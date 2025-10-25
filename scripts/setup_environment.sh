@@ -77,7 +77,25 @@ confirm_execution() {
   fi
 
   step "Confirm start"
-  read -rp "${message} Continue? [y/N] " reply
+
+  if [[ "${ENVIRONMENT_AUTO_CONFIRM:-}" =~ ^([yY][eE][sS]|[yY])$ ]]; then
+    reply="yes"
+  else
+    if [[ -t 0 ]]; then
+      if ! read -rp "${message} Continue? [y/N] " reply; then
+        echo "Aborted by user (no input)."
+        exit 0
+      fi
+    elif [[ -r /dev/tty ]]; then
+      if ! read -rp "${message} Continue? [y/N] " reply < /dev/tty; then
+        echo "Aborted by user (no input)."
+        exit 0
+      fi
+    else
+      echo "No interactive terminal available for confirmation. Set ENVIRONMENT_AUTO_CONFIRM=yes to run non-interactively."
+      exit 1
+    fi
+  fi
   case "${reply:-}" in
     [yY][eE][sS]|[yY])
       echo "Proceeding with setup."

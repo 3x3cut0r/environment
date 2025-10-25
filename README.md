@@ -11,6 +11,18 @@ This repository provides a foundational setup script and configuration snippets 
 
 ## Usage
 
+### Run directly (recommended)
+
+Execute the setup without cloning the repository by streaming the bootstrap script:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/3x3cut0r/environment/main/environment.sh | bash
+```
+
+You can override the branch that should be executed by setting the `ENVIRONMENT_BRANCH` environment variable before running the command.
+
+### Run from a local clone
+
 1. Clone the repository and change into its directory.
 2. Run the setup script:
 

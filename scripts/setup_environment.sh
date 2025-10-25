@@ -322,6 +322,23 @@ configure_environment() {
   apply_config "${REPO_ROOT}/home/.config/nvim/init.vim" "${HOME}/.config/nvim/init.vim" "\""
 }
 
+install_catppuccin_tmux() {
+  step "Install Catppuccin tmux plugin"
+  local plugin_root="${HOME}/.config/tmux/plugins/catppuccin"
+  local plugin_dir="${plugin_root}/tmux"
+  local repo_url="https://github.com/catppuccin/tmux.git"
+
+  mkdir -p "${plugin_root}"
+
+  if [[ -d "${plugin_dir}/.git" ]]; then
+    git -C "${plugin_dir}" fetch --tags --prune
+    git -C "${plugin_dir}" pull --ff-only
+  else
+    rm -rf "${plugin_dir}"
+    git clone "${repo_url}" "${plugin_dir}"
+  fi
+}
+
 summarize() {
   step "Summary"
   if ((${#ENSURED_PACKAGES[@]} > 0)); then
@@ -342,6 +359,7 @@ main() {
     install_packages
   fi
   configure_environment
+  install_catppuccin_tmux
   summarize
 }
 

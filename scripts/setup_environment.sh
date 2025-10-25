@@ -10,10 +10,11 @@ MODE="all"
 PACKAGES=()
 ENSURED_PACKAGES=()
 STEP_COUNTER=0
-TOTAL_STEPS=9
+TOTAL_STEPS=10
 CONFIG_APPLIED=false
 TPM_INSTALLED=false
 ALIASES_CONFIGURED=false
+CATPPUCCIN_PLUGIN_INSTALLED=false
 INSTALL_PACKAGES=true
 PACKAGES_SKIPPED=false
 
@@ -753,6 +754,46 @@ ensure_tmux_plugin_manager() {
   fi
 }
 
+ensure_catppuccin_tmux_plugin() {
+  step "Ensure Catppuccin tmux plugin"
+
+  if [[ "${MODE}" == "packages" ]]; then
+    echo "Skipping Catppuccin tmux plugin setup (packages-only mode)."
+    return
+  fi
+
+  local plugin_root="${HOME}/.config/tmux/plugins/catppuccin"
+  local plugin_dir="${plugin_root}/tmux"
+  local repo_url="https://github.com/catppuccin/tmux.git"
+  local api_url="https://api.github.com/repos/catppuccin/tmux/releases/latest"
+  local latest_tag
+
+  if ! latest_tag=$(curl -fsSL "${api_url}" | jq -r '.tag_name' 2>/dev/null); then
+    echo "Failed to fetch latest Catppuccin tmux release information." >&2
+    exit 1
+  fi
+
+  if [[ -z "${latest_tag}" || "${latest_tag}" == "null" ]]; then
+    echo "Received invalid release tag for Catppuccin tmux." >&2
+    exit 1
+  fi
+
+  mkdir -p "${plugin_root}"
+
+  if [[ -d "${plugin_dir}" ]]; then
+    echo "Removing existing Catppuccin tmux plugin from ${plugin_dir}."
+    rm -rf "${plugin_dir}"
+  fi
+
+  if git clone --depth 1 --branch "${latest_tag}" "${repo_url}" "${plugin_dir}"; then
+    echo "Installed Catppuccin tmux plugin (${latest_tag}) to ${plugin_dir}."
+    CATPPUCCIN_PLUGIN_INSTALLED=true
+  else
+    echo "Failed to install Catppuccin tmux plugin." >&2
+    exit 1
+  fi
+}
+
 summarize() {
   step "Summary"
 
@@ -792,6 +833,12 @@ summarize() {
   else
     echo "tmux plugin manager was not changed."
   fi
+
+  if [[ "${CATPPUCCIN_PLUGIN_INSTALLED}" == true ]]; then
+    echo "Catppuccin tmux plugin ensured."
+  else
+    echo "Catppuccin tmux plugin was not changed."
+  fi
 }
 
 main() {
@@ -805,6 +852,7 @@ main() {
   configure_environment
   configure_aliases
   ensure_tmux_plugin_manager
+  ensure_catppuccin_tmux_plugin
   summarize
 }
 

@@ -12,6 +12,50 @@ STEP_COUNTER=0
 CONFIG_APPLIED=false
 TPM_INSTALLED=false
 
+display_environment_info() {
+  step "Environment information"
+
+  local uname_s uname_r arch shell_name workdir
+
+  if uname_s=$(uname -s 2>/dev/null); then
+    :
+  else
+    uname_s="unknown"
+  fi
+
+  if uname_r=$(uname -r 2>/dev/null); then
+    :
+  else
+    uname_r="unknown"
+  fi
+
+  if arch=$(uname -m 2>/dev/null); then
+    :
+  else
+    arch="unknown"
+  fi
+
+  shell_name="${SHELL:-unknown}"
+  workdir="${PWD:-unknown}"
+
+  echo "User: $(whoami 2>/dev/null || echo unknown)"
+  echo "Host: $(hostname 2>/dev/null || echo unknown)"
+  echo "Operating system: ${uname_s} ${uname_r}"
+  echo "Architecture: ${arch}"
+
+  if [[ -r /etc/os-release ]]; then
+    # shellcheck disable=SC1091
+    . /etc/os-release
+    local distro_name distro_version
+    distro_name="${NAME:-${ID:-unknown}}"
+    distro_version="${VERSION:-${VERSION_ID:-unknown}}"
+    echo "Distribution: ${distro_name} ${distro_version}"
+  fi
+
+  echo "Shell: ${shell_name}"
+  echo "Working directory: ${workdir}"
+}
+
 usage() {
   cat <<'EOF'
 Usage: setup_environment.sh [OPTIONS]
@@ -411,6 +455,7 @@ summarize() {
 main() {
   parse_args "$@"
   load_packages
+  display_environment_info
   confirm_execution
   detect_environment
   if [[ "${ENVIRONMENT}" == "mac" && -z "${PKG_MANAGER}" ]]; then

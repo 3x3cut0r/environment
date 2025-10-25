@@ -15,15 +15,21 @@ PACKAGES=(
   bash-completion
   neovim
   vim
+  vi
+  nano
   mtr
   ripgrep
   sshpass
   rsync
   unzip
+  zip
+  make
   lshw
   zoxide
   watch
   dog
+  dnsutils
+  net-tools
   tcpdump
   wormhole
   lazydocker
@@ -201,6 +207,28 @@ install_packages() {
 resolve_package_name() {
   local pkg="$1"
   case "${pkg}" in
+    dnsutils)
+      case "${ENVIRONMENT}" in
+        arch)
+          echo "bind"
+          ;;
+        debian)
+          echo "dnsutils"
+          ;;
+        rhel)
+          echo "bind-utils"
+          ;;
+        mac)
+          echo "bind"
+          ;;
+        *)
+          echo "${pkg}"
+          ;;
+      esac
+      ;;
+    vi)
+      echo "vim"
+      ;;
     watch)
       case "${ENVIRONMENT}" in
         arch)

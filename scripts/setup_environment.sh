@@ -321,6 +321,24 @@ configure_environment() {
   apply_config "${REPO_ROOT}/home/.tmux.conf" "${HOME}/.tmux.conf" "#"
   apply_config "${REPO_ROOT}/home/.config/nvim/init.vim" "${HOME}/.config/nvim/init.vim" "\""
 }
+    
+ensure_tmux_plugin_manager() {
+  step "Ensure tmux plugin manager"
+  local tpm_dir="${HOME}/.tmux/plugins/tpm"
+
+  if [[ -d "${tpm_dir}" ]]; then
+    echo "tmux plugin manager already installed at ${tpm_dir}."
+    return
+  fi
+
+  mkdir -p "${HOME}/.tmux/plugins"
+  if git clone https://github.com/tmux-plugins/tpm "${tpm_dir}"; then
+    echo "Installed tmux plugin manager to ${tpm_dir}."
+  else
+    echo "Failed to install tmux plugin manager." >&2
+    exit 1
+  fi
+}
 
 install_catppuccin_tmux() {
   step "Install Catppuccin tmux plugin"
@@ -336,8 +354,6 @@ install_catppuccin_tmux() {
   else
     rm -rf "${plugin_dir}"
     git clone "${repo_url}" "${plugin_dir}"
-  fi
-}
 
 summarize() {
   step "Summary"
@@ -359,6 +375,7 @@ main() {
     install_packages
   fi
   configure_environment
+  ensure_tmux_plugin_manager
   install_catppuccin_tmux
   summarize
 }

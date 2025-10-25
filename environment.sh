@@ -5,18 +5,27 @@ REPO_OWNER="3x3cut0r"
 REPO_NAME="environment"
 BRANCH="${ENVIRONMENT_BRANCH:-main}"
 
+TMP_DIR=""
+
 cleanup() {
-  local exit_code=$1
-  trap - EXIT INT TERM
-  if [[ -n "${TMP_DIR:-}" && -d "${TMP_DIR}" ]]; then
+  local exit_code=${1:-$?}
+
+  trap - EXIT ERR INT TERM HUP QUIT
+
+  if [[ -n "${TMP_DIR}" && -d "${TMP_DIR}" ]]; then
     rm -rf "${TMP_DIR}"
+    TMP_DIR=""
   fi
+
   exit "${exit_code}"
 }
 
 trap 'cleanup $?' EXIT
+trap 'cleanup $?' ERR
 trap 'cleanup 130' INT
 trap 'cleanup 143' TERM
+trap 'cleanup 129' HUP
+trap 'cleanup 131' QUIT
 
 for tool in curl tar; do
   if ! command -v "${tool}" >/dev/null 2>&1; then

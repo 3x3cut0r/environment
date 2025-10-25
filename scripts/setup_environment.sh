@@ -237,19 +237,17 @@ install_packages() {
 
   if [[ -z "${PKG_MANAGER}" ]]; then
     echo "Homebrew not detected. Attempting installation."
-    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-    PKG_MANAGER="brew"
-    install_packages
+    if /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"; then
+      PKG_MANAGER="brew"
+      install_packages
+    else
+      echo "Failed to install Homebrew; skipping package installation."
+    fi
     return
   fi
 
-  if [[ "${PKG_MANAGER}" == "apt-get" ]]; then
-    ${sudo_cmd} apt-get update
-  elif [[ "${PKG_MANAGER}" == "brew" ]]; then
-    brew update
-  fi
-
   local resolved_packages=()
+  local requested_packages=()
   ENSURED_PACKAGES=()
   for pkg in "${PACKAGES[@]}"; do
     local resolved
@@ -260,7 +258,7 @@ install_packages() {
     fi
     if is_package_available "${resolved}"; then
       resolved_packages+=("${resolved}")
-      ENSURED_PACKAGES+=("${pkg}")
+      requested_packages+=("${pkg}")
     else
       echo "Package ${resolved} (requested as ${pkg}) not available via ${PKG_MANAGER}; skipping."
     fi
@@ -271,29 +269,77 @@ install_packages() {
     return
   fi
 
-  echo "Installing packages via ${PKG_MANAGER}: ${resolved_packages[*]}"
-
   case "${PKG_MANAGER}" in
     pacman)
-      ${sudo_cmd} pacman -Syu --noconfirm --needed "${resolved_packages[@]}"
+      if ! ${sudo_cmd} pacman -Sy --noconfirm; then
+        echo "Failed to refresh pacman package databases; skipping package installation."
+        return
+      fi
       ;;
     apt-get)
-      ${sudo_cmd} apt-get install -y "${resolved_packages[@]}"
-      ;;
-    dnf)
-      ${sudo_cmd} dnf install -y "${resolved_packages[@]}"
-      ;;
-    yum)
-      ${sudo_cmd} yum install -y "${resolved_packages[@]}"
+      if ! ${sudo_cmd} apt-get update; then
+        echo "Failed to update apt package lists; skipping package installation."
+        return
+      fi
       ;;
     brew)
-      brew install "${resolved_packages[@]}"
-      ;;
-    *)
-      echo "Package manager ${PKG_MANAGER} is not supported by this script."
-      exit 1
+      if ! brew update; then
+        echo "Failed to update Homebrew; skipping package installation."
+        return
+      fi
       ;;
   esac
+
+  for i in "${!resolved_packages[@]}"; do
+    local resolved_pkg="${resolved_packages[$i]}"
+    local requested_pkg="${requested_packages[$i]}"
+    local install_failed=false
+
+    echo "Installing ${requested_pkg} via ${PKG_MANAGER} (${resolved_pkg})."
+
+    case "${PKG_MANAGER}" in
+      pacman)
+        if ! ${sudo_cmd} pacman -S --noconfirm --needed "${resolved_pkg}"; then
+          install_failed=true
+        fi
+        ;;
+      apt-get)
+        if ! ${sudo_cmd} apt-get install -y "${resolved_pkg}"; then
+          install_failed=true
+        fi
+        ;;
+      dnf)
+        if ! ${sudo_cmd} dnf install -y "${resolved_pkg}"; then
+          install_failed=true
+        fi
+        ;;
+      yum)
+        if ! ${sudo_cmd} yum install -y "${resolved_pkg}"; then
+          install_failed=true
+        fi
+        ;;
+      brew)
+        if ! brew install "${resolved_pkg}"; then
+          install_failed=true
+        fi
+        ;;
+      *)
+        echo "Package manager ${PKG_MANAGER} is not supported by this script."
+        return 1
+        ;;
+    esac
+
+    if [[ "${install_failed}" == true ]]; then
+      echo "Failed to install ${resolved_pkg} (requested as ${requested_pkg}); skipping."
+      continue
+    fi
+
+    ENSURED_PACKAGES+=("${requested_pkg}")
+  done
+
+  if ((${#ENSURED_PACKAGES[@]} == 0)); then
+    echo "No packages were installed due to installation failures."
+  fi
 }
 
 resolve_package_name() {

@@ -4,6 +4,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 PACKAGES_FILE="${SCRIPT_DIR}/packages.list"
+ALIASES_FILE="${SCRIPT_DIR}/aliases.list"
 
 MODE="all"
 PACKAGES=()
@@ -11,6 +12,7 @@ ENSURED_PACKAGES=()
 STEP_COUNTER=0
 CONFIG_APPLIED=false
 TPM_INSTALLED=false
+ALIASES_CONFIGURED=false
 
 display_environment_info() {
   step "Environment information"
@@ -412,7 +414,86 @@ configure_environment() {
   apply_config "${REPO_ROOT}/home/.config/nvim/init.vim" "${HOME}/.config/nvim/init.vim" "\""
   CONFIG_APPLIED=true
 }
-    
+
+configure_aliases() {
+  step "Configure shell aliases"
+
+  if [[ ! -f "${ALIASES_FILE}" ]]; then
+    echo "Aliases file not found: ${ALIASES_FILE}" >&2
+    return
+  fi
+
+  local alias_dir="${HOME}/.config/environment"
+  local alias_list_target="${alias_dir}/aliases.list"
+  local fish_alias_target="${alias_dir}/aliases.fish"
+  local posix_snippet fish_snippet
+
+  mkdir -p "${alias_dir}"
+  cp "${ALIASES_FILE}" "${alias_list_target}"
+  echo "Installed alias definitions to ${alias_list_target}."
+
+  if command -v python3 >/dev/null 2>&1; then
+    python3 - <<'PY' "${alias_list_target}" "${fish_alias_target}"
+import pathlib
+import re
+import sys
+
+source_path = pathlib.Path(sys.argv[1])
+target_path = pathlib.Path(sys.argv[2])
+lines = [f"# Generated fish aliases from {source_path}"]
+pattern = re.compile(r"^alias\s+([^=\s]+)\s*=\s*(.+)$")
+
+for raw in source_path.read_text().splitlines():
+    stripped = raw.strip()
+    if not stripped or stripped.startswith("#"):
+        continue
+    match = pattern.match(stripped)
+    if not match:
+        lines.append(f"# Skipped unsupported alias line: {stripped}")
+        continue
+    name, value = match.groups()
+    value = value.strip()
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in {'"', "'"}:
+        value = value[1:-1]
+    escaped = value.replace("\\", "\\\\").replace('"', '\\"')
+    lines.append(f'alias {name} "{escaped}"')
+
+target_path.write_text("\n".join(lines) + "\n")
+PY
+    echo "Generated fish aliases at ${fish_alias_target}."
+  else
+    {
+      echo "# python3 not available; falling back to bash-compatible aliases"
+      echo "# Source file: ${alias_list_target}"
+    } > "${fish_alias_target}"
+    cat "${alias_list_target}" >> "${fish_alias_target}"
+    echo "python3 not found. Copied aliases to ${fish_alias_target} without conversion."
+  fi
+
+  posix_snippet="$(mktemp)"
+  cat <<'EOF' > "${posix_snippet}"
+if [ -f "${HOME}/.config/environment/aliases.list" ]; then
+  # shellcheck disable=SC1090
+  . "${HOME}/.config/environment/aliases.list"
+fi
+EOF
+  apply_config "${posix_snippet}" "${HOME}/.bashrc" "# alias"
+  apply_config "${posix_snippet}" "${HOME}/.profile" "# alias"
+  apply_config "${posix_snippet}" "${HOME}/.zshrc" "# alias"
+  rm -f "${posix_snippet}"
+
+  fish_snippet="$(mktemp)"
+  cat <<'EOF' > "${fish_snippet}"
+if test -f "$HOME/.config/environment/aliases.fish"
+  source "$HOME/.config/environment/aliases.fish"
+end
+EOF
+  apply_config "${fish_snippet}" "${HOME}/.config/fish/config.fish" "# alias"
+  rm -f "${fish_snippet}"
+
+  ALIASES_CONFIGURED=true
+}
+
 ensure_tmux_plugin_manager() {
   step "Ensure tmux plugin manager"
   local tpm_dir="${HOME}/.tmux/plugins/tpm"
@@ -445,6 +526,11 @@ summarize() {
   else
     echo "Configuration files were not updated."
   fi
+  if [[ "${ALIASES_CONFIGURED}" == true ]]; then
+    echo "Shell aliases configured for bash, sh, zsh, and fish."
+  else
+    echo "Shell aliases were not configured."
+  fi
   if [[ "${TPM_INSTALLED}" == true ]]; then
     echo "tmux plugin manager ensured."
   else
@@ -466,6 +552,7 @@ main() {
   fi
   if [[ "${MODE}" != "packages" ]]; then
     configure_environment
+    configure_aliases
     ensure_tmux_plugin_manager
   fi
   summarize

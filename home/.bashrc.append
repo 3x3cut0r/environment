@@ -9,5 +9,4 @@ else
   alias ll='ls -alF'
 fi
 
-alias la='ls -A'
-alias gs='git status'
+# Additional alias definitions are managed via ~/.config/environment/aliases.list.

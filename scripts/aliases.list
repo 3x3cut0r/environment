@@ -1,0 +1,5 @@
+# Common shell aliases managed by the setup script
+alias la='ls -A'
+alias gs='git status'
+alias gd='git diff'
+alias ..='cd ..'

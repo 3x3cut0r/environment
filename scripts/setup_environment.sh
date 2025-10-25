@@ -13,6 +13,8 @@ STEP_COUNTER=0
 CONFIG_APPLIED=false
 TPM_INSTALLED=false
 ALIASES_CONFIGURED=false
+INSTALL_PACKAGES=true
+PACKAGES_SKIPPED=false
 
 display_environment_info() {
   step "Environment information"
@@ -149,6 +151,76 @@ confirm_execution() {
     *)
       echo "Aborted by user."
       exit 0
+      ;;
+  esac
+}
+
+confirm_package_installation() {
+  if ((${#PACKAGES[@]} == 0)); then
+    INSTALL_PACKAGES=false
+    PACKAGES_SKIPPED=true
+    echo "No packages defined to install; skipping package installation."
+    return
+  fi
+
+  case "${ENVIRONMENT_AUTO_INSTALL_PACKAGES:-}" in
+    [yY][eE][sS]|[yY])
+      INSTALL_PACKAGES=true
+      return
+      ;;
+    [nN][oO]|[nN])
+      INSTALL_PACKAGES=false
+      PACKAGES_SKIPPED=true
+      echo "Skipping package installation (ENVIRONMENT_AUTO_INSTALL_PACKAGES set to no)."
+      return
+      ;;
+  esac
+
+  if [[ "${ENVIRONMENT_AUTO_CONFIRM:-}" =~ ^([yY][eE][sS]|[yY])$ ]]; then
+    INSTALL_PACKAGES=true
+    return
+  fi
+
+  step "Confirm package installation"
+
+  local prompt message reply
+  if [[ -n "${PKG_MANAGER:-}" ]]; then
+    message="Install required packages using ${PKG_MANAGER}?"
+  else
+    message="Install required packages now?"
+  fi
+
+  prompt="${message} [Y/n] "
+
+  if [[ -t 0 ]]; then
+    if ! read -rp "${prompt}" reply; then
+      echo "Skipped package installation (no input)."
+      INSTALL_PACKAGES=false
+      PACKAGES_SKIPPED=true
+      return
+    fi
+  elif [[ -r /dev/tty ]]; then
+    if ! read -rp "${prompt}" reply < /dev/tty; then
+      echo "Skipped package installation (no input)."
+      INSTALL_PACKAGES=false
+      PACKAGES_SKIPPED=true
+      return
+    fi
+  else
+    echo "No interactive terminal available to confirm package installation. Set ENVIRONMENT_AUTO_INSTALL_PACKAGES=yes to proceed non-interactively."
+    INSTALL_PACKAGES=false
+    PACKAGES_SKIPPED=true
+    return
+  fi
+
+  case "${reply:-}" in
+    [nN][oO]|[nN])
+      INSTALL_PACKAGES=false
+      PACKAGES_SKIPPED=true
+      echo "Package installation skipped by user."
+      ;;
+    *)
+      INSTALL_PACKAGES=true
       ;;
   esac
 }
@@ -592,7 +664,9 @@ ensure_tmux_plugin_manager() {
 
 summarize() {
   step "Summary"
-  if ((${#ENSURED_PACKAGES[@]} > 0)); then
+  if [[ "${PACKAGES_SKIPPED}" == true ]]; then
+    echo "Package installation was skipped."
+  elif ((${#ENSURED_PACKAGES[@]} > 0)); then
     echo "Packages ensured: ${ENSURED_PACKAGES[*]}"
   else
     echo "No packages were installed by this run."
@@ -620,11 +694,16 @@ main() {
   display_environment_info
   confirm_execution
   detect_environment
-  if [[ "${ENVIRONMENT}" == "mac" && -z "${PKG_MANAGER}" ]]; then
-    step "Install Homebrew"
-    install_packages
+  confirm_package_installation
+  if [[ "${INSTALL_PACKAGES}" == true ]]; then
+    if [[ "${ENVIRONMENT}" == "mac" && -z "${PKG_MANAGER}" ]]; then
+      step "Install Homebrew"
+      install_packages
+    else
+      install_packages
+    fi
   else
-    install_packages
+    echo "Skipping package installation."
   fi
   if [[ "${MODE}" != "packages" ]]; then
     configure_environment

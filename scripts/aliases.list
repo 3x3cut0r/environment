@@ -33,6 +33,25 @@ alias df='df -h'
 alias du='du -h -c'
 alias free='free -h'
 
+# Flexible wrappers around find for different file types.
+_find_by_type() {
+  local type="$1"
+  shift
+
+  local dir="."
+  if (($# > 0)) && [[ "$1" != -* ]]; then
+    dir="$1"
+    shift
+  fi
+
+  find "$dir" -type "$type" "$@"
+}
+
+findf() { _find_by_type f "$@"; }
+findd() { _find_by_type d "$@"; }
+findl() { _find_by_type l "$@"; }
+findb() { _find_by_type b "$@"; }
+
 # Shortcuts for Git workflows.
 alias g='git'
 alias ga='git add'

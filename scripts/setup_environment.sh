@@ -340,21 +340,6 @@ ensure_tmux_plugin_manager() {
   fi
 }
 
-install_catppuccin_tmux() {
-  step "Install Catppuccin tmux plugin"
-  local plugin_root="${HOME}/.config/tmux/plugins/catppuccin"
-  local plugin_dir="${plugin_root}/tmux"
-  local repo_url="https://github.com/catppuccin/tmux.git"
-
-  mkdir -p "${plugin_root}"
-
-  if [[ -d "${plugin_dir}/.git" ]]; then
-    git -C "${plugin_dir}" fetch --tags --prune
-    git -C "${plugin_dir}" pull --ff-only
-  else
-    rm -rf "${plugin_dir}"
-    git clone "${repo_url}" "${plugin_dir}"
-
 summarize() {
   step "Summary"
   if ((${#ENSURED_PACKAGES[@]} > 0)); then
@@ -376,7 +361,6 @@ main() {
   fi
   configure_environment
   ensure_tmux_plugin_manager
-  install_catppuccin_tmux
   summarize
 }
 

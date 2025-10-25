@@ -10,6 +10,7 @@ MODE="all"
 PACKAGES=()
 ENSURED_PACKAGES=()
 STEP_COUNTER=0
+TOTAL_STEPS=9
 CONFIG_APPLIED=false
 TPM_INSTALLED=false
 ALIASES_CONFIGURED=false
@@ -44,7 +45,12 @@ display_environment_info() {
 
   echo "User: $(whoami 2>/dev/null || echo unknown)"
   echo "Host: $(hostname 2>/dev/null || echo unknown)"
-  echo "Operating system: ${uname_s} ${uname_r}"
+  local os_label="${uname_s}"
+  if [[ "${uname_s}" == "Darwin" ]]; then
+    os_label="${uname_s} (macOS)"
+  fi
+
+  echo "Operating system: ${os_label} ${uname_r}"
   echo "Architecture: ${arch}"
 
   if [[ -r /etc/os-release ]]; then
@@ -114,7 +120,7 @@ load_packages() {
 step() {
   STEP_COUNTER=$((STEP_COUNTER + 1))
   echo ""
-  echo "Step ${STEP_COUNTER}: $1"
+  echo "Step ${STEP_COUNTER}/${TOTAL_STEPS}: $1"
   echo "------------------------------"
 }
 
@@ -295,6 +301,12 @@ detect_environment() {
 
 install_packages() {
   step "Install required packages"
+
+  if [[ "${INSTALL_PACKAGES}" != true ]]; then
+    echo "Skipping package installation."
+    return
+  fi
+
   local sudo_cmd=""
   if [[ "${EUID}" -ne 0 ]]; then
     if command -v sudo >/dev/null 2>&1; then
@@ -504,7 +516,23 @@ apply_config() {
 
   if [[ -e "${target_file}" ]]; then
     if grep -Fq "${start_marker}" "${target_file}"; then
-      echo "Config snippet already present in ${target_file}."
+      local tmp_file
+      tmp_file="$(mktemp)"
+      awk -v start="${start_marker}" -v end="${end_marker}" '
+        $0 == start {in_block=1; next}
+        $0 == end {in_block=0; next}
+        !in_block {print}
+      ' "${target_file}" > "${tmp_file}"
+      if [[ -s "${tmp_file}" ]]; then
+        printf '\n' >> "${tmp_file}"
+      fi
+      {
+        echo "${start_marker}"
+        cat "${source_file}"
+        echo "${end_marker}"
+      } >> "${tmp_file}"
+      mv "${tmp_file}" "${target_file}"
+      echo "Updated configuration block in ${target_file}."
       return
     fi
     {
@@ -526,6 +554,12 @@ apply_config() {
 
 configure_environment() {
   step "Apply configuration files"
+
+  if [[ "${MODE}" == "packages" ]]; then
+    echo "Skipping configuration (packages-only mode)."
+    return
+  fi
+
   apply_config "${REPO_ROOT}/home/.bashrc.append" "${HOME}/.bashrc" "#"
   apply_config "${REPO_ROOT}/home/.vimrc" "${HOME}/.vimrc" "\""
   apply_config "${REPO_ROOT}/home/.tmux.conf" "${HOME}/.tmux.conf" "#"
@@ -535,6 +569,11 @@ configure_environment() {
 
 configure_aliases() {
   step "Configure shell aliases"
+
+  if [[ "${MODE}" == "packages" ]]; then
+    echo "Skipping alias configuration (packages-only mode)."
+    return
+  fi
 
   if [[ ! -f "${ALIASES_FILE}" ]]; then
     echo "Aliases file not found: ${ALIASES_FILE}" >&2
@@ -644,6 +683,12 @@ EOF
 
 ensure_tmux_plugin_manager() {
   step "Ensure tmux plugin manager"
+
+  if [[ "${MODE}" == "packages" ]]; then
+    echo "Skipping tmux plugin manager setup (packages-only mode)."
+    return
+  fi
+
   local tpm_dir="${HOME}/.tmux/plugins/tpm"
 
   if [[ -d "${tpm_dir}" ]]; then
@@ -664,23 +709,38 @@ ensure_tmux_plugin_manager() {
 
 summarize() {
   step "Summary"
+
   if [[ "${PACKAGES_SKIPPED}" == true ]]; then
     echo "Package installation was skipped."
   elif ((${#ENSURED_PACKAGES[@]} > 0)); then
-    echo "Packages ensured: ${ENSURED_PACKAGES[*]}"
+    echo "Packages ensured:"
+    for pkg in "${ENSURED_PACKAGES[@]}"; do
+      echo "  - ${pkg}"
+    done
   else
     echo "No packages were installed by this run."
   fi
+
   if [[ "${CONFIG_APPLIED}" == true ]]; then
-    echo "Configuration files managed: ~/.bashrc, ~/.vimrc, ~/.tmux.conf, ~/.config/nvim/init.vim"
+    echo "Configuration files managed:"
+    echo "  - ~/.bashrc"
+    echo "  - ~/.vimrc"
+    echo "  - ~/.tmux.conf"
+    echo "  - ~/.config/nvim/init.vim"
   else
     echo "Configuration files were not updated."
   fi
+
   if [[ "${ALIASES_CONFIGURED}" == true ]]; then
-    echo "Shell aliases configured for bash, sh, zsh, and fish."
+    echo "Shell aliases configured for:"
+    echo "  - bash"
+    echo "  - sh"
+    echo "  - zsh"
+    echo "  - fish"
   else
     echo "Shell aliases were not configured."
   fi
+
   if [[ "${TPM_INSTALLED}" == true ]]; then
     echo "tmux plugin manager ensured."
   else
@@ -695,21 +755,10 @@ main() {
   confirm_execution
   detect_environment
   confirm_package_installation
-  if [[ "${INSTALL_PACKAGES}" == true ]]; then
-    if [[ "${ENVIRONMENT}" == "mac" && -z "${PKG_MANAGER}" ]]; then
-      step "Install Homebrew"
-      install_packages
-    else
-      install_packages
-    fi
-  else
-    echo "Skipping package installation."
-  fi
-  if [[ "${MODE}" != "packages" ]]; then
-    configure_environment
-    configure_aliases
-    ensure_tmux_plugin_manager
-  fi
+  install_packages
+  configure_environment
+  configure_aliases
+  ensure_tmux_plugin_manager
   summarize
 }
 

@@ -5,9 +5,11 @@
 if command -v exa >/dev/null 2>&1; then
 alias ls='exa --group-directories-first --classify'
 alias ll='exa -al --group-directories-first'
+alias llh='exa -alh --group-directories-first'
 else
 # Fallback listing aliases when exa is not available.
 alias ll='ls -alF'
+alias llh='ls -alhF'
 fi
 
 # Provide a vi alias that maps to Vim when it is available.

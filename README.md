@@ -19,7 +19,11 @@ Execute the setup without cloning the repository by streaming the bootstrap scri
 curl -fsSL https://raw.githubusercontent.com/3x3cut0r/environment/main/environment.sh | bash
 ```
 
-To run the script non-interactively (for example in automated setups), set `ENVIRONMENT_AUTO_CONFIRM=yes` before invoking it to bypass the confirmation prompt.
+To run the script non-interactively (for example in automated setups), set `ENVIRONMENT_AUTO_CONFIRM=yes` before invoking it to bypass the confirmation prompt:
+
+```bash
+ENVIRONMENT_AUTO_CONFIRM=yes curl -fsSL https://raw.githubusercontent.com/3x3cut0r/environment/main/environment.sh | bash
+```
 
 You can override the branch that should be executed by setting the `ENVIRONMENT_BRANCH` environment variable before running the command.
 

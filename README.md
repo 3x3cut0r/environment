@@ -24,6 +24,11 @@ You can override the branch that should be executed by setting the `ENVIRONMENT_
 ### Run from a local clone
 
 1. Clone the repository and change into its directory.
+
+   ```bash
+   git clone https://github.com/3x3cut0r/environment.git
+   cd environment
+   ```
 2. Run the setup script:
 
    ```bash

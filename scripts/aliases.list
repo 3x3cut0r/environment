@@ -1,22 +1,39 @@
+# Aliases for enhanced command-line productivity.
+# The blocks are organized by the tools they extend.
+
+# Prefer exa over ls when it is installed.
 if command -v exa >/dev/null 2>&1; then
 alias ls='exa --group-directories-first --classify'
 alias ll='exa -al --group-directories-first'
 else
+# Fallback listing aliases when exa is not available.
 alias ll='ls -alF'
 fi
 
+# Provide a vi alias that maps to Vim when it is available.
+if command -v vim >/dev/null 2>&1; then
+alias vi='vim'
+fi
+
+# Additional directory navigation helpers.
 alias la='ls -A'
 alias ..='cd ..'
 alias ...='cd ../..'
 alias ....='cd ../../..'
 alias ~='cd ~'
+
+# Colorized search commands.
 alias grep='grep --color=auto'
 alias egrep='egrep --color=auto'
 alias fgrep='fgrep --color=auto'
+
+# Convenience aliases for common utilities.
 alias cls='clear'
 alias df='df -h'
 alias du='du -h -c'
 alias free='free -h'
+
+# Shortcuts for Git workflows.
 alias g='git'
 alias ga='git add'
 alias gc='git commit'
@@ -25,6 +42,8 @@ alias gs='git status'
 alias gst='git status'
 alias gd='git diff'
 alias gl='git log --oneline --graph --decorate'
+
+# Package management aliases for multiple distributions.
 alias apti='sudo apt install'
 alias aptu='sudo apt update'
 alias aptuu='sudo apt update && sudo apt upgrade -y && sudo apt autoremove -y'

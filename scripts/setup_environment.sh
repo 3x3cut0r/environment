@@ -225,6 +225,46 @@ confirm_package_installation() {
   esac
 }
 
+confirm_homebrew_installation() {
+  case "${ENVIRONMENT_AUTO_INSTALL_HOMEBREW:-}" in
+    [yY][eE][sS]|[yY])
+      return 0
+      ;;
+    [nN][oO]|[nN])
+      return 1
+      ;;
+  esac
+
+  if [[ "${ENVIRONMENT_AUTO_CONFIRM:-}" =~ ^([yY][eE][sS]|[yY])$ ]]; then
+    return 0
+  fi
+
+  local prompt reply
+  prompt="Homebrew is required to install packages on macOS. Install Homebrew now? [y/N] "
+
+  if [[ -t 0 ]]; then
+    if ! read -rp "${prompt}" reply; then
+      return 1
+    fi
+  elif [[ -r /dev/tty ]]; then
+    if ! read -rp "${prompt}" reply < /dev/tty; then
+      return 1
+    fi
+  else
+    echo "Cannot prompt to install Homebrew (no interactive terminal). Set ENVIRONMENT_AUTO_INSTALL_HOMEBREW=yes to continue." >&2
+    return 1
+  fi
+
+  case "${reply:-}" in
+    [yY][eE][sS]|[yY])
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
+
 detect_environment() {
   step "Detect operating system"
   local uname_out
@@ -308,12 +348,18 @@ install_packages() {
   fi
 
   if [[ -z "${PKG_MANAGER}" ]]; then
-    echo "Homebrew not detected. Attempting installation."
-    if /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"; then
-      PKG_MANAGER="brew"
-      install_packages
+    echo "Homebrew not detected."
+    if confirm_homebrew_installation; then
+      if /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"; then
+        PKG_MANAGER="brew"
+        install_packages
+      else
+        echo "Failed to install Homebrew; skipping package installation."
+        PACKAGES_SKIPPED=true
+      fi
     else
-      echo "Failed to install Homebrew; skipping package installation."
+      echo "Homebrew installation skipped."
+      PACKAGES_SKIPPED=true
     fi
     return
   fi

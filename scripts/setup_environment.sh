@@ -441,22 +441,52 @@ import sys
 source_path = pathlib.Path(sys.argv[1])
 target_path = pathlib.Path(sys.argv[2])
 lines = [f"# Generated fish aliases from {source_path}"]
-pattern = re.compile(r"^alias\s+([^=\s]+)\s*=\s*(.+)$")
+alias_pattern = re.compile(r"^alias\s+([^=\s]+)\s*=\s*(.+)$")
+if_command_pattern = re.compile(r"^if\s+command\s+-v\s+([^\s;]+).*")
+
+indent_stack = []
+
+def current_indent():
+    return "  " * len(indent_stack)
 
 for raw in source_path.read_text().splitlines():
     stripped = raw.strip()
     if not stripped or stripped.startswith("#"):
         continue
-    match = pattern.match(stripped)
-    if not match:
-        lines.append(f"# Skipped unsupported alias line: {stripped}")
+
+    if stripped == "fi":
+        if indent_stack:
+            indent_stack.pop()
+            lines.append(f"{current_indent()}end")
+        else:
+            lines.append(f"# Skipped unsupported alias line: {stripped}")
         continue
-    name, value = match.groups()
-    value = value.strip()
-    if len(value) >= 2 and value[0] == value[-1] and value[0] in {'"', "'"}:
-        value = value[1:-1]
-    escaped = value.replace("\\", "\\\\").replace('"', '\\"')
-    lines.append(f'alias {name} "{escaped}"')
+
+    if stripped == "else":
+        if indent_stack:
+            lines.append(f"{'  ' * (len(indent_stack) - 1)}else")
+        else:
+            lines.append(f"# Skipped unsupported alias line: {stripped}")
+        continue
+
+    if_match = if_command_pattern.match(stripped)
+    if if_match:
+        command = if_match.group(1)
+        lines.append(f"{current_indent()}if type -q {command}")
+        indent_stack.append("if")
+        continue
+
+    match = alias_pattern.match(stripped)
+    if match:
+        name, value = match.groups()
+        value = value.strip()
+        if len(value) >= 2 and value[0] == value[-1] and value[0] in {'"', "'"}:
+            value = value[1:-1]
+        escaped = value.replace("\\", "\\\\").replace('"', '\\"')
+        lines.append(f"{current_indent()}alias {name} \"{escaped}\"")
+        continue
+
+    lines.append(f"# Skipped unsupported alias line: {stripped}")
 
 target_path.write_text("\n".join(lines) + "\n")
 PY

@@ -1,0 +1,13 @@
+# Environment setup additions
+export EDITOR="nvim"
+export VISUAL="nvim"
+
+if command -v exa >/dev/null 2>&1; then
+  alias ls='exa --group-directories-first --classify'
+  alias ll='exa -al --group-directories-first'
+else
+  alias ll='ls -alF'
+fi
+
+alias la='ls -A'
+alias gs='git status'

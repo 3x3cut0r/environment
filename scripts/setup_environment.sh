@@ -4,7 +4,34 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
-PACKAGES=(curl wget exa ranger tmux ncdu git bash-completion neovim vim mtr)
+PACKAGES=(
+  curl
+  wget
+  exa
+  ranger
+  tmux
+  ncdu
+  git
+  bash-completion
+  neovim
+  vim
+  mtr
+  ripgrep
+  sshpass
+  rsync
+  unzip
+  lshw
+  zoxide
+  watch
+  dog
+  tcpdump
+  wormhole
+  lazydocker
+  unp
+  jq
+  termshark
+)
+ENSURED_PACKAGES=()
 STEP_COUNTER=0
 
 step() {
@@ -110,34 +137,118 @@ install_packages() {
     fi
   fi
 
+  if [[ -z "${PKG_MANAGER}" ]]; then
+    echo "Homebrew not detected. Attempting installation."
+    /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+    PKG_MANAGER="brew"
+    install_packages
+    return
+  fi
+
+  if [[ "${PKG_MANAGER}" == "apt-get" ]]; then
+    ${sudo_cmd} apt-get update
+  elif [[ "${PKG_MANAGER}" == "brew" ]]; then
+    brew update
+  fi
+
+  local resolved_packages=()
+  ENSURED_PACKAGES=()
+  for pkg in "${PACKAGES[@]}"; do
+    local resolved
+    resolved="$(resolve_package_name "${pkg}")"
+    if [[ -z "${resolved}" ]]; then
+      echo "Skipping ${pkg} (not supported on ${ENVIRONMENT})."
+      continue
+    fi
+    if is_package_available "${resolved}"; then
+      resolved_packages+=("${resolved}")
+      ENSURED_PACKAGES+=("${pkg}")
+    else
+      echo "Package ${resolved} (requested as ${pkg}) not available via ${PKG_MANAGER}; skipping."
+    fi
+  done
+
+  if ((${#resolved_packages[@]} == 0)); then
+    echo "No packages available to install for ${PKG_MANAGER}."
+    return
+  fi
+
+  echo "Installing packages via ${PKG_MANAGER}: ${resolved_packages[*]}"
+
   case "${PKG_MANAGER}" in
     pacman)
-      ${sudo_cmd} pacman -Syu --noconfirm --needed "${PACKAGES[@]}"
+      ${sudo_cmd} pacman -Syu --noconfirm --needed "${resolved_packages[@]}"
       ;;
     apt-get)
-      ${sudo_cmd} apt-get update
-      ${sudo_cmd} apt-get install -y "${PACKAGES[@]}"
+      ${sudo_cmd} apt-get install -y "${resolved_packages[@]}"
       ;;
     dnf)
-      ${sudo_cmd} dnf install -y "${PACKAGES[@]}"
+      ${sudo_cmd} dnf install -y "${resolved_packages[@]}"
       ;;
     yum)
-      ${sudo_cmd} yum install -y "${PACKAGES[@]}"
+      ${sudo_cmd} yum install -y "${resolved_packages[@]}"
       ;;
     brew)
-      brew update
-      brew install "${PACKAGES[@]}"
-      ;;
-    "")
-      echo "Homebrew not detected. Attempting installation."
-      /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
-      PKG_MANAGER="brew"
-      install_packages
-      return
+      brew install "${resolved_packages[@]}"
       ;;
     *)
       echo "Package manager ${PKG_MANAGER} is not supported by this script."
       exit 1
+      ;;
+  esac
+}
+
+resolve_package_name() {
+  local pkg="$1"
+  case "${pkg}" in
+    watch)
+      case "${ENVIRONMENT}" in
+        arch)
+          echo "procps-ng"
+          ;;
+        debian)
+          echo "procps"
+          ;;
+        rhel)
+          echo "procps-ng"
+          ;;
+        mac)
+          echo "watch"
+          ;;
+        *)
+          echo "${pkg}"
+          ;;
+      esac
+      ;;
+    wormhole)
+      echo "magic-wormhole"
+      ;;
+    *)
+      echo "${pkg}"
+      ;;
+  esac
+}
+
+is_package_available() {
+  local pkg="$1"
+  case "${PKG_MANAGER}" in
+    pacman)
+      pacman -Si "${pkg}" >/dev/null 2>&1
+      ;;
+    apt-get)
+      apt-cache show "${pkg}" >/dev/null 2>&1
+      ;;
+    dnf)
+      dnf info "${pkg}" >/dev/null 2>&1
+      ;;
+    yum)
+      yum info "${pkg}" >/dev/null 2>&1
+      ;;
+    brew)
+      brew info "${pkg}" >/dev/null 2>&1
+      ;;
+    *)
+      return 1
       ;;
   esac
 }
@@ -185,7 +296,11 @@ configure_environment() {
 
 summarize() {
   step "Summary"
-  echo "Packages ensured: ${PACKAGES[*]}"
+  if ((${#ENSURED_PACKAGES[@]} > 0)); then
+    echo "Packages ensured: ${ENSURED_PACKAGES[*]}"
+  else
+    echo "No packages were installed by this run."
+  fi
   echo "Configuration files updated: ~/.bashrc, ~/.vimrc, ~/.tmux.conf, ~/.config/nvim/init.vim"
 }
 

@@ -40,6 +40,6 @@ You can override the branch that should be executed by setting the `ENVIRONMENT_
 3. When prompted, confirm the installation. The script will:
    - Detect whether the system is based on Arch, Debian/Ubuntu, RHEL, Proxmox, or macOS.
    - Install the tools listed in [`scripts/packages.list`](scripts/packages.list) using the appropriate package manager.
-   - Append the repository's configuration snippets from the [`home/`](home/) directory (including [`home/.config/nvim/init.vim`](home/.config/nvim/init.vim)) to the corresponding files in your home directory, adding markers to avoid duplicate entries.
+   - Append the repository's configuration snippets from the [`home/`](home/) directory to the corresponding files in your home directory, adding markers to avoid duplicate entries.
 
 The script requires administrative privileges to install packages and will request elevation with `sudo` or `doas` when necessary.

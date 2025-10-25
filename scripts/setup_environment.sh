@@ -3,42 +3,65 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+PACKAGES_FILE="${SCRIPT_DIR}/packages.list"
 
-PACKAGES=(
-  curl
-  wget
-  exa
-  ranger
-  tmux
-  ncdu
-  git
-  bash-completion
-  neovim
-  vim
-  vi
-  nano
-  mtr
-  ripgrep
-  sshpass
-  rsync
-  unzip
-  zip
-  make
-  lshw
-  zoxide
-  watch
-  dog
-  dnsutils
-  net-tools
-  tcpdump
-  wormhole
-  lazydocker
-  unp
-  jq
-  termshark
-)
+MODE="all"
+PACKAGES=()
 ENSURED_PACKAGES=()
 STEP_COUNTER=0
+CONFIG_APPLIED=false
+TPM_INSTALLED=false
+
+usage() {
+  cat <<'EOF'
+Usage: setup_environment.sh [OPTIONS]
+
+Options:
+  -p, --packages    Only install packages listed in packages.list
+  -h, --help        Display this help message and exit
+EOF
+}
+
+parse_args() {
+  while (($# > 0)); do
+    case "$1" in
+      -p|--packages)
+        MODE="packages"
+        shift
+        ;;
+      -h|--help)
+        usage
+        exit 0
+        ;;
+      --)
+        shift
+        break
+        ;;
+      -*)
+        echo "Unknown option: $1" >&2
+        usage >&2
+        exit 1
+        ;;
+      *)
+        break
+        ;;
+    esac
+  done
+}
+
+load_packages() {
+  if [[ ! -r "${PACKAGES_FILE}" ]]; then
+    echo "Packages file not found: ${PACKAGES_FILE}" >&2
+    exit 1
+  fi
+
+  mapfile -t PACKAGES < <(grep -vE '^(\s*$|\s*#)' "${PACKAGES_FILE}")
+
+  if ((${#PACKAGES[@]} == 0)); then
+    echo "No packages defined in ${PACKAGES_FILE}" >&2
+    exit 1
+  fi
+}
 
 step() {
   STEP_COUNTER=$((STEP_COUNTER + 1))
@@ -48,8 +71,13 @@ step() {
 }
 
 confirm_execution() {
+  local message="This script will install packages and update configuration files."
+  if [[ "${MODE}" == "packages" ]]; then
+    message="This script will install packages only."
+  fi
+
   step "Confirm start"
-  read -rp "This script will install packages and update configuration files. Continue? [y/N] " reply
+  read -rp "${message} Continue? [y/N] " reply
   case "${reply:-}" in
     [yY][eE][sS]|[yY])
       echo "Proceeding with setup."
@@ -320,6 +348,7 @@ configure_environment() {
   apply_config "${REPO_ROOT}/home/.vimrc" "${HOME}/.vimrc" "\""
   apply_config "${REPO_ROOT}/home/.tmux.conf" "${HOME}/.tmux.conf" "#"
   apply_config "${REPO_ROOT}/home/.config/nvim/init.vim" "${HOME}/.config/nvim/init.vim" "\""
+  CONFIG_APPLIED=true
 }
     
 ensure_tmux_plugin_manager() {
@@ -328,12 +357,14 @@ ensure_tmux_plugin_manager() {
 
   if [[ -d "${tpm_dir}" ]]; then
     echo "tmux plugin manager already installed at ${tpm_dir}."
+    TPM_INSTALLED=true
     return
   fi
 
   mkdir -p "${HOME}/.tmux/plugins"
   if git clone https://github.com/tmux-plugins/tpm "${tpm_dir}"; then
     echo "Installed tmux plugin manager to ${tpm_dir}."
+    TPM_INSTALLED=true
   else
     echo "Failed to install tmux plugin manager." >&2
     exit 1
@@ -347,10 +378,21 @@ summarize() {
   else
     echo "No packages were installed by this run."
   fi
-  echo "Configuration files updated: ~/.bashrc, ~/.vimrc, ~/.tmux.conf, ~/.config/nvim/init.vim"
+  if [[ "${CONFIG_APPLIED}" == true ]]; then
+    echo "Configuration files managed: ~/.bashrc, ~/.vimrc, ~/.tmux.conf, ~/.config/nvim/init.vim"
+  else
+    echo "Configuration files were not updated."
+  fi
+  if [[ "${TPM_INSTALLED}" == true ]]; then
+    echo "tmux plugin manager ensured."
+  else
+    echo "tmux plugin manager was not changed."
+  fi
 }
 
 main() {
+  parse_args "$@"
+  load_packages
   confirm_execution
   detect_environment
   if [[ "${ENVIRONMENT}" == "mac" && -z "${PKG_MANAGER}" ]]; then
@@ -359,8 +401,10 @@ main() {
   else
     install_packages
   fi
-  configure_environment
-  ensure_tmux_plugin_manager
+  if [[ "${MODE}" != "packages" ]]; then
+    configure_environment
+    ensure_tmux_plugin_manager
+  fi
   summarize
 }
 

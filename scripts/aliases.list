@@ -1,5 +1,3 @@
 # Common shell aliases managed by the setup script
-alias la='ls -A'
-alias gs='git status'
-alias gd='git diff'
+# Dynamic aliases such as ll/llh are appended during environment setup.
 alias ..='cd ..'

@@ -430,6 +430,21 @@ configure_aliases() {
 
   mkdir -p "${alias_dir}"
   cp "${ALIASES_FILE}" "${alias_list_target}"
+
+  local ll_command llh_command
+  if command -v exa >/dev/null 2>&1; then
+    ll_command="exa -la --icons"
+    llh_command="exa -lah --icons"
+  else
+    ll_command="ls -la"
+    llh_command="ls -lah"
+  fi
+
+  {
+    echo "alias ll='${ll_command}'"
+    echo "alias llh='${llh_command}'"
+  } >> "${alias_list_target}"
+
   echo "Installed alias definitions to ${alias_list_target}."
 
   if command -v python3 >/dev/null 2>&1; then

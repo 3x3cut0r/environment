@@ -6,8 +6,6 @@ This repository provides a foundational setup script and configuration snippets 
 
 - `scripts/` – contains automation such as `setup_environment.sh`.
 - `home/` – configuration snippets that are appended to the user's home directory files.
-- `home/.config/` – nested configurations, for example Neovim's `init.vim`.
-- `etc/` – placeholder for system-wide configuration managed by future automation.
 
 ## Usage
 

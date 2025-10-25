@@ -47,7 +47,7 @@ detect_environment() {
     # shellcheck disable=SC1091
     . /etc/os-release
     case "${ID}" in
-      arch|manjaro|endeavouros)
+      arch|manjaro|endeavouros|omarchy)
         ENVIRONMENT="arch"
         PKG_MANAGER="pacman"
         ;;

@@ -762,7 +762,7 @@ ensure_catppuccin_tmux_plugin() {
     return
   fi
 
-  local plugin_root="${HOME}/.config/tmux/plugins/catppuccin"
+  local plugin_root="${HOME}/.tmux/plugins/catppuccin"
   local plugin_dir="${plugin_root}/tmux"
   local repo_url="https://github.com/catppuccin/tmux.git"
   local api_url="https://api.github.com/repos/catppuccin/tmux/releases/latest"

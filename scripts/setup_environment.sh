@@ -10,7 +10,7 @@ MODE="all"
 PACKAGES=()
 ENSURED_PACKAGES=()
 STEP_COUNTER=0
-TOTAL_STEPS=11
+TOTAL_STEPS=12
 CONFIG_APPLIED=false
 TPM_INSTALLED=false
 ALIASES_CONFIGURED=false
@@ -117,6 +117,42 @@ load_packages() {
     echo "No packages defined in ${PACKAGES_FILE}" >&2
     exit 1
   fi
+}
+
+display_execution_plan() {
+  step "Planned actions"
+
+  local package_count=${#PACKAGES[@]}
+  local package_label="packages"
+  if ((package_count == 1)); then
+    package_label="package"
+  fi
+
+  echo "Mode: ${MODE}"
+  echo "Requested ${package_label}: ${package_count}"
+  echo
+  echo "This script will perform the following actions:"
+  echo "  - Display environment information"
+  echo "  - Ask for confirmation before continuing"
+  echo "  - Detect the operating system and package manager"
+
+  if ((package_count > 0)); then
+    echo "  - Confirm package installation and install up to ${package_count} ${package_label} listed in packages.list"
+  else
+    echo "  - Skip package installation because no packages are listed"
+  fi
+
+  if [[ "${MODE}" == "packages" ]]; then
+    echo "  - Run in packages-only mode, skipping configuration and tooling setup steps"
+  else
+    echo "  - Apply configuration snippets for bash, Vim, Neovim, and tmux"
+    echo "  - Configure shell aliases for bash, sh, zsh, and fish"
+    echo "  - Ensure the JetBrainsMono Nerd Font is installed"
+    echo "  - Ensure the tmux plugin manager (TPM) is installed"
+    echo "  - Install tmux plugins via TPM"
+  fi
+
+  echo "  - Provide a summary of the actions performed"
 }
 
 step() {
@@ -976,6 +1012,7 @@ summarize() {
 main() {
   parse_args "$@"
   load_packages
+  display_execution_plan
   display_environment_info
   confirm_execution
   detect_environment

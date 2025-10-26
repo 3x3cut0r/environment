@@ -1,5 +1,3 @@
 # Environment setup additions
 export EDITOR="nvim"
 export VISUAL="nvim"
-
-# Additional alias definitions are managed via ~/.config/environment/aliases.list.

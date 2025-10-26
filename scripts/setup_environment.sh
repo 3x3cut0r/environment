@@ -555,10 +555,11 @@ apply_config() {
   local source_file="$1"
   local target_file="$2"
   local comment_prefix="${3:-#}"
+  local mode="${4:-auto}"
 
   mkdir -p "$(dirname "${target_file}")"
 
-  if [[ "${source_file}" == *.append ]]; then
+  if [[ "${mode}" == append || "${source_file}" == *.append ]]; then
     local start_marker end_marker
 
     start_marker="${comment_prefix} >>> environment repo config >>>"
@@ -724,9 +725,9 @@ if [ -f "${HOME}/.config/environment/aliases.list" ]; then
   . "${HOME}/.config/environment/aliases.list"
 fi
 EOF
-  apply_config "${posix_snippet}" "${HOME}/.bashrc" "# alias"
-  apply_config "${posix_snippet}" "${HOME}/.profile" "# alias"
-  apply_config "${posix_snippet}" "${HOME}/.zshrc" "# alias"
+  apply_config "${posix_snippet}" "${HOME}/.bashrc" "# alias" append
+  apply_config "${posix_snippet}" "${HOME}/.profile" "# alias" append
+  apply_config "${posix_snippet}" "${HOME}/.zshrc" "# alias" append
   rm -f "${posix_snippet}"
 
   fish_snippet="$(mktemp)"
@@ -735,7 +736,7 @@ if test -f "$HOME/.config/environment/aliases.fish"
   source "$HOME/.config/environment/aliases.fish"
 end
 EOF
-  apply_config "${fish_snippet}" "${HOME}/.config/fish/config.fish" "# alias"
+  apply_config "${fish_snippet}" "${HOME}/.config/fish/config.fish" "# alias" append
   rm -f "${fish_snippet}"
 
   ALIASES_CONFIGURED=true

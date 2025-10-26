@@ -10,11 +10,12 @@ MODE="all"
 PACKAGES=()
 ENSURED_PACKAGES=()
 STEP_COUNTER=0
-TOTAL_STEPS=10
+TOTAL_STEPS=11
 CONFIG_APPLIED=false
 TPM_INSTALLED=false
 ALIASES_CONFIGURED=false
 CATPPUCCIN_PLUGIN_INSTALLED=false
+JETBRAINS_FONT_INSTALLED=false
 INSTALL_PACKAGES=true
 PACKAGES_SKIPPED=false
 
@@ -740,6 +741,112 @@ EOF
   ALIASES_CONFIGURED=true
 }
 
+ensure_jetbrainsmono_nerd_font() {
+  step "Ensure JetBrainsMono Nerd Font"
+
+  if [[ "${MODE}" == "packages" ]]; then
+    echo "Skipping JetBrainsMono Nerd Font installation (packages-only mode)."
+    return
+  fi
+
+  local fonts_dir font_file font_url temp_dir archive extract_dir copied
+
+  case "${ENVIRONMENT}" in
+    mac)
+      fonts_dir="${HOME}/Library/Fonts"
+      ;;
+    *)
+      fonts_dir="${HOME}/.local/share/fonts"
+      ;;
+  esac
+
+  font_file="${fonts_dir}/JetBrainsMonoNerdFont-Regular.ttf"
+  font_url="https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.zip"
+
+  if [[ -f "${font_file}" ]]; then
+    echo "JetBrainsMono Nerd Font already present at ${font_file}."
+    JETBRAINS_FONT_INSTALLED=true
+    return
+  fi
+
+  mkdir -p "${fonts_dir}"
+
+  temp_dir="$(mktemp -d)"
+  if [[ -z "${temp_dir}" || ! -d "${temp_dir}" ]]; then
+    echo "Failed to create temporary directory for JetBrainsMono Nerd Font installation." >&2
+    exit 1
+  fi
+
+  archive="${temp_dir}/JetBrainsMono.zip"
+  if ! curl -fsSL "${font_url}" -o "${archive}"; then
+    echo "Failed to download JetBrainsMono Nerd Font from ${font_url}." >&2
+    rm -rf "${temp_dir}"
+    exit 1
+  fi
+
+  extract_dir="${temp_dir}/fonts"
+  mkdir -p "${extract_dir}"
+
+  if command -v unzip >/dev/null 2>&1; then
+    if ! unzip -oq "${archive}" -d "${extract_dir}"; then
+      echo "Failed to extract JetBrainsMono Nerd Font archive with unzip." >&2
+      rm -rf "${temp_dir}"
+      exit 1
+    fi
+  elif command -v python3 >/dev/null 2>&1; then
+    if ! python3 - "${archive}" "${extract_dir}" <<'PY'; then
+import pathlib
+import sys
+import zipfile
+
+archive_path = pathlib.Path(sys.argv[1])
+target_dir = pathlib.Path(sys.argv[2])
+target_dir.mkdir(parents=True, exist_ok=True)
+
+with zipfile.ZipFile(archive_path) as zf:
+    zf.extractall(target_dir)
+PY
+      echo "Failed to extract JetBrainsMono Nerd Font archive with python3." >&2
+      rm -rf "${temp_dir}"
+      exit 1
+    fi
+  else
+    echo "Neither unzip nor python3 is available to extract the JetBrainsMono Nerd Font archive." >&2
+    rm -rf "${temp_dir}"
+    exit 1
+  fi
+
+  copied=false
+  while IFS= read -r -d '' font_path; do
+    if install -m 0644 "${font_path}" "${fonts_dir}/"; then
+      copied=true
+    else
+      echo "Failed to install font file ${font_path}." >&2
+      rm -rf "${temp_dir}"
+      exit 1
+    fi
+  done < <(find "${extract_dir}" -type f \( -iname '*.ttf' -o -iname '*.otf' \) -print0)
+
+  if [[ "${copied}" == false ]]; then
+    echo "No font files were found in the JetBrainsMono Nerd Font archive." >&2
+    rm -rf "${temp_dir}"
+    exit 1
+  fi
+
+  if command -v fc-cache >/dev/null 2>&1; then
+    if fc-cache -f "${fonts_dir}" >/dev/null 2>&1; then
+      echo "Refreshed font cache via fc-cache."
+    else
+      echo "Warning: failed to refresh font cache with fc-cache." >&2
+    fi
+  fi
+
+  rm -rf "${temp_dir}"
+
+  echo "Installed JetBrainsMono Nerd Font to ${fonts_dir}."
+  JETBRAINS_FONT_INSTALLED=true
+}
+
 ensure_tmux_plugin_manager() {
   step "Ensure tmux plugin manager"
 
@@ -851,6 +958,12 @@ summarize() {
   else
     echo "Catppuccin tmux plugin was not changed."
   fi
+
+  if [[ "${JETBRAINS_FONT_INSTALLED}" == true ]]; then
+    echo "JetBrainsMono Nerd Font ensured."
+  else
+    echo "JetBrainsMono Nerd Font was not changed."
+  fi
 }
 
 main() {
@@ -863,6 +976,7 @@ main() {
   install_packages
   configure_environment
   configure_aliases
+  ensure_jetbrainsmono_nerd_font
   ensure_tmux_plugin_manager
   ensure_catppuccin_tmux_plugin
   summarize

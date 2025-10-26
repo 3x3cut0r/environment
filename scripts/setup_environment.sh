@@ -234,6 +234,14 @@ confirm_package_installation() {
     message="Install required packages now?"
   fi
 
+  if ((${#PACKAGES[@]} > 0)); then
+    echo "The following packages are queued for installation:"
+    for pkg in "${PACKAGES[@]}"; do
+      echo "  - ${pkg}"
+    done
+    echo
+  fi
+
   prompt="${message} [Y/n] "
 
   if [[ -t 0 ]]; then

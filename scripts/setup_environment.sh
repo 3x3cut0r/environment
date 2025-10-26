@@ -818,15 +818,37 @@ PY
   fi
 
   copied=false
-  while IFS= read -r -d '' font_path; do
-    if install -m 0644 "${font_path}" "${fonts_dir}/"; then
-      copied=true
-    else
-      echo "Failed to install font file ${font_path}." >&2
-      rm -rf "${temp_dir}"
-      exit 1
-    fi
-  done < <(find "${extract_dir}" -type f \( -iname '*.ttf' -o -iname '*.otf' \) -print0)
+
+  if command -v python3 >/dev/null 2>&1; then
+    while IFS= read -r -d '' font_path; do
+      if install -m 0644 "${font_path}" "${fonts_dir}/"; then
+        copied=true
+      else
+        echo "Failed to install font file ${font_path}." >&2
+        rm -rf "${temp_dir}"
+        exit 1
+      fi
+    done < <(python3 - "${extract_dir}" <<'PY'
+import pathlib
+import sys
+
+root = pathlib.Path(sys.argv[1])
+for candidate in root.rglob('*'):
+    if candidate.suffix.lower() in {'.ttf', '.otf'}:
+        sys.stdout.write(f"{candidate}\0")
+PY
+    )
+  else
+    while IFS= read -r -d '' font_path; do
+      if install -m 0644 "${font_path}" "${fonts_dir}/"; then
+        copied=true
+      else
+        echo "Failed to install font file ${font_path}." >&2
+        rm -rf "${temp_dir}"
+        exit 1
+      fi
+    done < <(find "${extract_dir}" -type f \( -iname '*.ttf' -o -iname '*.otf' \) -print0)
+  fi
 
   if [[ "${copied}" == false ]]; then
     echo "No font files were found in the JetBrainsMono Nerd Font archive." >&2

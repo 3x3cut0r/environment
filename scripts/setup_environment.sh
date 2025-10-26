@@ -881,8 +881,6 @@ install_tmux_plugins() {
     return
   fi
 
-  local install_script="${HOME}/.tmux/plugins/tpm/bin/install_plugins"
-
   if [[ ! -f "${install_script}" ]]; then
     echo "tmux plugin installer not found at ${install_script}." >&2
     exit 1

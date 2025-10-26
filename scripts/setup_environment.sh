@@ -14,8 +14,8 @@ TOTAL_STEPS=11
 CONFIG_APPLIED=false
 TPM_INSTALLED=false
 ALIASES_CONFIGURED=false
-CATPPUCCIN_PLUGIN_INSTALLED=false
 JETBRAINS_FONT_INSTALLED=false
+TMUX_PLUGINS_INSTALLED=false
 INSTALL_PACKAGES=true
 PACKAGES_SKIPPED=false
 
@@ -873,42 +873,26 @@ ensure_tmux_plugin_manager() {
   fi
 }
 
-ensure_catppuccin_tmux_plugin() {
-  step "Ensure Catppuccin tmux plugin"
+install_tmux_plugins() {
+  step "Install tmux plugins"
 
   if [[ "${MODE}" == "packages" ]]; then
-    echo "Skipping Catppuccin tmux plugin setup (packages-only mode)."
+    echo "Skipping tmux plugin installation (packages-only mode)."
     return
   fi
 
-  local plugin_root="${HOME}/.tmux/plugins/catppuccin"
-  local plugin_dir="${plugin_root}/tmux"
-  local repo_url="https://github.com/catppuccin/tmux.git"
-  local api_url="https://api.github.com/repos/catppuccin/tmux/releases/latest"
-  local latest_tag
+  local install_script="${HOME}/.tmux/plugins/tpm/bin/install_plugins"
 
-  if ! latest_tag=$(curl -fsSL "${api_url}" | jq -r '.tag_name' 2>/dev/null); then
-    echo "Failed to fetch latest Catppuccin tmux release information." >&2
+  if [[ ! -f "${install_script}" ]]; then
+    echo "tmux plugin installer not found at ${install_script}." >&2
     exit 1
   fi
 
-  if [[ -z "${latest_tag}" || "${latest_tag}" == "null" ]]; then
-    echo "Received invalid release tag for Catppuccin tmux." >&2
-    exit 1
-  fi
-
-  mkdir -p "${plugin_root}"
-
-  if [[ -d "${plugin_dir}" ]]; then
-    echo "Removing existing Catppuccin tmux plugin from ${plugin_dir}."
-    rm -rf "${plugin_dir}"
-  fi
-
-  if git clone --depth 1 --branch "${latest_tag}" "${repo_url}" "${plugin_dir}"; then
-    echo "Installed Catppuccin tmux plugin (${latest_tag}) to ${plugin_dir}."
-    CATPPUCCIN_PLUGIN_INSTALLED=true
+  if bash "${install_script}"; then
+    echo "Installed tmux plugins via TPM."
+    TMUX_PLUGINS_INSTALLED=true
   else
-    echo "Failed to install Catppuccin tmux plugin." >&2
+    echo "Failed to install tmux plugins via TPM." >&2
     exit 1
   fi
 }
@@ -953,10 +937,10 @@ summarize() {
     echo "tmux plugin manager was not changed."
   fi
 
-  if [[ "${CATPPUCCIN_PLUGIN_INSTALLED}" == true ]]; then
-    echo "Catppuccin tmux plugin ensured."
+  if [[ "${TMUX_PLUGINS_INSTALLED}" == true ]]; then
+    echo "tmux plugins installed via TPM."
   else
-    echo "Catppuccin tmux plugin was not changed."
+    echo "tmux plugins were not installed."
   fi
 
   if [[ "${JETBRAINS_FONT_INSTALLED}" == true ]]; then
@@ -978,7 +962,7 @@ main() {
   configure_aliases
   ensure_jetbrainsmono_nerd_font
   ensure_tmux_plugin_manager
-  ensure_catppuccin_tmux_plugin
+  install_tmux_plugins
   summarize
 }
 

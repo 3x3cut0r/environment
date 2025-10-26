@@ -416,6 +416,7 @@ install_packages() {
 
   local resolved_packages=()
   local requested_packages=()
+  local package_managers=()
   ENSURED_PACKAGES=()
   for pkg in "${PACKAGES[@]}"; do
     local resolved
@@ -424,12 +425,27 @@ install_packages() {
       echo "Skipping ${pkg} (not supported on ${ENVIRONMENT})."
       continue
     fi
-    if is_package_available "${resolved}"; then
-      resolved_packages+=("${resolved}")
-      requested_packages+=("${pkg}")
+    local manager=""
+    if is_package_available "${resolved}" "${PKG_MANAGER}"; then
+      manager="${PKG_MANAGER}"
+    elif [[ "${PKG_MANAGER}" == "pacman" ]] && command -v yay >/dev/null 2>&1 && is_package_available "${resolved}" "yay"; then
+      manager="yay"
     else
-      echo "Package ${resolved} (requested as ${pkg}) not available via ${PKG_MANAGER}; skipping."
+      if [[ "${PKG_MANAGER}" == "pacman" ]]; then
+        if command -v yay >/dev/null 2>&1; then
+          echo "Package ${resolved} (requested as ${pkg}) not available via pacman or yay; skipping."
+        else
+          echo "Package ${resolved} (requested as ${pkg}) not available via pacman and yay not found; skipping."
+        fi
+      else
+        echo "Package ${resolved} (requested as ${pkg}) not available via ${PKG_MANAGER}; skipping."
+      fi
+      continue
     fi
+
+    resolved_packages+=("${resolved}")
+    requested_packages+=("${pkg}")
+    package_managers+=("${manager}")
   done
 
   if ((${#resolved_packages[@]} == 0)); then
@@ -437,37 +453,95 @@ install_packages() {
     return
   fi
 
-  case "${PKG_MANAGER}" in
-    pacman)
-      if ! ${sudo_cmd} pacman -Sy --noconfirm; then
-        echo "Failed to refresh pacman package databases; skipping package installation."
-        return
+  local managers_to_refresh=()
+  for manager in "${package_managers[@]}"; do
+    local found=false
+    for existing in "${managers_to_refresh[@]}"; do
+      if [[ "${existing}" == "${manager}" ]]; then
+        found=true
+        break
       fi
-      ;;
-    apt-get)
-      if ! ${sudo_cmd} apt-get update; then
-        echo "Failed to update apt package lists; skipping package installation."
-        return
-      fi
-      ;;
-    brew)
-      if ! brew update; then
-        echo "Failed to update Homebrew; skipping package installation."
-        return
-      fi
-      ;;
-  esac
+    done
+    if [[ "${found}" == false ]]; then
+      managers_to_refresh+=("${manager}")
+    fi
+  done
+
+  local failed_refresh_managers=()
+  for manager in "${managers_to_refresh[@]}"; do
+    case "${manager}" in
+      pacman)
+        if ! ${sudo_cmd} pacman -Sy --noconfirm; then
+          echo "Failed to refresh pacman package databases; skipping pacman installations."
+          failed_refresh_managers+=("${manager}")
+        fi
+        ;;
+      yay)
+        if ! yay -Sy --noconfirm; then
+          echo "Failed to refresh yay package databases; skipping yay installations."
+          failed_refresh_managers+=("${manager}")
+        fi
+        ;;
+      apt-get)
+        if ! ${sudo_cmd} apt-get update; then
+          echo "Failed to update apt package lists; skipping apt-get installations."
+          failed_refresh_managers+=("${manager}")
+        fi
+        ;;
+      brew)
+        if ! brew update; then
+          echo "Failed to update Homebrew; skipping brew installations."
+          failed_refresh_managers+=("${manager}")
+        fi
+        ;;
+      dnf)
+        if ! ${sudo_cmd} dnf makecache; then
+          echo "Failed to refresh dnf metadata; skipping dnf installations."
+          failed_refresh_managers+=("${manager}")
+        fi
+        ;;
+      yum)
+        if ! ${sudo_cmd} yum makecache; then
+          echo "Failed to refresh yum metadata; skipping yum installations."
+          failed_refresh_managers+=("${manager}")
+        fi
+        ;;
+      *)
+        echo "Package manager ${manager} is not supported by this script."
+        failed_refresh_managers+=("${manager}")
+        ;;
+    esac
+  done
 
   for i in "${!resolved_packages[@]}"; do
     local resolved_pkg="${resolved_packages[$i]}"
     local requested_pkg="${requested_packages[$i]}"
     local install_failed=false
+    local manager="${package_managers[$i]}"
 
-    echo "Installing ${requested_pkg} via ${PKG_MANAGER} (${resolved_pkg})."
+    local skip_install=false
+    for failed in "${failed_refresh_managers[@]}"; do
+      if [[ "${failed}" == "${manager}" ]]; then
+        skip_install=true
+        break
+      fi
+    done
 
-    case "${PKG_MANAGER}" in
+    if [[ "${skip_install}" == true ]]; then
+      echo "Skipping ${requested_pkg}; package manager ${manager} not available for installation."
+      continue
+    fi
+
+    echo "Installing ${requested_pkg} via ${manager} (${resolved_pkg})."
+
+    case "${manager}" in
       pacman)
         if ! ${sudo_cmd} pacman -S --noconfirm --needed "${resolved_pkg}"; then
+          install_failed=true
+        fi
+        ;;
+      yay)
+        if ! yay -S --noconfirm --needed "${resolved_pkg}"; then
           install_failed=true
         fi
         ;;
@@ -492,7 +566,7 @@ install_packages() {
         fi
         ;;
       *)
-        echo "Package manager ${PKG_MANAGER} is not supported by this script."
+        echo "Package manager ${manager} is not supported by this script."
         return 1
         ;;
     esac
@@ -565,9 +639,17 @@ resolve_package_name() {
 
 is_package_available() {
   local pkg="$1"
-  case "${PKG_MANAGER}" in
+  local manager="${2:-${PKG_MANAGER}}"
+  case "${manager}" in
     pacman)
       pacman -Si "${pkg}" >/dev/null 2>&1
+      ;;
+    yay)
+      if command -v yay >/dev/null 2>&1; then
+        yay -Si "${pkg}" >/dev/null 2>&1
+      else
+        return 1
+      fi
       ;;
     apt-get)
       apt-cache show "${pkg}" >/dev/null 2>&1

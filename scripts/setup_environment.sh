@@ -553,50 +553,62 @@ is_package_available() {
 apply_config() {
   local source_file="$1"
   local target_file="$2"
-  local comment_prefix="$3"
-  local start_marker end_marker
-
-  start_marker="${comment_prefix} >>> environment repo config >>>"
-  end_marker="${comment_prefix} <<< environment repo config <<<"
+  local comment_prefix="${3:-#}"
 
   mkdir -p "$(dirname "${target_file}")"
 
-  if [[ -e "${target_file}" ]]; then
-    if grep -Fq "${start_marker}" "${target_file}"; then
-      local tmp_file
-      tmp_file="$(mktemp)"
-      awk -v start="${start_marker}" -v end="${end_marker}" '
-        $0 == start {in_block=1; next}
-        $0 == end {in_block=0; next}
-        !in_block {print}
-      ' "${target_file}" > "${tmp_file}"
-      if [[ -s "${tmp_file}" ]]; then
-        printf '\n' >> "${tmp_file}"
+  if [[ "${source_file}" == *.append ]]; then
+    local start_marker end_marker
+
+    start_marker="${comment_prefix} >>> environment repo config >>>"
+    end_marker="${comment_prefix} <<< environment repo config <<<"
+
+    if [[ -e "${target_file}" ]]; then
+      if grep -Fq "${start_marker}" "${target_file}"; then
+        local tmp_file
+        tmp_file="$(mktemp)"
+        awk -v start="${start_marker}" -v end="${end_marker}" '
+          $0 == start {in_block=1; next}
+          $0 == end {in_block=0; next}
+          !in_block {print}
+        ' "${target_file}" > "${tmp_file}"
+        if [[ -s "${tmp_file}" ]]; then
+          printf '\n' >> "${tmp_file}"
+        fi
+        {
+          echo "${start_marker}"
+          cat "${source_file}"
+          echo "${end_marker}"
+        } >> "${tmp_file}"
+        mv "${tmp_file}" "${target_file}"
+        echo "Updated configuration block in ${target_file}."
+        return
       fi
+      {
+        echo ""
+        echo "${start_marker}"
+        cat "${source_file}"
+        echo "${end_marker}"
+      } >> "${target_file}"
+      echo "Appended configuration to ${target_file}."
+    else
       {
         echo "${start_marker}"
         cat "${source_file}"
         echo "${end_marker}"
-      } >> "${tmp_file}"
-      mv "${tmp_file}" "${target_file}"
-      echo "Updated configuration block in ${target_file}."
-      return
+      } > "${target_file}"
+      echo "Created ${target_file} with new configuration."
     fi
-    {
-      echo ""
-      echo "${start_marker}"
-      cat "${source_file}"
-      echo "${end_marker}"
-    } >> "${target_file}"
-    echo "Appended configuration to ${target_file}."
-  else
-    {
-      echo "${start_marker}"
-      cat "${source_file}"
-      echo "${end_marker}"
-    } > "${target_file}"
-    echo "Created ${target_file} with new configuration."
+    return
   fi
+
+  if [[ -e "${target_file}" ]] && cmp -s "${source_file}" "${target_file}"; then
+    echo "${target_file} is already up to date."
+    return
+  fi
+
+  cp "${source_file}" "${target_file}"
+  echo "Installed ${target_file} from ${source_file}."
 }
 
 configure_environment() {

@@ -49,7 +49,7 @@ display_environment_info() {
   echo "Host: $(hostname 2>/dev/null || echo unknown)"
   local os_label="${uname_s}"
   if [[ "${uname_s}" == "Darwin" ]]; then
-    os_label="${uname_s} (macOS)"
+    os_label="${uname_s} (MacOS)"
   fi
 
   echo "Operating system: ${os_label} ${uname_r}"
@@ -284,7 +284,7 @@ confirm_homebrew_installation() {
   fi
 
   local prompt reply
-  prompt="Homebrew is required to install packages on macOS. Install Homebrew now? [y/N] "
+  prompt="Homebrew is required to install packages on MacOS. Install Homebrew now? [y/N] "
 
   if [[ -t 0 ]]; then
     if ! read -rp "${prompt}" reply; then

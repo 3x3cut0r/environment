@@ -1,10 +1,9 @@
 "$schema" = 'https://starship.rs/config-schema.json'
 palette = "catppuccin_mocha"
-add_newline = true
+add_newline = false
 
 format = """
-$custom.catppuccin_application$custom.tmux_session$directory$git_branch$git_status$fill$time
-$line_break$character
+$git_branch$git_status$fill$time $character
 """
 
 [fill]
@@ -15,38 +14,19 @@ success_symbol = "[[󰄛](green) ❯](peach)"
 error_symbol = "[[󰄛](red) ❯](peach)"
 vimcmd_symbol = "[󰄛 ❮](subtext1)"
 
-[custom.catppuccin_application]
-command = "printf '󰄛'"
-shell = ["sh", "-c"]
-when = "true"
-style = "fg:crust bg:peach"
-format = "[ $output ]($style) "
-
-[custom.tmux_session]
-command = "tmux display-message -p '#S' 2>/dev/null || echo 'session'"
-shell = ["bash", "-c"]
-when = "true"
-style = "fg:crust bg:lavender"
-format = "[  $output ]($style) "
-
-[directory]
-truncation_length = 4
-style = "fg:crust bg:sapphire"
-format = "[  $path ]($style) "
-
 [git_branch]
 style = "fg:crust bg:mauve"
-format = "[  $symbol$branch ]($style) "
+format = "[[](fg:mauve)[  $symbol$branch ]($style)[](fg:mauve)] "
 
 [git_status]
 style = "fg:peach bg:surface0"
-format = "[ $all_status$ahead_behind ]($style) "
+format = "[[](fg:surface0)[ $all_status$ahead_behind ]($style)[](fg:surface0)] "
 
 [time]
 disabled = false
 time_format = "%H:%M"
 style = "fg:crust bg:blue"
-format = "[  $time ]($style)"
+format = "[[](fg:blue)[  $time ]($style)[](fg:blue)]"
 
 # Palette definitions
 [palettes.catppuccin_latte]

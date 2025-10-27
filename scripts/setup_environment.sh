@@ -747,7 +747,18 @@ configure_environment() {
     return
   fi
 
-  apply_config "${REPO_ROOT}/home/.bashrc.append" "${HOME}/.bashrc" "#"
+  local shell_snippet="${REPO_ROOT}/home/.shell.append"
+  local shell_targets=(
+    "${HOME}/.bashrc"
+    "${HOME}/.bash_profile"
+    "${HOME}/.profile"
+    "${HOME}/.zshrc"
+    "${HOME}/.zprofile"
+  )
+
+  for shell_target in "${shell_targets[@]}"; do
+    apply_config "${shell_snippet}" "${shell_target}" "#"
+  done
   apply_config "${REPO_ROOT}/home/.vimrc" "${HOME}/.vimrc" "\""
   apply_config "${REPO_ROOT}/home/.tmux.conf" "${HOME}/.tmux.conf" "#"
   apply_config "${REPO_ROOT}/home/.config/nvim/init.vim" "${HOME}/.config/nvim/init.vim" "\""

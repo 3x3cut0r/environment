@@ -26,7 +26,7 @@ format = "[[](fg:surface0)[ $all_status$ahead_behind ]($style)[](fg:surfac
 disabled = false
 time_format = "%H:%M"
 style = "fg:crust bg:blue"
-format = "[[](fg:blue)[  $time ]($style)[](fg:blue)]"
+format = "[  $time ]($style)"
 
 # Palette definitions
 [palettes.catppuccin_latte]

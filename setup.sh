@@ -106,7 +106,7 @@ MODE="all"
 PACKAGES=()
 ENSURED_PACKAGES=()
 STEP_COUNTER=0
-TOTAL_STEPS=12
+TOTAL_STEPS=9
 CONFIG_APPLIED=false
 TPM_INSTALLED=false
 ALIASES_CONFIGURED=false
@@ -115,8 +115,14 @@ TMUX_PLUGINS_INSTALLED=false
 INSTALL_PACKAGES=true
 PACKAGES_SKIPPED=false
 
+section_heading() {
+  echo ""
+  echo "$1"
+  echo "------------------------------"
+}
+
 display_environment_info() {
-  step "Environment information"
+  section_heading "Environment information"
 
   local uname_s uname_r arch shell_name workdir
 
@@ -216,7 +222,7 @@ load_packages() {
 }
 
 display_execution_plan() {
-  step "Planned actions"
+  section_heading "Planned actions"
 
   local package_count=${#PACKAGES[@]}
   local package_label="packages"
@@ -264,7 +270,7 @@ confirm_execution() {
     message="This script will install packages only."
   fi
 
-  step "Confirm start"
+  section_heading "Confirm start"
 
   if [[ "${ENVIRONMENT_AUTO_CONFIRM:-}" =~ ^([yY][eE][sS]|[yY])$ ]]; then
     reply="yes"
@@ -1209,8 +1215,8 @@ summarize() {
 main() {
   parse_args "$@"
   load_packages
-  display_execution_plan
   display_environment_info
+  display_execution_plan
   confirm_execution
   detect_environment
   confirm_package_installation

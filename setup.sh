@@ -418,7 +418,7 @@ detect_environment() {
     else
       PKG_MANAGER=""
     fi
-    echo "Detected macOS."
+    echo "Detected MacOS."
     return 0
   fi
 

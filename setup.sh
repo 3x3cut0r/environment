@@ -106,14 +106,17 @@ MODE="all"
 PACKAGES=()
 ENSURED_PACKAGES=()
 STEP_COUNTER=0
-TOTAL_STEPS=8
+TOTAL_STEPS=9
 CONFIG_APPLIED=false
 TPM_INSTALLED=false
 ALIASES_CONFIGURED=false
 JETBRAINS_FONT_INSTALLED=false
 TMUX_PLUGINS_INSTALLED=false
+STARSHIP_CONFIGURED=false
 INSTALL_PACKAGES=true
 PACKAGES_SKIPPED=false
+STARSHIP_SKIPPED=false
+INSTALL_STARSHIP=true
 OPERATING_SYSTEM_LABEL=""
 
 section_heading() {
@@ -237,6 +240,7 @@ display_execution_plan() {
   else
     echo "  - Apply configuration snippets for bash, Vim, Neovim, and tmux"
     echo "  - Configure shell aliases for bash, sh, zsh, and fish"
+    echo "  - Offer Catppuccin-themed Starship prompt installation for supported shells"
     echo "  - Ensure the JetBrainsMono Nerd Font is installed"
     echo "  - Ensure the tmux plugin manager (TPM) is installed"
     echo "  - Install tmux plugins via TPM"
@@ -359,6 +363,72 @@ confirm_package_installation() {
       ;;
     *)
       INSTALL_PACKAGES=true
+      ;;
+  esac
+}
+
+confirm_starship_setup() {
+  if [[ "${MODE}" == "packages" ]]; then
+    INSTALL_STARSHIP=false
+    STARSHIP_SKIPPED=true
+    return
+  fi
+
+  case "${ENVIRONMENT_AUTO_INSTALL_STARSHIP:-}" in
+    [yY][eE][sS]|[yY])
+      INSTALL_STARSHIP=true
+      return
+      ;;
+    [nN][oO]|[nN])
+      INSTALL_STARSHIP=false
+      STARSHIP_SKIPPED=true
+      return
+      ;;
+  esac
+
+  if [[ "${ENVIRONMENT_AUTO_CONFIRM:-}" =~ ^([yY][eE][sS]|[yY])$ ]]; then
+    INSTALL_STARSHIP=true
+    return
+  fi
+
+  echo ""
+  echo "Starship prompt customization will perform:" 
+  echo "  - Installation of the Starship prompt for bash, zsh, and fish via the official script"
+  echo "  - Placement of a Catppuccin-themed starship.toml at ~/.config/starship.toml"
+  echo "  - Activation snippets so supported shells initialize Starship with the Catppuccin look"
+
+  local prompt reply
+  prompt="Apply these Starship prompt customizations? [Y/n] "
+
+  if [[ -t 0 ]]; then
+    if ! read -rp "${prompt}" reply; then
+      INSTALL_STARSHIP=false
+      STARSHIP_SKIPPED=true
+      echo "Skipped Starship prompt customization (no input)."
+      return
+    fi
+  elif [[ -r /dev/tty ]]; then
+    if ! read -rp "${prompt}" reply < /dev/tty; then
+      INSTALL_STARSHIP=false
+      STARSHIP_SKIPPED=true
+      echo "Skipped Starship prompt customization (no input)."
+      return
+    fi
+  else
+    echo "No interactive terminal available to confirm Starship prompt customization. Set ENVIRONMENT_AUTO_INSTALL_STARSHIP=yes to continue automatically."
+    INSTALL_STARSHIP=false
+    STARSHIP_SKIPPED=true
+    return
+  fi
+
+  case "${reply:-}" in
+    [nN][oO]|[nN])
+      INSTALL_STARSHIP=false
+      STARSHIP_SKIPPED=true
+      echo "Starship prompt customization skipped by user."
+      ;;
+    *)
+      INSTALL_STARSHIP=true
       ;;
   esac
 }
@@ -988,6 +1058,39 @@ EOF
   ALIASES_CONFIGURED=true
 }
 
+install_starship_prompt() {
+  step "Install Starship prompt"
+
+  if [[ "${MODE}" == "packages" ]]; then
+    echo "Skipping Starship prompt setup (packages-only mode)."
+    STARSHIP_SKIPPED=true
+    return
+  fi
+
+  if [[ "${INSTALL_STARSHIP}" != true ]]; then
+    echo "Starship prompt setup skipped."
+    STARSHIP_SKIPPED=true
+    return
+  fi
+
+  if command -v starship >/dev/null 2>&1; then
+    echo "Starship prompt already installed."
+  else
+    if curl -sS https://starship.rs/install.sh | sh -s -- -y; then
+      echo "Installed Starship prompt using the official installer."
+    else
+      echo "Failed to install Starship prompt." >&2
+      exit 1
+    fi
+  fi
+
+  apply_config "${REPO_ROOT}/home/.config/starship.toml" "${HOME}/.config/starship.toml" "#"
+  apply_config "${REPO_ROOT}/home/.config/fish/conf.d/starship.fish" "${HOME}/.config/fish/conf.d/starship.fish" "#"
+
+  STARSHIP_CONFIGURED=true
+  STARSHIP_SKIPPED=false
+}
+
 ensure_jetbrainsmono_nerd_font() {
   step "Ensure JetBrainsMono Nerd Font"
 
@@ -1200,6 +1303,16 @@ summarize() {
     echo "Shell aliases were not configured."
   fi
 
+  if [[ "${MODE}" != "packages" ]]; then
+    if [[ "${STARSHIP_CONFIGURED}" == true ]]; then
+      echo "Starship prompt installed and themed with Catppuccin."
+    elif [[ "${STARSHIP_SKIPPED}" == true ]]; then
+      echo "Starship prompt customization was skipped."
+    else
+      echo "Starship prompt was not changed."
+    fi
+  fi
+
   if [[ "${TPM_INSTALLED}" == true ]]; then
     echo "tmux plugin manager ensured."
   else
@@ -1226,10 +1339,12 @@ main() {
   display_environment_info
   display_execution_plan
   confirm_execution
+  confirm_starship_setup
   confirm_package_installation
   install_packages
   configure_environment
   configure_aliases
+  install_starship_prompt
   ensure_jetbrainsmono_nerd_font
   ensure_tmux_plugin_manager
   install_tmux_plugins

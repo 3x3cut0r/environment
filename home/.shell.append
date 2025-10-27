@@ -4,9 +4,9 @@ export VISUAL="nvim"
 
 if [ -n "${PS1-}" ]; then
   if [ -n "${ZSH_VERSION-}" ]; then
-    PROMPT="%1~ %#"
+    PROMPT="%1~ %# "
     PS1="${PROMPT}"
   else
-    PS1="\W \$"
+    PS1="\W \$ "
   fi
 fi

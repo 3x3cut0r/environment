@@ -257,23 +257,18 @@ step() {
 }
 
 confirm_execution() {
-  local message="This script will install packages and update configuration files."
-  if [[ "${MODE}" == "packages" ]]; then
-    message="This script will install packages only."
-  fi
-
-  section_heading "Confirm start"
+  local prompt="Do you want to continue? [y/N] "
 
   if [[ "${ENVIRONMENT_AUTO_CONFIRM:-}" =~ ^([yY][eE][sS]|[yY])$ ]]; then
     reply="yes"
   else
     if [[ -t 0 ]]; then
-      if ! read -rp "${message} Continue? [y/N] " reply; then
+      if ! read -rp "${prompt}" reply; then
         echo "Aborted by user (no input)."
         exit 0
       fi
     elif [[ -r /dev/tty ]]; then
-      if ! read -rp "${message} Continue? [y/N] " reply < /dev/tty; then
+      if ! read -rp "${prompt}" reply < /dev/tty; then
         echo "Aborted by user (no input)."
         exit 0
       fi

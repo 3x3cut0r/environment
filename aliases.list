@@ -1,13 +1,13 @@
 # Aliases for enhanced command-line productivity.
 # The blocks are organized by the tools they extend.
 
-# Prefer exa over ls when it is installed.
-if command -v exa >/dev/null 2>&1; then
-alias ls='exa --group-directories-first --classify'
-alias ll='exa -al --group-directories-first'
-alias llh='exa -alh --group-directories-first'
+# Prefer eza over ls when it is installed.
+if command -v eza >/dev/null 2>&1; then
+alias ls='eza --group-directories-first --classify'
+alias ll='eza -al --group-directories-first'
+alias llh='eza -alh --group-directories-first'
 else
-# Fallback listing aliases when exa is not available.
+# Fallback listing aliases when eza is not available.
 alias ll='ls -alF'
 alias llh='ls -alhF'
 fi

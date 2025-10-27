@@ -257,6 +257,7 @@ step() {
 }
 
 confirm_execution() {
+  echo ""
   local prompt="Do you want to continue? [y/N] "
 
   if [[ "${ENVIRONMENT_AUTO_CONFIRM:-}" =~ ^([yY][eE][sS]|[yY])$ ]]; then

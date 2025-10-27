@@ -1,10 +1,106 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
-PACKAGES_FILE="${SCRIPT_DIR}/packages.list"
-ALIASES_FILE="${SCRIPT_DIR}/aliases.list"
+REPO_OWNER="3x3cut0r"
+REPO_NAME="environment"
+BRANCH="${ENVIRONMENT_BRANCH:-main}"
+TMP_DIR=""
+REPO_ROOT=""
+PACKAGES_FILE=""
+ALIASES_FILE=""
+
+cleanup_bootstrap() {
+  local exit_code=${1:-$?}
+
+  trap - EXIT ERR INT TERM HUP QUIT
+
+  if [[ -n "${TMP_DIR}" && -d "${TMP_DIR}" ]]; then
+    rm -rf "${TMP_DIR}"
+    TMP_DIR=""
+  fi
+
+  exit "${exit_code}"
+}
+
+ensure_bootstrap_tools() {
+  for tool in curl tar; do
+    if ! command -v "${tool}" >/dev/null 2>&1; then
+      echo "${tool} is required to bootstrap the environment setup." >&2
+      exit 1
+    fi
+  done
+}
+
+bootstrap_and_exec() {
+  ensure_bootstrap_tools
+
+  trap 'cleanup_bootstrap $?' EXIT
+  trap 'cleanup_bootstrap $?' ERR
+  trap 'cleanup_bootstrap 130' INT
+  trap 'cleanup_bootstrap 143' TERM
+  trap 'cleanup_bootstrap 129' HUP
+  trap 'cleanup_bootstrap 131' QUIT
+
+  local tarball_url="https://codeload.github.com/${REPO_OWNER}/${REPO_NAME}/tar.gz/${BRANCH}"
+  TMP_DIR="$(mktemp -d)"
+
+  if [[ -z "${TMP_DIR}" || ! -d "${TMP_DIR}" ]]; then
+    echo "Failed to create temporary directory." >&2
+    exit 1
+  fi
+
+  if ! curl -fsSL "${tarball_url}" | tar -xz -C "${TMP_DIR}" --strip-components=1; then
+    echo "Failed to download or extract repository archive from ${tarball_url}." >&2
+    exit 1
+  fi
+
+  local script_path="${TMP_DIR}/setup.sh"
+  if [[ ! -x "${script_path}" ]]; then
+    if [[ -f "${script_path}" ]]; then
+      chmod +x "${script_path}"
+    else
+      echo "Expected setup script not found in repository archive." >&2
+      exit 1
+    fi
+  fi
+
+  ENVIRONMENT_BOOTSTRAPPED=1 ENVIRONMENT_REPO_ROOT="${TMP_DIR}" "${script_path}" "$@"
+  cleanup_bootstrap "$?"
+}
+
+determine_repo_root() {
+  if [[ -n "${ENVIRONMENT_BOOTSTRAPPED:-}" && -n "${ENVIRONMENT_REPO_ROOT:-}" ]]; then
+    if [[ -f "${ENVIRONMENT_REPO_ROOT}/packages.list" ]]; then
+      REPO_ROOT="${ENVIRONMENT_REPO_ROOT}"
+      return 0
+    fi
+  fi
+
+  local source_path="${BASH_SOURCE[0]:-$0}"
+  if [[ -n "${source_path}" && "${source_path}" != "-" ]]; then
+    local candidate_dir
+    if candidate_dir="$(cd "$(dirname "${source_path}")" && pwd 2>/dev/null)"; then
+      if [[ -f "${candidate_dir}/packages.list" ]]; then
+        REPO_ROOT="${candidate_dir}"
+        return 0
+      fi
+    fi
+  fi
+
+  if [[ -f "${PWD}/packages.list" ]]; then
+    REPO_ROOT="${PWD}"
+    return 0
+  fi
+
+  return 1
+}
+
+if ! determine_repo_root; then
+  bootstrap_and_exec "$@"
+fi
+
+PACKAGES_FILE="${REPO_ROOT}/packages.list"
+ALIASES_FILE="${REPO_ROOT}/aliases.list"
 
 MODE="all"
 PACKAGES=()
@@ -70,7 +166,7 @@ display_environment_info() {
 
 usage() {
   cat <<'EOF'
-Usage: setup_environment.sh [OPTIONS]
+Usage: setup.sh [OPTIONS]
 
 Options:
   -p, --packages    Only install packages listed in packages.list

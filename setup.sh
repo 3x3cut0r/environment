@@ -106,7 +106,7 @@ MODE="all"
 PACKAGES=()
 ENSURED_PACKAGES=()
 STEP_COUNTER=0
-TOTAL_STEPS=9
+TOTAL_STEPS=8
 CONFIG_APPLIED=false
 TPM_INSTALLED=false
 ALIASES_CONFIGURED=false
@@ -114,6 +114,7 @@ JETBRAINS_FONT_INSTALLED=false
 TMUX_PLUGINS_INSTALLED=false
 INSTALL_PACKAGES=true
 PACKAGES_SKIPPED=false
+OPERATING_SYSTEM_LABEL=""
 
 section_heading() {
   echo ""
@@ -124,18 +125,12 @@ section_heading() {
 display_environment_info() {
   section_heading "Environment information"
 
-  local uname_s uname_r arch shell_name workdir
+  local kernel arch shell_name workdir os_label
 
-  if uname_s=$(uname -s 2>/dev/null); then
+  if kernel=$(uname -r 2>/dev/null); then
     :
   else
-    uname_s="unknown"
-  fi
-
-  if uname_r=$(uname -r 2>/dev/null); then
-    :
-  else
-    uname_r="unknown"
+    kernel="unknown"
   fi
 
   if arch=$(uname -m 2>/dev/null); then
@@ -144,17 +139,18 @@ display_environment_info() {
     arch="unknown"
   fi
 
+  if [[ -z "${OPERATING_SYSTEM_LABEL:-}" ]]; then
+    detect_environment
+  fi
+
   shell_name="${SHELL:-unknown}"
   workdir="${PWD:-unknown}"
 
   echo "User: $(whoami 2>/dev/null || echo unknown)"
   echo "Host: $(hostname 2>/dev/null || echo unknown)"
-  local os_label="${uname_s}"
-  if [[ "${uname_s}" == "Darwin" ]]; then
-    os_label="${uname_s} (MacOS)"
-  fi
+  os_label="${OPERATING_SYSTEM_LABEL:-unknown}"
 
-  echo "Operating system: ${os_label} ${uname_r}"
+  echo "Operating system: ${os_label} ${kernel}"
   echo "Architecture: ${arch}"
 
   if [[ -r /etc/os-release ]]; then
@@ -408,9 +404,10 @@ confirm_homebrew_installation() {
 }
 
 detect_environment() {
-  step "Detect operating system"
   local uname_out
   uname_out="$(uname -s)"
+  OPERATING_SYSTEM_LABEL="${uname_out}"
+
   if [[ "${uname_out}" == "Darwin" ]]; then
     ENVIRONMENT="mac"
     if command -v brew >/dev/null 2>&1; then
@@ -418,13 +415,37 @@ detect_environment() {
     else
       PKG_MANAGER=""
     fi
-    echo "Detected MacOS."
+
+    if command -v sw_vers >/dev/null 2>&1; then
+      local macos_version
+      macos_version="$(sw_vers -productVersion 2>/dev/null || true)"
+      if [[ -n "${macos_version}" ]]; then
+        OPERATING_SYSTEM_LABEL="macOS ${macos_version}"
+      else
+        OPERATING_SYSTEM_LABEL="macOS"
+      fi
+    else
+      OPERATING_SYSTEM_LABEL="macOS"
+    fi
+
     return 0
   fi
 
   if [[ -r /etc/os-release ]]; then
     # shellcheck disable=SC1091
     . /etc/os-release
+
+    local distro_name distro_version
+    distro_name="${PRETTY_NAME:-${NAME:-${ID:-unknown}}}"
+    distro_version="${VERSION:-${VERSION_ID:-}}"
+    if [[ -n "${distro_name}" ]]; then
+      if [[ -n "${distro_version}" && "${distro_name}" != *"${distro_version}"* ]]; then
+        OPERATING_SYSTEM_LABEL="${distro_name} ${distro_version}"
+      else
+        OPERATING_SYSTEM_LABEL="${distro_name}"
+      fi
+    fi
+
     case "${ID}" in
       arch|manjaro|endeavouros|omarchy)
         ENVIRONMENT="arch"
@@ -471,8 +492,6 @@ detect_environment() {
     echo "Unsupported or undetected environment."
     exit 1
   fi
-
-  echo "Environment: ${ENVIRONMENT} (package manager: ${PKG_MANAGER})"
 }
 
 install_packages() {
@@ -1202,11 +1221,11 @@ summarize() {
 
 main() {
   parse_args "$@"
+  detect_environment
   load_packages
   display_environment_info
   display_execution_plan
   confirm_execution
-  detect_environment
   confirm_package_installation
   install_packages
   configure_environment

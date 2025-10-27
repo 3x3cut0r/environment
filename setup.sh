@@ -230,14 +230,6 @@ display_execution_plan() {
     package_label="package"
   fi
 
-  echo "Mode: ${MODE}"
-  echo "Requested ${package_label}: ${package_count}"
-  echo
-  echo "This script will perform the following actions:"
-  echo "  - Display environment information"
-  echo "  - Ask for confirmation before continuing"
-  echo "  - Detect the operating system and package manager"
-
   if ((package_count > 0)); then
     echo "  - Confirm package installation and install up to ${package_count} ${package_label} listed in packages.list"
   else

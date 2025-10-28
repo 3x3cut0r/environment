@@ -106,7 +106,7 @@ MODE="all"
 PACKAGES=()
 ENSURED_PACKAGES=()
 STEP_COUNTER=0
-TOTAL_STEPS=9
+TOTAL_STEPS=10
 CONFIG_APPLIED=false
 TPM_INSTALLED=false
 ALIASES_CONFIGURED=false
@@ -118,6 +118,20 @@ PACKAGES_SKIPPED=false
 STARSHIP_SKIPPED=false
 INSTALL_STARSHIP=true
 OPERATING_SYSTEM_LABEL=""
+PROMPT_CHOICE=1
+PROMPT_EXAMPLE=""
+PROMPT_BASH_VALUE='\\W \\$ '
+PROMPT_ZSH_VALUE='%1~ %(!.#.\\$) '
+PROMPT_STARSHIP_FORMAT='$directory$character'
+PROMPT_STARSHIP_DIRECTORY_PREFIX=""
+PROMPT_STARSHIP_TRUNCATION=1
+PROMPT_STARSHIP_INCLUDE_USERNAME=false
+PROMPT_STARSHIP_INCLUDE_HOSTNAME=false
+PROMPT_CONTEXT_DIR=""
+PROMPT_CONTEXT_BASENAME=""
+PROMPT_CONTEXT_DISPLAY_PATH=""
+PROMPT_CONTEXT_USER=""
+PROMPT_CONTEXT_HOST=""
 
 section_heading() {
   echo ""
@@ -239,14 +253,101 @@ display_execution_plan() {
     echo "  - Run in packages-only mode, skipping configuration and tooling setup steps"
   else
     echo "  - Apply configuration snippets for bash, Vim, Neovim, and tmux"
+    echo "  - Ask for your preferred prompt style and reuse it across bash, zsh, and Starship"
     echo "  - Configure shell aliases for bash, sh, zsh, and fish"
-    echo "  - Offer Catppuccin-themed Starship prompt installation for supported shells"
+    echo "  - Offer Starship prompt installation aligned with the chosen prompt style"
     echo "  - Ensure the JetBrainsMono Nerd Font is installed"
     echo "  - Ensure the tmux plugin manager (TPM) is installed"
     echo "  - Install tmux plugins via TPM"
   fi
 
   echo "  - Provide a summary of the actions performed"
+}
+
+initialize_prompt_context() {
+  local current_dir base display user host
+
+  current_dir="${PWD:-${HOME:-/}}"
+  if [[ -z "${current_dir}" ]]; then
+    current_dir="${HOME:-/}"
+  fi
+
+  PROMPT_CONTEXT_DIR="${current_dir}"
+
+  base="${current_dir##*/}"
+  if [[ -z "${base}" ]]; then
+    base="/"
+  fi
+  PROMPT_CONTEXT_BASENAME="${base}"
+
+  display="${current_dir}"
+  if [[ -n "${HOME:-}" && "${display}" == "${HOME}"* ]]; then
+    display="~${display:${#HOME}}"
+  fi
+  PROMPT_CONTEXT_DISPLAY_PATH="${display}"
+
+  if ! user=$(whoami 2>/dev/null); then
+    user="user"
+  fi
+  PROMPT_CONTEXT_USER="${user}"
+
+  if ! host=$(hostname 2>/dev/null); then
+    host="host"
+  fi
+  host="${host%%.*}"
+  if [[ -z "${host}" ]]; then
+    host="host"
+  fi
+  PROMPT_CONTEXT_HOST="${host}"
+}
+
+set_prompt_values() {
+  case "${PROMPT_CHOICE}" in
+    1)
+      PROMPT_BASH_VALUE='\\W \\$ '
+      PROMPT_ZSH_VALUE='%1~ %(!.#.\\$) '
+      PROMPT_STARSHIP_FORMAT='$directory$character'
+      PROMPT_STARSHIP_DIRECTORY_PREFIX=""
+      PROMPT_STARSHIP_TRUNCATION=1
+      PROMPT_STARSHIP_INCLUDE_USERNAME=false
+      PROMPT_STARSHIP_INCLUDE_HOSTNAME=false
+      PROMPT_EXAMPLE="${PROMPT_CONTEXT_BASENAME} $"
+      ;;
+    2)
+      PROMPT_BASH_VALUE='\\w \\$ '
+      PROMPT_ZSH_VALUE='%~ %(!.#.\\$) '
+      PROMPT_STARSHIP_FORMAT='$directory$character'
+      PROMPT_STARSHIP_DIRECTORY_PREFIX=""
+      PROMPT_STARSHIP_TRUNCATION=0
+      PROMPT_STARSHIP_INCLUDE_USERNAME=false
+      PROMPT_STARSHIP_INCLUDE_HOSTNAME=false
+      PROMPT_EXAMPLE="${PROMPT_CONTEXT_DISPLAY_PATH} $"
+      ;;
+    3)
+      PROMPT_BASH_VALUE='\\u:\\W \\$ '
+      PROMPT_ZSH_VALUE='%n:%1~ %(!.#.\\$) '
+      PROMPT_STARSHIP_FORMAT='$username$directory$character'
+      PROMPT_STARSHIP_DIRECTORY_PREFIX=":"
+      PROMPT_STARSHIP_TRUNCATION=1
+      PROMPT_STARSHIP_INCLUDE_USERNAME=true
+      PROMPT_STARSHIP_INCLUDE_HOSTNAME=false
+      PROMPT_EXAMPLE="${PROMPT_CONTEXT_USER}:${PROMPT_CONTEXT_BASENAME} $"
+      ;;
+    4)
+      PROMPT_BASH_VALUE='\\u@\\h:\\W \\$ '
+      PROMPT_ZSH_VALUE='%n@%m:%1~ %(!.#.\\$) '
+      PROMPT_STARSHIP_FORMAT='$username$hostname$directory$character'
+      PROMPT_STARSHIP_DIRECTORY_PREFIX=":"
+      PROMPT_STARSHIP_TRUNCATION=1
+      PROMPT_STARSHIP_INCLUDE_USERNAME=true
+      PROMPT_STARSHIP_INCLUDE_HOSTNAME=true
+      PROMPT_EXAMPLE="${PROMPT_CONTEXT_USER}@${PROMPT_CONTEXT_HOST}:${PROMPT_CONTEXT_BASENAME} $"
+      ;;
+    *)
+      PROMPT_CHOICE=1
+      set_prompt_values
+      ;;
+  esac
 }
 
 step() {
@@ -392,10 +493,10 @@ confirm_starship_setup() {
   fi
 
   echo ""
-  echo "Starship prompt customization will perform:" 
+  echo "Starship prompt customization will perform:"
   echo "  - Installation of the Starship prompt for bash, zsh, and fish via the official script"
-  echo "  - Placement of a Catppuccin-themed starship.toml at ~/.config/starship.toml"
-  echo "  - Activation snippets so supported shells initialize Starship with the Catppuccin look"
+  echo "  - Creation of a Starship configuration that mirrors your selected prompt style"
+  echo "  - Activation snippets so supported shells initialize Starship with the chosen look"
 
   local prompt reply
   prompt="Apply these Starship prompt customizations? [Y/n] "
@@ -431,6 +532,64 @@ confirm_starship_setup() {
       INSTALL_STARSHIP=true
       ;;
   esac
+}
+
+prompt_for_shell_prompt() {
+  step "Select shell prompt style"
+
+  initialize_prompt_context
+
+  if [[ "${MODE}" == "packages" ]]; then
+    echo "Skipping shell prompt selection (packages-only mode)."
+    PROMPT_CHOICE=1
+    set_prompt_values
+    return
+  fi
+
+  local env_choice="${ENVIRONMENT_PROMPT_CHOICE:-}"
+  if [[ "${env_choice}" =~ ^[1-4]$ ]]; then
+    PROMPT_CHOICE="${env_choice}"
+    set_prompt_values
+    echo "Selected shell prompt style ${PROMPT_CHOICE} (${PROMPT_EXAMPLE}) via ENVIRONMENT_PROMPT_CHOICE."
+    return
+  fi
+
+  echo "Shell prompt style options:"
+  echo "  1) ${PROMPT_CONTEXT_BASENAME} \$"
+  echo "  2) ${PROMPT_CONTEXT_DISPLAY_PATH} \$"
+  echo "  3) ${PROMPT_CONTEXT_USER}:${PROMPT_CONTEXT_BASENAME} \$"
+  echo "  4) ${PROMPT_CONTEXT_USER}@${PROMPT_CONTEXT_HOST}:${PROMPT_CONTEXT_BASENAME} \$"
+
+  local prompt reply
+  prompt="Choose a shell prompt style [1-4] (default: 1): "
+
+  if [[ -t 0 ]]; then
+    if ! read -rp "${prompt}" reply; then
+      reply=""
+    fi
+  elif [[ -r /dev/tty ]]; then
+    if ! read -rp "${prompt}" reply < /dev/tty; then
+      reply=""
+    fi
+  else
+    echo "No interactive input available; defaulting to option 1."
+    PROMPT_CHOICE=1
+    set_prompt_values
+    return
+  fi
+
+  if [[ -z "${reply}" ]]; then
+    reply="1"
+  fi
+
+  if [[ ! "${reply}" =~ ^[1-4]$ ]]; then
+    echo "Invalid selection '${reply}'; defaulting to option 1."
+    reply="1"
+  fi
+
+  PROMPT_CHOICE="${reply}"
+  set_prompt_values
+  echo "Using prompt style ${PROMPT_CHOICE}: ${PROMPT_EXAMPLE}"
 }
 
 confirm_homebrew_installation() {
@@ -918,6 +1077,44 @@ apply_config() {
   echo "Installed ${target_file} from ${source_file}."
 }
 
+write_prompt_configuration() {
+  if [[ -z "${PROMPT_EXAMPLE}" ]]; then
+    initialize_prompt_context
+    set_prompt_values
+  fi
+
+  local prompt_dir="${HOME}/.config/environment"
+  local prompt_file="${prompt_dir}/prompt.sh"
+
+  mkdir -p "${prompt_dir}"
+
+  cat <<EOF > "${prompt_file}"
+# shellcheck shell=sh
+# Generated by environment setup. Do not edit manually.
+ENVIRONMENT_PROMPT_CHOICE="${PROMPT_CHOICE}"
+ENVIRONMENT_PROMPT_PREVIEW="${PROMPT_EXAMPLE}"
+
+if [ -n "\${PS1-}" ]; then
+  if command -v starship >/dev/null 2>&1; then
+    if [ -n "\${ZSH_VERSION-}" ]; then
+      eval "\$(starship init zsh)"
+    else
+      eval "\$(starship init bash)"
+    fi
+  else
+    if [ -n "\${ZSH_VERSION-}" ]; then
+      PROMPT="${PROMPT_ZSH_VALUE}"
+      PS1="\${PROMPT}"
+    else
+      PS1="${PROMPT_BASH_VALUE}"
+    fi
+  fi
+fi
+EOF
+
+  echo "Wrote prompt configuration to ${prompt_file} (style ${PROMPT_CHOICE}: ${PROMPT_EXAMPLE})."
+}
+
 configure_environment() {
   step "Apply configuration files"
 
@@ -941,6 +1138,7 @@ configure_environment() {
   apply_config "${REPO_ROOT}/home/.vimrc" "${HOME}/.vimrc" "\""
   apply_config "${REPO_ROOT}/home/.tmux.conf" "${HOME}/.tmux.conf" "#"
   apply_config "${REPO_ROOT}/home/.config/nvim/init.vim" "${HOME}/.config/nvim/init.vim" "\""
+  write_prompt_configuration
   CONFIG_APPLIED=true
 }
 
@@ -1058,6 +1256,76 @@ EOF
   ALIASES_CONFIGURED=true
 }
 
+generate_starship_config() {
+  if [[ -z "${PROMPT_EXAMPLE}" ]]; then
+    initialize_prompt_context
+    set_prompt_values
+  fi
+
+  local temp_file template_path
+  temp_file="$(mktemp)"
+  template_path="${REPO_ROOT}/home/.config/starship.toml"
+
+  if [[ ! -f "${template_path}" ]]; then
+    echo "Starship template not found at ${template_path}." >&2
+    rm -f "${temp_file}"
+    return 1
+  fi
+
+  if ! cp "${template_path}" "${temp_file}"; then
+    echo "Failed to copy Starship template." >&2
+    rm -f "${temp_file}"
+    return 1
+  fi
+
+  PROMPT_STARSHIP_FORMAT_VALUE="${PROMPT_STARSHIP_FORMAT}" \
+  PROMPT_STARSHIP_DIRECTORY_PREFIX="${PROMPT_STARSHIP_DIRECTORY_PREFIX}" \
+  PROMPT_STARSHIP_TRUNCATION="${PROMPT_STARSHIP_TRUNCATION}" \
+  PROMPT_STARSHIP_INCLUDE_USERNAME="${PROMPT_STARSHIP_INCLUDE_USERNAME}" \
+  PROMPT_STARSHIP_INCLUDE_HOSTNAME="${PROMPT_STARSHIP_INCLUDE_HOSTNAME}" \
+  python3 - "$temp_file" <<'PY' || {
+import os
+import re
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+text = path.read_text()
+
+def replace_once(pattern: str, repl: str, *, flags=0) -> str:
+    new_text, count = re.subn(pattern, repl, text, count=1, flags=flags)
+    if count == 0:
+        raise SystemExit(f"Failed to apply pattern: {pattern}")
+    return new_text
+
+format_value = os.environ.get("PROMPT_STARSHIP_FORMAT_VALUE", "")
+directory_prefix = os.environ.get("PROMPT_STARSHIP_DIRECTORY_PREFIX", "")
+truncation = os.environ.get("PROMPT_STARSHIP_TRUNCATION", "1")
+username_enabled = os.environ.get("PROMPT_STARSHIP_INCLUDE_USERNAME", "false").lower() == "true"
+hostname_enabled = os.environ.get("PROMPT_STARSHIP_INCLUDE_HOSTNAME", "false").lower() == "true"
+
+text = replace_once(r'format = """\n.*?\n"""', f'format = """\n{format_value}\n"""', flags=re.S)
+
+directory_format = f"{directory_prefix}$path "
+escaped_directory_format = directory_format.replace('\\', '\\\\').replace('"', '\\"')
+text = replace_once(r'(\[directory\][^\[]*?format = )".*?"', rf'\1"{escaped_directory_format}"', flags=re.S)
+text = replace_once(r'(\[directory\][^\[]*?truncation_length = )\d+', rf'\1{truncation}', flags=re.S)
+
+username_value = "false" if username_enabled else "true"
+text = replace_once(r'(\[username\][^\[]*?disabled = )(true|false)', rf'\1{username_value}', flags=re.S)
+
+hostname_value = "false" if hostname_enabled else "true"
+text = replace_once(r'(\[hostname\][^\[]*?disabled = )(true|false)', rf'\1{hostname_value}', flags=re.S)
+
+path.write_text(text)
+PY
+    rm -f "${temp_file}"
+    return 1
+  }
+
+  echo "${temp_file}"
+}
+
 install_starship_prompt() {
   step "Install Starship prompt"
 
@@ -1084,9 +1352,13 @@ install_starship_prompt() {
     fi
   fi
 
-  apply_config "${REPO_ROOT}/home/.config/starship.toml" "${HOME}/.config/starship.toml" "#"
+  local starship_config
+  starship_config="$(generate_starship_config)"
+  apply_config "${starship_config}" "${HOME}/.config/starship.toml" "#"
+  rm -f "${starship_config}"
   apply_config "${REPO_ROOT}/home/.config/fish/conf.d/starship.fish" "${HOME}/.config/fish/conf.d/starship.fish" "#"
 
+  echo "Aligned Starship prompt with style ${PROMPT_CHOICE}: ${PROMPT_EXAMPLE}."
   STARSHIP_CONFIGURED=true
   STARSHIP_SKIPPED=false
 }
@@ -1289,6 +1561,7 @@ summarize() {
     echo "  - ~/.vimrc"
     echo "  - ~/.tmux.conf"
     echo "  - ~/.config/nvim/init.vim"
+    echo "  - ~/.config/environment/prompt.sh"
   else
     echo "Configuration files were not updated."
   fi
@@ -1305,7 +1578,7 @@ summarize() {
 
   if [[ "${MODE}" != "packages" ]]; then
     if [[ "${STARSHIP_CONFIGURED}" == true ]]; then
-      echo "Starship prompt installed and themed with Catppuccin."
+      echo "Starship prompt installed and matched to the selected style."
     elif [[ "${STARSHIP_SKIPPED}" == true ]]; then
       echo "Starship prompt customization was skipped."
     else
@@ -1340,6 +1613,7 @@ main() {
   display_execution_plan
   confirm_execution
   confirm_starship_setup
+  prompt_for_shell_prompt
   confirm_package_installation
   install_packages
   configure_environment

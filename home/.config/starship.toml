@@ -10,9 +10,33 @@ $git_branch$git_status$fill$time $character
 symbol = " "
 
 [character]
-success_symbol = "[[󰄛](green) ❯](peach)"
-error_symbol = "[[󰄛](red) ❯](peach)"
-vimcmd_symbol = "[󰄛 ❮](subtext1)"
+format = "$symbol "
+success_symbol = "$"
+error_symbol = "$"
+vimcmd_symbol = "$"
+use_symbol_for_status = true
+style = "plain"
+disabled = false
+
+[username]
+format = "$user"
+show_always = true
+style_user = "plain"
+style_root = "plain"
+disabled = true
+
+[hostname]
+ssh_only = false
+format = "@$hostname"
+trim_at = "."
+style = "plain"
+disabled = true
+
+[directory]
+truncate_to_repo = false
+style = "plain"
+format = "$path "
+truncation_length = 1
 
 [git_branch]
 style = "fg:crust bg:mauve"

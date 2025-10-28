@@ -14,7 +14,6 @@ format = "$symbol "
 success_symbol = "$"
 error_symbol = "$"
 vimcmd_symbol = "$"
-use_symbol_for_status = true
 style = "plain"
 disabled = false
 

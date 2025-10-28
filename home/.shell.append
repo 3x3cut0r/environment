@@ -2,19 +2,26 @@
 export EDITOR="nvim"
 export VISUAL="nvim"
 
+ENVIRONMENT_PROMPT_FILE="${HOME}/.config/environment/prompt.sh"
+
 if [ -n "${PS1-}" ]; then
-  if command -v starship >/dev/null 2>&1; then
-    if [ -n "${ZSH_VERSION-}" ]; then
-      eval "$(starship init zsh)"
-    else
-      eval "$(starship init bash)"
-    fi
+  if [ -f "${ENVIRONMENT_PROMPT_FILE}" ]; then
+    # shellcheck source=/dev/null
+    . "${ENVIRONMENT_PROMPT_FILE}"
   else
-    if [ -n "${ZSH_VERSION-}" ]; then
-      PROMPT="%1~ %# "
-      PS1="${PROMPT}"
+    if command -v starship >/dev/null 2>&1; then
+      if [ -n "${ZSH_VERSION-}" ]; then
+        eval "$(starship init zsh)"
+      else
+        eval "$(starship init bash)"
+      fi
     else
-      PS1="\\W \\$ "
+      if [ -n "${ZSH_VERSION-}" ]; then
+        PROMPT="%1~ %(!.#.\$) "
+        PS1="${PROMPT}"
+      else
+        PS1="\W \$ "
+      fi
     fi
   fi
 fi

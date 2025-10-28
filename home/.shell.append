@@ -9,7 +9,12 @@ if [ -n "${PS1-}" ]; then
     # shellcheck source=/dev/null
     . "${ENVIRONMENT_PROMPT_FILE}"
   else
-    if command -v starship >/dev/null 2>&1; then
+    if [ -z "${ENVIRONMENT_STARSHIP_ENABLED+x}" ]; then
+      ENVIRONMENT_STARSHIP_ENABLED="true"
+      export ENVIRONMENT_STARSHIP_ENABLED
+    fi
+
+    if [ "${ENVIRONMENT_STARSHIP_ENABLED}" = "true" ] && command -v starship >/dev/null 2>&1; then
       if [ -n "${ZSH_VERSION-}" ]; then
         eval "$(starship init zsh)"
       else

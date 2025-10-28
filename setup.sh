@@ -1308,14 +1308,14 @@ text = replace_once(r'format = """\n.*?\n"""', f'format = """\n{format_value}\n"
 
 directory_format = f"{directory_prefix}$path "
 escaped_directory_format = directory_format.replace('\\', '\\\\').replace('"', '\\"')
-text = replace_once(r'(\[directory\][^\[]*?format = )".*?"', rf'\1"{escaped_directory_format}"', flags=re.S)
-text = replace_once(r'(\[directory\][^\[]*?truncation_length = )\d+', rf'\1{truncation}', flags=re.S)
+text = replace_once(r'(\[directory\][^\[]*?format = )".*?"', rf'\g<1>"{escaped_directory_format}"', flags=re.S)
+text = replace_once(r'(\[directory\][^\[]*?truncation_length = )\d+', rf'\g<1>{truncation}', flags=re.S)
 
 username_value = "false" if username_enabled else "true"
-text = replace_once(r'(\[username\][^\[]*?disabled = )(true|false)', rf'\1{username_value}', flags=re.S)
+text = replace_once(r'(\[username\][^\[]*?disabled = )(true|false)', rf'\g<1>{username_value}', flags=re.S)
 
 hostname_value = "false" if hostname_enabled else "true"
-text = replace_once(r'(\[hostname\][^\[]*?disabled = )(true|false)', rf'\1{hostname_value}', flags=re.S)
+text = replace_once(r'(\[hostname\][^\[]*?disabled = )(true|false)', rf'\g<1>{hostname_value}', flags=re.S)
 
 path.write_text(text)
 PY

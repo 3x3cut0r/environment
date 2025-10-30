@@ -3,18 +3,20 @@ palette = "catppuccin_mocha"
 add_newline = false
 
 format = """
-$directory$character
+$directory${custom.prompt_symbol}
 """
 
 [fill]
 symbol = " "
 
 [character]
-format = "$symbol "
-success_symbol = "\\$"
-error_symbol = "\\$"
-vimcmd_symbol = "\\$"
-disabled = false
+disabled = true
+
+[custom.prompt_symbol]
+command = "if [ \"$(id -u)\" -eq 0 ]; then printf '#'; else printf '\\$'; fi"
+format = "$output "
+shell = ["bash", "--noprofile", "--norc"]
+when = "true"
 
 [username]
 format = "$user"

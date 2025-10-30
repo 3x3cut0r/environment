@@ -122,7 +122,7 @@ PROMPT_CHOICE=1
 PROMPT_EXAMPLE=""
 PROMPT_BASH_VALUE='\\W \\$ '
 PROMPT_ZSH_VALUE='%1~ %(!.#.\\$) '
-PROMPT_STARSHIP_FORMAT='$directory$character'
+PROMPT_STARSHIP_FORMAT='$directory${custom.prompt_symbol}'
 PROMPT_STARSHIP_DIRECTORY_PREFIX=""
 PROMPT_STARSHIP_TRUNCATION=1
 PROMPT_STARSHIP_INCLUDE_USERNAME=false
@@ -306,7 +306,7 @@ set_prompt_values() {
     1)
       PROMPT_BASH_VALUE='\\W \\$ '
       PROMPT_ZSH_VALUE='%1~ %(!.#.\\$) '
-      PROMPT_STARSHIP_FORMAT='$directory$character'
+      PROMPT_STARSHIP_FORMAT='$directory${custom.prompt_symbol}'
       PROMPT_STARSHIP_DIRECTORY_PREFIX=""
       PROMPT_STARSHIP_TRUNCATION=1
       PROMPT_STARSHIP_INCLUDE_USERNAME=false
@@ -316,7 +316,7 @@ set_prompt_values() {
     2)
       PROMPT_BASH_VALUE='\\w \\$ '
       PROMPT_ZSH_VALUE='%~ %(!.#.\\$) '
-      PROMPT_STARSHIP_FORMAT='$directory$character'
+      PROMPT_STARSHIP_FORMAT='$directory${custom.prompt_symbol}'
       PROMPT_STARSHIP_DIRECTORY_PREFIX=""
       PROMPT_STARSHIP_TRUNCATION=0
       PROMPT_STARSHIP_INCLUDE_USERNAME=false
@@ -326,7 +326,7 @@ set_prompt_values() {
     3)
       PROMPT_BASH_VALUE='\\u:\\W \\$ '
       PROMPT_ZSH_VALUE='%n:%1~ %(!.#.\\$) '
-      PROMPT_STARSHIP_FORMAT='$username$directory$character'
+      PROMPT_STARSHIP_FORMAT='$username$directory${custom.prompt_symbol}'
       PROMPT_STARSHIP_DIRECTORY_PREFIX=":"
       PROMPT_STARSHIP_TRUNCATION=1
       PROMPT_STARSHIP_INCLUDE_USERNAME=true
@@ -336,7 +336,7 @@ set_prompt_values() {
     4)
       PROMPT_BASH_VALUE='\\u@\\h:\\W \\$ '
       PROMPT_ZSH_VALUE='%n@%m:%1~ %(!.#.\\$) '
-      PROMPT_STARSHIP_FORMAT='$username$hostname$directory$character'
+      PROMPT_STARSHIP_FORMAT='$username$hostname$directory${custom.prompt_symbol}'
       PROMPT_STARSHIP_DIRECTORY_PREFIX=":"
       PROMPT_STARSHIP_TRUNCATION=1
       PROMPT_STARSHIP_INCLUDE_USERNAME=true

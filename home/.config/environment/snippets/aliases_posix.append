@@ -1,0 +1,4 @@
+if [ -f "${HOME}/.config/environment/aliases.list" ]; then
+  # shellcheck disable=SC1090
+  . "${HOME}/.config/environment/aliases.list"
+fi

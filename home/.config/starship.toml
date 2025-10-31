@@ -1,3 +1,9 @@
+# Active Starship prompt configuration (style 1).
+# Alternative styles (commented for reference):
+# Style 2: use `format = "$directory${custom.prompt_symbol}"` with `truncation_length = 0`.
+# Style 3: use `format = "$username$directory${custom.prompt_symbol}"` and enable the username module.
+# Style 4: use `format = "$username$hostname$directory${custom.prompt_symbol}"` and enable both username and hostname.
+
 '$schema' = 'https://starship.rs/config-schema.json'
 palette = "catppuccin_mocha"
 add_newline = false

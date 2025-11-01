@@ -9,6 +9,14 @@ REPO_ROOT=""
 PACKAGES_FILE=""
 ALIASES_FILE=""
 
+# cleanup_bootstrap()
+# Description:
+#   Cleans up the temporary bootstrap directory and exits with the provided
+#   status code. Registered as a trap handler during the bootstrap phase.
+# Arguments:
+#   $1 - Optional exit code to use; defaults to the most recent command status.
+# Returns:
+#   This function does not return; it terminates the script with the exit code.
 cleanup_bootstrap() {
   local exit_code=${1:-$?}
 
@@ -22,6 +30,14 @@ cleanup_bootstrap() {
   exit "${exit_code}"
 }
 
+# ensure_bootstrap_tools()
+# Description:
+#   Verifies that the tools required for bootstrapping (curl and tar) are
+#   available before attempting to download the repository archive.
+# Arguments:
+#   None.
+# Returns:
+#   0 if all required tools are available; otherwise exits the script with 1.
 ensure_bootstrap_tools() {
   for tool in curl tar; do
     if ! command -v "${tool}" >/dev/null 2>&1; then
@@ -31,6 +47,15 @@ ensure_bootstrap_tools() {
   done
 }
 
+# bootstrap_and_exec()
+# Description:
+#   Downloads the repository tarball into a temporary directory and executes
+#   the setup script contained within it, ensuring cleanup afterward.
+# Arguments:
+#   $@ - Arguments forwarded verbatim to the downloaded setup script.
+# Returns:
+#   This function does not return; it re-invokes the setup script and exits
+#   the current process after execution.
 bootstrap_and_exec() {
   ensure_bootstrap_tools
 
@@ -68,6 +93,14 @@ bootstrap_and_exec() {
   cleanup_bootstrap "$?"
 }
 
+# determine_repo_root()
+# Description:
+#   Attempts to locate the repository root by checking known locations for
+#   the packages.list file, including bootstrap-provided metadata.
+# Arguments:
+#   None.
+# Returns:
+#   0 if the repository root is found and stored in REPO_ROOT; otherwise 1.
 determine_repo_root() {
   if [[ -n "${ENVIRONMENT_BOOTSTRAPPED:-}" && -n "${ENVIRONMENT_REPO_ROOT:-}" ]]; then
     if [[ -f "${ENVIRONMENT_REPO_ROOT}/packages.list" ]]; then
@@ -133,6 +166,14 @@ else
   COLOR_ERROR=""
 fi
 
+# format_log_context()
+# Description:
+#   Updates the global log context label used to prefix log messages. When no
+#   label is provided, the context resets to the default value.
+# Arguments:
+#   $1 - Optional label to include in the log context.
+# Returns:
+#   0 after updating the global LOG_CONTEXT variable.
 format_log_context() {
   local label="$1"
   if [[ -n "${label}" ]]; then
@@ -142,6 +183,17 @@ format_log_context() {
   fi
 }
 
+# log_message()
+# Description:
+#   Formats and prints a log message with the given severity, color, and output
+#   destination while honoring the current log context.
+# Arguments:
+#   $1 - Log level label (e.g., INFO, WARN).
+#   $2 - ANSI color code to apply to the message.
+#   $3 - Output destination, either 'stdout' or 'stderr'.
+#   $@ - Remaining words form the message body.
+# Returns:
+#   0 if the message prints successfully.
 log_message() {
   local level="$1"
   shift
@@ -162,18 +214,48 @@ log_message() {
   fi
 }
 
+# log_info()
+# Description:
+#   Convenience wrapper that logs informational messages to standard output.
+# Arguments:
+#   $@ - Message content passed through to log_message.
+# Returns:
+#   0 if the message prints successfully.
 log_info() {
   log_message "INFO" "${COLOR_INFO}" "stdout" "$*"
 }
 
+# log_warn()
+# Description:
+#   Convenience wrapper that logs warning messages to standard output.
+# Arguments:
+#   $@ - Message content passed through to log_message.
+# Returns:
+#   0 if the message prints successfully.
 log_warn() {
   log_message "WARN" "${COLOR_WARN}" "stdout" "$*"
 }
 
+# log_error()
+# Description:
+#   Convenience wrapper that logs error messages to standard error.
+# Arguments:
+#   $@ - Message content passed through to log_message.
+# Returns:
+#   0 if the message prints successfully.
 log_error() {
   log_message "ERROR" "${COLOR_ERROR}" "stderr" "$*"
 }
 
+# log_input_prompt()
+# Description:
+#   Prints an input prompt in the warning color either to the controlling TTY
+#   or standard output, depending on availability.
+# Arguments:
+#   $1 - Prompt text to display.
+#   $2 - Optional destination ('stdout' or 'tty'); defaults to stdout.
+# Returns:
+#   0 if the prompt prints successfully, non-zero on failure.
 log_input_prompt() {
   local prompt="$1"
   local destination="${2:-stdout}"
@@ -185,6 +267,15 @@ log_input_prompt() {
   fi
 }
 
+# log_step_message()
+# Description:
+#   Emits a formatted step progress message indicating the current step and
+#   total number of setup steps.
+# Arguments:
+#   $1 - Step number being executed.
+#   $@ - Description of the step.
+# Returns:
+#   0 if the message prints successfully.
 log_step_message() {
   local step_number="$1"
   shift
@@ -193,6 +284,14 @@ log_step_message() {
   printf '%b%s%b\n' "${COLOR_INFO}" "${formatted}" "${COLOR_RESET}"
 }
 
+# sanitize_prompt_reply()
+# Description:
+#   Normalizes user input read from prompts by stripping CR/LF characters and
+#   trimming surrounding whitespace so that simple comparisons succeed.
+# Arguments:
+#   $1 - Raw input string to sanitize.
+# Returns:
+#   0 after printing the sanitized string to stdout.
 sanitize_prompt_reply() {
   local input="$1"
 
@@ -216,6 +315,15 @@ sanitize_prompt_reply() {
   printf '%s' "${input}"
 }
 
+# prompt_for_input()
+# Description:
+#   Displays a prompt and reads user input from STDIN or /dev/tty, sanitizing
+#   the response and returning it via an output variable.
+# Arguments:
+#   $1 - Prompt text to show the user.
+#   $2 - Name of the variable that should receive the sanitized reply.
+# Returns:
+#   0 on success, 1 if reading input fails, 2 if no interactive terminal exists.
 prompt_for_input() {
   local prompt="$1"
   local __resultvar="$2"
@@ -247,12 +355,28 @@ prompt_for_input() {
   return 0
 }
 
+# section_heading()
+# Description:
+#   Prints a blank line and then a heading accompanied by a separator to
+#   clearly delineate script sections in the output.
+# Arguments:
+#   $1 - Heading text to display.
+# Returns:
+#   0 if the heading prints successfully.
 section_heading() {
   printf '\n'
   log_info "$1"
   log_info "------------------------------"
 }
 
+# display_environment_info()
+# Description:
+#   Gathers and prints diagnostic information about the current execution
+#   environment, including OS details, shell, and working directory.
+# Arguments:
+#   None.
+# Returns:
+#   0 after logging the environment information.
 display_environment_info() {
   section_heading "Environment information"
 
@@ -297,6 +421,14 @@ display_environment_info() {
   log_info "  Working directory: ${workdir}"
 }
 
+# usage()
+# Description:
+#   Outputs usage information for the setup script and describes available
+#   command-line options.
+# Arguments:
+#   None.
+# Returns:
+#   0 after printing the usage text.
 usage() {
   cat <<'EOF'
 Usage: setup.sh [OPTIONS]
@@ -307,6 +439,14 @@ Options:
 EOF
 }
 
+# parse_args()
+# Description:
+#   Parses command-line arguments to configure script behavior, such as
+#   restricting operations to package installation or showing help.
+# Arguments:
+#   $@ - Command-line arguments provided to the script.
+# Returns:
+#   0 on success; exits the script with 1 if unknown options are encountered.
 parse_args() {
   while (($# > 0)); do
     case "$1" in
@@ -334,6 +474,14 @@ parse_args() {
   done
 }
 
+# load_packages()
+# Description:
+#   Reads the list of packages from packages.list into the PACKAGES array,
+#   skipping empty lines and comments.
+# Arguments:
+#   None.
+# Returns:
+#   0 on success; exits the script if the packages file is missing or empty.
 load_packages() {
   if [[ ! -r "${PACKAGES_FILE}" ]]; then
     log_error "Packages file not found: ${PACKAGES_FILE}"
@@ -348,6 +496,14 @@ load_packages() {
   fi
 }
 
+# display_execution_plan()
+# Description:
+#   Prints a summary of the actions the setup script intends to perform based
+#   on the selected mode and available packages.
+# Arguments:
+#   None.
+# Returns:
+#   0 after logging the planned actions.
 display_execution_plan() {
   section_heading "Planned actions"
 
@@ -378,6 +534,13 @@ display_execution_plan() {
   log_info "  - Provide a summary of the actions performed"
 }
 
+# is_shell_available()
+# Description:
+#   Checks whether a supported shell executable exists on the PATH.
+# Arguments:
+#   $1 - Shell name to check (bash, zsh, or fish).
+# Returns:
+#   0 if the shell is available; 1 otherwise.
 is_shell_available() {
   local shell_name="$1"
   case "${shell_name}" in
@@ -390,12 +553,28 @@ is_shell_available() {
   esac
 }
 
+# step()
+# Description:
+#   Increments the global step counter and logs a formatted step heading for
+#   the supplied description.
+# Arguments:
+#   $1 - Human-readable description of the step being executed.
+# Returns:
+#   0 after logging the step message.
 step() {
   STEP_COUNTER=$((STEP_COUNTER + 1))
   printf '\n'
   log_step_message "${STEP_COUNTER}" "$1"
 }
 
+# confirm_execution()
+# Description:
+#   Prompts the user to confirm whether the setup should proceed, honoring
+#   automation environment variables when present.
+# Arguments:
+#   None.
+# Returns:
+#   0 if execution should continue; exits the script if declined or input fails.
 confirm_execution() {
   printf '\n'
   local prompt="Do you want to continue? [y/N]"
@@ -431,6 +610,14 @@ confirm_execution() {
   esac
 }
 
+# confirm_package_installation()
+# Description:
+#   Determines whether package installation should proceed by consulting
+#   automation variables or prompting the user when necessary.
+# Arguments:
+#   None.
+# Returns:
+#   Sets INSTALL_PACKAGES and PACKAGES_SKIPPED; returns 0 after decision.
 confirm_package_installation() {
   if ((${#PACKAGES[@]} == 0)); then
     INSTALL_PACKAGES=false
@@ -507,6 +694,14 @@ confirm_package_installation() {
   esac
 }
 
+# confirm_starship_setup()
+# Description:
+#   Decides if the Starship prompt configuration should be applied, honoring
+#   automation variables or prompting the user for confirmation.
+# Arguments:
+#   None.
+# Returns:
+#   Sets INSTALL_STARSHIP and STARSHIP_SKIPPED; returns 0 after decision.
 confirm_starship_setup() {
   if [[ "${MODE}" == "packages" ]]; then
     INSTALL_STARSHIP=false
@@ -571,6 +766,14 @@ confirm_starship_setup() {
   esac
 }
 
+# confirm_homebrew_installation()
+# Description:
+#   Asks the user for permission to install Homebrew on macOS when required,
+#   unless automation environment variables have already specified the choice.
+# Arguments:
+#   None.
+# Returns:
+#   0 if Homebrew installation is approved; 1 otherwise.
 confirm_homebrew_installation() {
   case "${ENVIRONMENT_AUTO_INSTALL_HOMEBREW:-}" in
     [yY][eE][sS]|[yY])
@@ -610,6 +813,14 @@ confirm_homebrew_installation() {
   esac
 }
 
+# detect_environment()
+# Description:
+#   Detects the operating system and selects the appropriate package manager,
+#   populating ENVIRONMENT, PKG_MANAGER, and logging metadata.
+# Arguments:
+#   None.
+# Returns:
+#   0 if the environment is successfully detected; exits the script on failure.
 detect_environment() {
   local uname_out
   uname_out="$(uname -s)"
@@ -704,6 +915,15 @@ detect_environment() {
   format_log_context ""
 }
 
+# install_packages()
+# Description:
+#   Installs required packages using the detected package manager, handling
+#   privilege escalation, repository refreshes, and fallbacks for various
+#   environments.
+# Arguments:
+#   None.
+# Returns:
+#   0 on success; may exit the script if prerequisites cannot be satisfied.
 install_packages() {
   step "Install required packages"
 
@@ -911,6 +1131,14 @@ install_packages() {
   fi
 }
 
+# resolve_package_name()
+# Description:
+#   Normalizes logical package names to distribution-specific identifiers so
+#   that requested tools map correctly across environments.
+# Arguments:
+#   $1 - Logical package name from packages.list.
+# Returns:
+#   Prints the resolved package name to stdout; exits with 0.
 resolve_package_name() {
   local pkg="$1"
   case "${pkg}" in
@@ -964,6 +1192,15 @@ resolve_package_name() {
   esac
 }
 
+# is_package_available()
+# Description:
+#   Checks whether a package is available via a given package manager by
+#   querying metadata commands for the manager.
+# Arguments:
+#   $1 - Package identifier to check.
+#   $2 - Optional package manager name; defaults to PKG_MANAGER.
+# Returns:
+#   0 if the package appears available; 1 otherwise.
 is_package_available() {
   local pkg="$1"
   local manager="${2:-${PKG_MANAGER}}"
@@ -996,6 +1233,17 @@ is_package_available() {
   esac
 }
 
+# apply_config()
+# Description:
+#   Installs or appends configuration snippets to target files, wrapping
+#   appended blocks in identifiable markers to support idempotent updates.
+# Arguments:
+#   $1 - Source file containing configuration content.
+#   $2 - Destination file to create or modify.
+#   $3 - Comment prefix used for marker lines (default '#').
+#   $4 - Mode controlling how content is applied ('auto' or 'append').
+# Returns:
+#   0 after the configuration file is updated.
 apply_config() {
   local source_file="$1"
   local target_file="$2"
@@ -1058,6 +1306,14 @@ apply_config() {
   log_info "Installed ${target_file} from ${source_file}."
 }
 
+# install_shell_configuration()
+# Description:
+#   Applies shell-specific configuration templates and PS1 snippets to the
+#   user's configuration file, merging prompt definitions where required.
+# Arguments:
+#   $1 - Shell name whose configuration should be installed.
+# Returns:
+#   0 after updating the shell configuration file if applicable.
 install_shell_configuration() {
   local shell_name="$1"
   local template="${REPO_ROOT}/home/.${shell_name}rc"
@@ -1103,6 +1359,14 @@ install_shell_configuration() {
   log_info "Installed ${target} from ${template} with prompt configuration from ${ps1_source}."
 }
 
+# configure_environment()
+# Description:
+#   Applies the repository's shell and editor configuration files unless the
+#   script is running in packages-only mode.
+# Arguments:
+#   None.
+# Returns:
+#   0 after configuration is applied or skipped as appropriate.
 configure_environment() {
   step "Apply configuration files"
 
@@ -1131,6 +1395,14 @@ configure_environment() {
   CONFIG_APPLIED=true
 }
 
+# configure_aliases()
+# Description:
+#   Installs shell alias definitions and supporting snippets across shells,
+#   generating fish-compatible aliases when python3 is available.
+# Arguments:
+#   None.
+# Returns:
+#   0 after alias configuration completes or is skipped.
 configure_aliases() {
   step "Configure shell aliases"
 
@@ -1244,6 +1516,14 @@ PY
   ALIASES_CONFIGURED=true
 }
 
+# install_starship_prompt()
+# Description:
+#   Installs and configures the Starship prompt when enabled, ensuring any
+#   shell-specific initialization files align with repository settings.
+# Arguments:
+#   None.
+# Returns:
+#   0 on success; may exit the script if installation fails.
 install_starship_prompt() {
   step "Install Starship prompt"
 
@@ -1288,6 +1568,14 @@ install_starship_prompt() {
   STARSHIP_SKIPPED=false
 }
 
+# ensure_jetbrainsmono_nerd_font()
+# Description:
+#   Verifies that the JetBrainsMono Nerd Font is present and installs it from
+#   the official release archive if necessary.
+# Arguments:
+#   None.
+# Returns:
+#   0 on success; exits the script if the font cannot be installed.
 ensure_jetbrainsmono_nerd_font() {
   step "Ensure JetBrainsMono Nerd Font"
 
@@ -1416,6 +1704,14 @@ PY
   JETBRAINS_FONT_INSTALLED=true
 }
 
+# ensure_tmux_plugin_manager()
+# Description:
+#   Ensures the tmux plugin manager (TPM) is installed in the user's tmux
+#   plugins directory, cloning it if missing.
+# Arguments:
+#   None.
+# Returns:
+#   0 if TPM is ensured; exits the script if installation fails.
 ensure_tmux_plugin_manager() {
   step "Ensure tmux plugin manager"
 
@@ -1442,6 +1738,14 @@ ensure_tmux_plugin_manager() {
   fi
 }
 
+# install_tmux_plugins()
+# Description:
+#   Runs the TPM-provided installation script to ensure tmux plugins are
+#   installed for the user.
+# Arguments:
+#   None.
+# Returns:
+#   0 on success; exits the script if plugin installation fails.
 install_tmux_plugins() {
   step "Install tmux plugins"
 
@@ -1466,6 +1770,14 @@ install_tmux_plugins() {
   fi
 }
 
+# summarize()
+# Description:
+#   Provides a summary of the actions performed during the setup, including
+#   installed packages and configured components.
+# Arguments:
+#   None.
+# Returns:
+#   0 after logging the summary information.
 summarize() {
   step "Summary"
 
@@ -1532,6 +1844,14 @@ summarize() {
   fi
 }
 
+# main()
+# Description:
+#   Entry point that orchestrates environment detection, user confirmations,
+#   installation steps, configuration, and final summary output.
+# Arguments:
+#   $@ - Command-line arguments passed to the setup script.
+# Returns:
+#   0 on success; may exit earlier if a step encounters a fatal error.
 main() {
   parse_args "$@"
   detect_environment

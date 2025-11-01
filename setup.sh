@@ -583,7 +583,7 @@ detect_environment() {
   local uname_out
   uname_out="$(uname -s)"
   OPERATING_SYSTEM_LABEL="${uname_out}"
-  format_log_context "${OPERATING_SYSTEM_LABEL}"
+  format_log_context ""
 
   if [[ "${uname_out}" == "Darwin" ]]; then
     ENVIRONMENT="mac"
@@ -605,7 +605,6 @@ detect_environment() {
       OPERATING_SYSTEM_LABEL="macOS"
     fi
 
-    format_log_context "${OPERATING_SYSTEM_LABEL}"
     return 0
   fi
 
@@ -671,7 +670,7 @@ detect_environment() {
     exit 1
   fi
 
-  format_log_context "${OPERATING_SYSTEM_LABEL:-${ENVIRONMENT:-Environment}}"
+  format_log_context ""
 }
 
 install_packages() {

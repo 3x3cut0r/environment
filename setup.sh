@@ -219,16 +219,16 @@ sanitize_prompt_reply() {
 prompt_for_input() {
   local prompt="$1"
   local __resultvar="$2"
-  local reply=""
+  local user_reply=""
 
   if [[ -t 0 ]]; then
     log_input_prompt "${prompt}"
-    if ! read -r reply; then
+    if ! read -r user_reply; then
       return 1
     fi
   elif [[ -r /dev/tty ]]; then
     log_input_prompt "${prompt}" "tty"
-    if ! read -r reply < /dev/tty; then
+    if ! read -r user_reply < /dev/tty; then
       return 1
     fi
   else
@@ -238,9 +238,12 @@ prompt_for_input() {
   # Normalise the response to avoid issues caused by carriage returns or
   # accidental surrounding whitespace, which otherwise prevent simple inputs
   # like "y" from matching confirmation checks later on.
-  reply="$(sanitize_prompt_reply "${reply}")"
+  user_reply="$(sanitize_prompt_reply "${user_reply}")"
 
-  printf -v "${__resultvar}" '%s' "${reply}"
+  # Use printf -v to propagate the sanitized reply back to the caller. The
+  # destination variable might be local to the caller, so avoid naming clashes
+  # with our own locals that would otherwise shadow it.
+  printf -v "${__resultvar}" '%s' "${user_reply}"
   return 0
 }
 

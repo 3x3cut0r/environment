@@ -212,6 +212,7 @@ prompt_for_input() {
     return 2
   fi
 
+  reply="${reply//$'\r'/}"
   printf -v "${__resultvar}" '%s' "${reply}"
   return 0
 }

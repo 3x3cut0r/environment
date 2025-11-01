@@ -17,7 +17,7 @@ symbol = " "
 disabled = true
 
 [custom.prompt_symbol]
-command = "if [ \"$(id -u)\" -eq 0 ]; then printf '#'; else printf '\\$'; fi"
+command = "if [ \"$(id -u)\" -eq 0 ]; then printf '#'; else printf '$'; fi"
 format = "$output "
 shell = ["bash", "--noprofile", "--norc"]
 when = "true"

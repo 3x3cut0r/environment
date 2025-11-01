@@ -193,6 +193,29 @@ log_step_message() {
   printf '%b%s%b\n' "${COLOR_INFO}" "${formatted}" "${COLOR_RESET}"
 }
 
+sanitize_prompt_reply() {
+  local input="$1"
+
+  # Remove carriage returns and line feeds that can be appended by
+  # environments emitting Windows-style line endings. These extra
+  # characters prevent straightforward confirmation inputs from
+  # matching validation checks later on.
+  input="${input//$'\r'/}"
+  input="${input//$'\n'/}"
+
+  # Trim leading and trailing spaces or tabs so accidental whitespace
+  # entered before or after the response does not cause mismatches.
+  while [[ "${input}" == ' '* || "${input}" == $'\t'* ]]; do
+    input="${input#?}"
+  done
+
+  while [[ "${input}" == *' ' || "${input}" == *$'\t' ]]; do
+    input="${input%?}"
+  done
+
+  printf '%s' "${input}"
+}
+
 prompt_for_input() {
   local prompt="$1"
   local __resultvar="$2"
@@ -211,6 +234,11 @@ prompt_for_input() {
   else
     return 2
   fi
+
+  # Normalise the response to avoid issues caused by carriage returns or
+  # accidental surrounding whitespace, which otherwise prevent simple inputs
+  # like "y" from matching confirmation checks later on.
+  reply="$(sanitize_prompt_reply "${reply}")"
 
   printf -v "${__resultvar}" '%s' "${reply}"
   return 0

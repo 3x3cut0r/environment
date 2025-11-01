@@ -189,7 +189,7 @@ log_step_message() {
   local step_number="$1"
   shift
   local message="$*"
-  local formatted="${LOG_CONTEXT}[${step_number}][INFO] ${message}"
+  local formatted="${LOG_CONTEXT}[INFO] Step ${step_number}/${TOTAL_STEPS} - ${message}"
   printf '%b%s%b\n' "${COLOR_INFO}" "${formatted}" "${COLOR_RESET}"
 }
 

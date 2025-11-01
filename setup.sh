@@ -25,7 +25,7 @@ cleanup_bootstrap() {
 ensure_bootstrap_tools() {
   for tool in curl tar; do
     if ! command -v "${tool}" >/dev/null 2>&1; then
-      echo "${tool} is required to bootstrap the environment setup." >&2
+      log_error "${tool} is required to bootstrap the environment setup."
       exit 1
     fi
   done
@@ -45,12 +45,12 @@ bootstrap_and_exec() {
   TMP_DIR="$(mktemp -d)"
 
   if [[ -z "${TMP_DIR}" || ! -d "${TMP_DIR}" ]]; then
-    echo "Failed to create temporary directory." >&2
+    log_error "Failed to create temporary directory."
     exit 1
   fi
 
   if ! curl -fsSL "${tarball_url}" | tar -xz -C "${TMP_DIR}" --strip-components=1; then
-    echo "Failed to download or extract repository archive from ${tarball_url}." >&2
+    log_error "Failed to download or extract repository archive from ${tarball_url}."
     exit 1
   fi
 
@@ -59,7 +59,7 @@ bootstrap_and_exec() {
     if [[ -f "${script_path}" ]]; then
       chmod +x "${script_path}"
     else
-      echo "Expected setup script not found in repository archive." >&2
+      log_error "Expected setup script not found in repository archive."
       exit 1
     fi
   fi
@@ -119,10 +119,107 @@ STARSHIP_SKIPPED=false
 INSTALL_STARSHIP=true
 OPERATING_SYSTEM_LABEL=""
 
+LOG_CONTEXT="[Environment]"
+
+if [[ -t 1 ]]; then
+  COLOR_RESET=$'\033[0m'
+  COLOR_INFO=$'\033[32m'
+  COLOR_WARN=$'\033[38;5;208m'
+  COLOR_ERROR=$'\033[31m'
+else
+  COLOR_RESET=""
+  COLOR_INFO=""
+  COLOR_WARN=""
+  COLOR_ERROR=""
+fi
+
+format_log_context() {
+  local label="$1"
+  if [[ -n "${label}" ]]; then
+    LOG_CONTEXT="[${label}]"
+  else
+    LOG_CONTEXT="[Environment]"
+  fi
+}
+
+log_message() {
+  local level="$1"
+  shift
+  local color="$1"
+  shift
+  local destination="$1"
+  shift
+  local message="$*"
+  local formatted_message="${LOG_CONTEXT}"
+  if [[ -n "${level}" ]]; then
+    formatted_message+="[${level}]"
+  fi
+  formatted_message+=" ${message}"
+  if [[ "${destination}" == "stderr" ]]; then
+    printf '%b%s%b\n' "${color}" "${formatted_message}" "${COLOR_RESET}" >&2
+  else
+    printf '%b%s%b\n' "${color}" "${formatted_message}" "${COLOR_RESET}"
+  fi
+}
+
+log_info() {
+  log_message "INFO" "${COLOR_INFO}" "stdout" "$*"
+}
+
+log_warn() {
+  log_message "WARN" "${COLOR_WARN}" "stdout" "$*"
+}
+
+log_error() {
+  log_message "ERROR" "${COLOR_ERROR}" "stderr" "$*"
+}
+
+log_input_prompt() {
+  local prompt="$1"
+  local destination="${2:-stdout}"
+  local formatted="${LOG_CONTEXT}[INPUT] ${prompt}"
+  if [[ "${destination}" == "tty" ]]; then
+    printf '%b%s%b ' "${COLOR_WARN}" "${formatted}" "${COLOR_RESET}" > /dev/tty
+  else
+    printf '%b%s%b ' "${COLOR_WARN}" "${formatted}" "${COLOR_RESET}"
+  fi
+}
+
+log_step_message() {
+  local step_number="$1"
+  shift
+  local message="$*"
+  local formatted="${LOG_CONTEXT}[${step_number}][INFO] ${message}"
+  printf '%b%s%b\n' "${COLOR_INFO}" "${formatted}" "${COLOR_RESET}"
+}
+
+prompt_for_input() {
+  local prompt="$1"
+  local __resultvar="$2"
+  local reply=""
+
+  if [[ -t 0 ]]; then
+    log_input_prompt "${prompt}"
+    if ! read -r reply; then
+      return 1
+    fi
+  elif [[ -r /dev/tty ]]; then
+    log_input_prompt "${prompt}" "tty"
+    if ! read -r reply < /dev/tty; then
+      return 1
+    fi
+  else
+    return 2
+  fi
+
+  printf -v "${__resultvar}" '%s' "${reply}"
+  return 0
+}
+
 section_heading() {
-  echo ""
-  echo "$1"
-  echo "------------------------------"
+  printf '\n'
+  log_info "$1"
+  log_info "------------------------------"
 }
 
 display_environment_info() {
@@ -149,12 +246,12 @@ display_environment_info() {
   shell_name="${SHELL:-unknown}"
   workdir="${PWD:-unknown}"
 
-  echo "User: $(whoami 2>/dev/null || echo unknown)"
-  echo "Host: $(hostname 2>/dev/null || echo unknown)"
+  log_info "User: $(whoami 2>/dev/null || echo unknown)"
+  log_info "Host: $(hostname 2>/dev/null || echo unknown)"
   os_label="${OPERATING_SYSTEM_LABEL:-unknown}"
 
-  echo "Operating system: ${os_label} ${kernel}"
-  echo "Architecture: ${arch}"
+  log_info "Operating system: ${os_label} ${kernel}"
+  log_info "Architecture: ${arch}"
 
   if [[ -r /etc/os-release ]]; then
     # shellcheck disable=SC1091
@@ -162,11 +259,11 @@ display_environment_info() {
     local distro_name distro_version
     distro_name="${NAME:-${ID:-unknown}}"
     distro_version="${VERSION:-${VERSION_ID:-unknown}}"
-    echo "Distribution: ${distro_name} ${distro_version}"
+    log_info "Distribution: ${distro_name} ${distro_version}"
   fi
 
-  echo "Shell: ${shell_name}"
-  echo "Working directory: ${workdir}"
+  log_info "Shell: ${shell_name}"
+  log_info "Working directory: ${workdir}"
 }
 
 usage() {
@@ -195,7 +292,7 @@ parse_args() {
         break
         ;;
       -*)
-        echo "Unknown option: $1" >&2
+        log_error "Unknown option: $1"
         usage >&2
         exit 1
         ;;
@@ -208,14 +305,14 @@ parse_args() {
 
 load_packages() {
   if [[ ! -r "${PACKAGES_FILE}" ]]; then
-    echo "Packages file not found: ${PACKAGES_FILE}" >&2
+    log_error "Packages file not found: ${PACKAGES_FILE}"
     exit 1
   fi
 
   mapfile -t PACKAGES < <(grep -vE '^(\s*$|\s*#)' "${PACKAGES_FILE}")
 
   if ((${#PACKAGES[@]} == 0)); then
-    echo "No packages defined in ${PACKAGES_FILE}" >&2
+    log_error "No packages defined in ${PACKAGES_FILE}"
     exit 1
   fi
 }
@@ -230,24 +327,24 @@ display_execution_plan() {
   fi
 
   if ((package_count > 0)); then
-    echo "  - Confirm package installation and install up to ${package_count} ${package_label} listed in packages.list"
+    log_info "  - Confirm package installation and install up to ${package_count} ${package_label} listed in packages.list"
   else
-    echo "  - Skip package installation because no packages are listed"
+    log_info "  - Skip package installation because no packages are listed"
   fi
 
   if [[ "${MODE}" == "packages" ]]; then
-    echo "  - Run in packages-only mode, skipping configuration and tooling setup steps"
+    log_info "  - Run in packages-only mode, skipping configuration and tooling setup steps"
   else
-    echo "  - Apply the repository's configuration files for bash, Vim, Neovim, and tmux"
-    echo "  - Install the curated bash and zsh prompts defined in the repository"
-    echo "  - Configure shell aliases for bash, sh, zsh, and fish"
-    echo "  - Offer Starship prompt installation aligned with the repository configuration"
-    echo "  - Ensure the JetBrainsMono Nerd Font is installed"
-    echo "  - Ensure the tmux plugin manager (TPM) is installed"
-    echo "  - Install tmux plugins via TPM"
+    log_info "  - Apply the repository's configuration files for bash, Vim, Neovim, and tmux"
+    log_info "  - Install the curated bash and zsh prompts defined in the repository"
+    log_info "  - Configure shell aliases for bash, sh, zsh, and fish"
+    log_info "  - Offer Starship prompt installation aligned with the repository configuration"
+    log_info "  - Ensure the JetBrainsMono Nerd Font is installed"
+    log_info "  - Ensure the tmux plugin manager (TPM) is installed"
+    log_info "  - Install tmux plugins via TPM"
   fi
 
-  echo "  - Provide a summary of the actions performed"
+  log_info "  - Provide a summary of the actions performed"
 }
 
 is_shell_available() {
@@ -264,39 +361,40 @@ is_shell_available() {
 
 step() {
   STEP_COUNTER=$((STEP_COUNTER + 1))
-  echo ""
-  echo "Step ${STEP_COUNTER}/${TOTAL_STEPS}: $1"
-  echo "------------------------------"
+  printf '\n'
+  log_step_message "${STEP_COUNTER}" "$1"
 }
 
 confirm_execution() {
-  echo ""
-  local prompt="Do you want to continue? [y/N] "
+  printf '\n'
+  local prompt="Do you want to continue? [y/N]"
+  local reply=""
 
   if [[ "${ENVIRONMENT_AUTO_CONFIRM:-}" =~ ^([yY][eE][sS]|[yY])$ ]]; then
     reply="yes"
   else
-    if [[ -t 0 ]]; then
-      if ! read -rp "${prompt}" reply; then
-        echo "Aborted by user (no input)."
-        exit 0
-      fi
-    elif [[ -r /dev/tty ]]; then
-      if ! read -rp "${prompt}" reply < /dev/tty; then
-        echo "Aborted by user (no input)."
-        exit 0
-      fi
-    else
-      echo "No interactive terminal available for confirmation. Set ENVIRONMENT_AUTO_CONFIRM=yes to run non-interactively."
-      exit 1
+    local prompt_status=0
+    if ! prompt_for_input "${prompt}" reply; then
+      prompt_status=$?
+      case "${prompt_status}" in
+        1)
+          log_warn "Aborted by user (no input)."
+          exit 0
+          ;;
+        2)
+          log_error "No interactive terminal available for confirmation. Set ENVIRONMENT_AUTO_CONFIRM=yes to run non-interactively."
+          exit 1
+          ;;
+      esac
     fi
   fi
+
   case "${reply:-}" in
     [yY][eE][sS]|[yY])
-      echo "Proceeding with setup."
+      log_info "Proceeding with setup."
       ;;
     *)
-      echo "Aborted by user."
+      log_warn "Aborted by user."
       exit 0
       ;;
   esac
@@ -306,7 +404,7 @@ confirm_package_installation() {
   if ((${#PACKAGES[@]} == 0)); then
     INSTALL_PACKAGES=false
     PACKAGES_SKIPPED=true
-    echo "No packages defined to install; skipping package installation."
+    log_info "No packages defined to install; skipping package installation."
     return
   fi
 
@@ -318,7 +416,7 @@ confirm_package_installation() {
     [nN][oO]|[nN])
       INSTALL_PACKAGES=false
       PACKAGES_SKIPPED=true
-      echo "Skipping package installation (ENVIRONMENT_AUTO_INSTALL_PACKAGES set to no)."
+      log_warn "Skipping package installation (ENVIRONMENT_AUTO_INSTALL_PACKAGES set to no)."
       return
       ;;
   esac
@@ -338,41 +436,39 @@ confirm_package_installation() {
   fi
 
   if ((${#PACKAGES[@]} > 0)); then
-    echo "The following packages are queued for installation:"
+    log_info "The following packages are queued for installation:"
     for pkg in "${PACKAGES[@]}"; do
-      echo "  - ${pkg}"
+      log_info "  - ${pkg}"
     done
-    echo
+    printf '\n'
   fi
 
   prompt="${message} [Y/n] "
 
-  if [[ -t 0 ]]; then
-    if ! read -rp "${prompt}" reply; then
-      echo "Skipped package installation (no input)."
-      INSTALL_PACKAGES=false
-      PACKAGES_SKIPPED=true
-      return
-    fi
-  elif [[ -r /dev/tty ]]; then
-    if ! read -rp "${prompt}" reply < /dev/tty; then
-      echo "Skipped package installation (no input)."
-      INSTALL_PACKAGES=false
-      PACKAGES_SKIPPED=true
-      return
-    fi
-  else
-    echo "No interactive terminal available to confirm package installation. Set ENVIRONMENT_AUTO_INSTALL_PACKAGES=yes to proceed non-interactively."
-    INSTALL_PACKAGES=false
-    PACKAGES_SKIPPED=true
-    return
+  local prompt_status=0
+  if ! prompt_for_input "${prompt}" reply; then
+    prompt_status=$?
+    case "${prompt_status}" in
+      1)
+        log_warn "Skipped package installation (no input)."
+        INSTALL_PACKAGES=false
+        PACKAGES_SKIPPED=true
+        return
+        ;;
+      2)
+        log_warn "No interactive terminal available to confirm package installation. Set ENVIRONMENT_AUTO_INSTALL_PACKAGES=yes to proceed non-interactively."
+        INSTALL_PACKAGES=false
+        PACKAGES_SKIPPED=true
+        return
+        ;;
+    esac
   fi
 
   case "${reply:-}" in
     [nN][oO]|[nN])
       INSTALL_PACKAGES=false
       PACKAGES_SKIPPED=true
-      echo "Package installation skipped by user."
+      log_warn "Package installation skipped by user."
       ;;
     *)
       INSTALL_PACKAGES=true
@@ -404,41 +500,39 @@ confirm_starship_setup() {
     return
   fi
 
-  echo ""
-  echo "Starship prompt customization will perform:"
-  echo "  - Installation of the Starship prompt for bash, zsh, and fish via the official script"
-  echo "  - Installation of the repository's Starship configuration"
-  echo "  - Activation snippets so supported shells initialize Starship with that configuration"
+  printf '\n'
+  log_info "Starship prompt customization will perform:"
+  log_info "  - Installation of the Starship prompt for bash, zsh, and fish via the official script"
+  log_info "  - Installation of the repository's Starship configuration"
+  log_info "  - Activation snippets so supported shells initialize Starship with that configuration"
 
   local prompt reply
   prompt="Activate these Starship prompt customizations? [Y/n] "
 
-  if [[ -t 0 ]]; then
-    if ! read -rp "${prompt}" reply; then
-      INSTALL_STARSHIP=false
-      STARSHIP_SKIPPED=true
-      echo "Skipped Starship prompt customization (no input)."
-      return
-    fi
-  elif [[ -r /dev/tty ]]; then
-    if ! read -rp "${prompt}" reply < /dev/tty; then
-      INSTALL_STARSHIP=false
-      STARSHIP_SKIPPED=true
-      echo "Skipped Starship prompt customization (no input)."
-      return
-    fi
-  else
-    echo "No interactive terminal available to confirm Starship prompt customization. Set ENVIRONMENT_AUTO_INSTALL_STARSHIP=yes to continue automatically."
-    INSTALL_STARSHIP=false
-    STARSHIP_SKIPPED=true
-    return
+  local prompt_status=0
+  if ! prompt_for_input "${prompt}" reply; then
+    prompt_status=$?
+    case "${prompt_status}" in
+      1)
+        INSTALL_STARSHIP=false
+        STARSHIP_SKIPPED=true
+        log_warn "Skipped Starship prompt customization (no input)."
+        return
+        ;;
+      2)
+        INSTALL_STARSHIP=false
+        STARSHIP_SKIPPED=true
+        log_warn "No interactive terminal available to confirm Starship prompt customization. Set ENVIRONMENT_AUTO_INSTALL_STARSHIP=yes to continue automatically."
+        return
+        ;;
+    esac
   fi
 
   case "${reply:-}" in
     [nN][oO]|[nN])
       INSTALL_STARSHIP=false
       STARSHIP_SKIPPED=true
-      echo "Starship prompt customization skipped by user."
+      log_warn "Starship prompt customization skipped by user."
       ;;
     *)
       INSTALL_STARSHIP=true
@@ -463,17 +557,16 @@ confirm_homebrew_installation() {
   local prompt reply
   prompt="Homebrew is required to install packages on MacOS. Install Homebrew now? [y/N] "
 
-  if [[ -t 0 ]]; then
-    if ! read -rp "${prompt}" reply; then
-      return 1
-    fi
-  elif [[ -r /dev/tty ]]; then
-    if ! read -rp "${prompt}" reply < /dev/tty; then
-      return 1
-    fi
-  else
-    echo "Cannot prompt to install Homebrew (no interactive terminal). Set ENVIRONMENT_AUTO_INSTALL_HOMEBREW=yes to continue." >&2
-    return 1
+  if ! prompt_for_input "${prompt}" reply; then
+    case "$?" in
+      1)
+        return 1
+        ;;
+      2)
+        log_warn "Cannot prompt to install Homebrew (no interactive terminal). Set ENVIRONMENT_AUTO_INSTALL_HOMEBREW=yes to continue."
+        return 1
+        ;;
+    esac
   fi
 
   case "${reply:-}" in
@@ -490,6 +583,7 @@ detect_environment() {
   local uname_out
   uname_out="$(uname -s)"
   OPERATING_SYSTEM_LABEL="${uname_out}"
+  format_log_context "${OPERATING_SYSTEM_LABEL}"
 
   if [[ "${uname_out}" == "Darwin" ]]; then
     ENVIRONMENT="mac"
@@ -511,6 +605,7 @@ detect_environment() {
       OPERATING_SYSTEM_LABEL="macOS"
     fi
 
+    format_log_context "${OPERATING_SYSTEM_LABEL}"
     return 0
   fi
 
@@ -572,16 +667,18 @@ detect_environment() {
   fi
 
   if [[ -z "${ENVIRONMENT:-}" || -z "${PKG_MANAGER:-}" ]]; then
-    echo "Unsupported or undetected environment."
+    log_error "Unsupported or undetected environment."
     exit 1
   fi
+
+  format_log_context "${OPERATING_SYSTEM_LABEL:-${ENVIRONMENT:-Environment}}"
 }
 
 install_packages() {
   step "Install required packages"
 
   if [[ "${INSTALL_PACKAGES}" != true ]]; then
-    echo "Skipping package installation."
+    log_warn "Skipping package installation."
     return
   fi
 
@@ -592,23 +689,23 @@ install_packages() {
     elif command -v doas >/dev/null 2>&1; then
       sudo_cmd="doas"
     else
-      echo "This script requires administrative privileges to install packages."
+      log_error "This script requires administrative privileges to install packages."
       exit 1
     fi
   fi
 
   if [[ -z "${PKG_MANAGER}" ]]; then
-    echo "Homebrew not detected."
+    log_warn "Homebrew not detected."
     if confirm_homebrew_installation; then
       if /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"; then
         PKG_MANAGER="brew"
         install_packages
       else
-        echo "Failed to install Homebrew; skipping package installation."
+        log_warn "Failed to install Homebrew; skipping package installation."
         PACKAGES_SKIPPED=true
       fi
     else
-      echo "Homebrew installation skipped."
+      log_warn "Homebrew installation skipped."
       PACKAGES_SKIPPED=true
     fi
     return
@@ -622,7 +719,7 @@ install_packages() {
     local resolved
     resolved="$(resolve_package_name "${pkg}")"
     if [[ -z "${resolved}" ]]; then
-      echo "Skipping ${pkg} (not supported on ${ENVIRONMENT})."
+      log_warn "Skipping ${pkg} (not supported on ${ENVIRONMENT})."
       continue
     fi
     local manager=""
@@ -633,12 +730,12 @@ install_packages() {
     else
       if [[ "${PKG_MANAGER}" == "pacman" ]]; then
         if command -v yay >/dev/null 2>&1; then
-          echo "Package ${resolved} (requested as ${pkg}) not available via pacman or yay; skipping."
+          log_warn "Package ${resolved} (requested as ${pkg}) not available via pacman or yay; skipping."
         else
-          echo "Package ${resolved} (requested as ${pkg}) not available via pacman and yay not found; skipping."
+          log_warn "Package ${resolved} (requested as ${pkg}) not available via pacman and yay not found; skipping."
         fi
       else
-        echo "Package ${resolved} (requested as ${pkg}) not available via ${PKG_MANAGER}; skipping."
+        log_warn "Package ${resolved} (requested as ${pkg}) not available via ${PKG_MANAGER}; skipping."
       fi
       continue
     fi
@@ -649,7 +746,7 @@ install_packages() {
   done
 
   if ((${#resolved_packages[@]} == 0)); then
-    echo "No packages available to install for ${PKG_MANAGER}."
+    log_warn "No packages available to install for ${PKG_MANAGER}."
     return
   fi
 
@@ -672,42 +769,42 @@ install_packages() {
     case "${manager}" in
       pacman)
         if ! ${sudo_cmd} pacman -Sy --noconfirm; then
-          echo "Failed to refresh pacman package databases; skipping pacman installations."
+          log_warn "Failed to refresh pacman package databases; skipping pacman installations."
           failed_refresh_managers+=("${manager}")
         fi
         ;;
       yay)
         if ! yay -Sy --noconfirm; then
-          echo "Failed to refresh yay package databases; skipping yay installations."
+          log_warn "Failed to refresh yay package databases; skipping yay installations."
           failed_refresh_managers+=("${manager}")
         fi
         ;;
       apt-get)
         if ! ${sudo_cmd} apt-get update; then
-          echo "Failed to update apt package lists; skipping apt-get installations."
+          log_warn "Failed to update apt package lists; skipping apt-get installations."
           failed_refresh_managers+=("${manager}")
         fi
         ;;
       brew)
         if ! brew update; then
-          echo "Failed to update Homebrew; skipping brew installations."
+          log_warn "Failed to update Homebrew; skipping brew installations."
           failed_refresh_managers+=("${manager}")
         fi
         ;;
       dnf)
         if ! ${sudo_cmd} dnf makecache; then
-          echo "Failed to refresh dnf metadata; skipping dnf installations."
+          log_warn "Failed to refresh dnf metadata; skipping dnf installations."
           failed_refresh_managers+=("${manager}")
         fi
         ;;
       yum)
         if ! ${sudo_cmd} yum makecache; then
-          echo "Failed to refresh yum metadata; skipping yum installations."
+          log_warn "Failed to refresh yum metadata; skipping yum installations."
           failed_refresh_managers+=("${manager}")
         fi
         ;;
       *)
-        echo "Package manager ${manager} is not supported by this script."
+        log_warn "Package manager ${manager} is not supported by this script."
         failed_refresh_managers+=("${manager}")
         ;;
     esac
@@ -728,11 +825,11 @@ install_packages() {
     done
 
     if [[ "${skip_install}" == true ]]; then
-      echo "Skipping ${requested_pkg}; package manager ${manager} not available for installation."
+      log_warn "Skipping ${requested_pkg}; package manager ${manager} not available for installation."
       continue
     fi
 
-    echo "Installing ${requested_pkg} via ${manager} (${resolved_pkg})."
+    log_info "Installing ${requested_pkg} via ${manager} (${resolved_pkg})."
 
     case "${manager}" in
       pacman)
@@ -766,13 +863,13 @@ install_packages() {
         fi
         ;;
       *)
-        echo "Package manager ${manager} is not supported by this script."
+        log_error "Package manager ${manager} is not supported by this script."
         return 1
         ;;
     esac
 
     if [[ "${install_failed}" == true ]]; then
-      echo "Failed to install ${resolved_pkg} (requested as ${requested_pkg}); skipping."
+      log_warn "Failed to install ${resolved_pkg} (requested as ${requested_pkg}); skipping."
       continue
     fi
 
@@ -780,7 +877,7 @@ install_packages() {
   done
 
   if ((${#ENSURED_PACKAGES[@]} == 0)); then
-    echo "No packages were installed due to installation failures."
+    log_warn "No packages were installed due to installation failures."
   fi
 }
 
@@ -901,7 +998,7 @@ apply_config() {
           echo "${end_marker}"
         } >> "${tmp_file}"
         mv "${tmp_file}" "${target_file}"
-        echo "Updated configuration block in ${target_file}."
+        log_info "Updated configuration block in ${target_file}."
         return
       fi
       {
@@ -910,25 +1007,25 @@ apply_config() {
         cat "${source_file}"
         echo "${end_marker}"
       } >> "${target_file}"
-      echo "Appended configuration to ${target_file}."
+      log_info "Appended configuration to ${target_file}."
     else
       {
         echo "${start_marker}"
         cat "${source_file}"
         echo "${end_marker}"
       } > "${target_file}"
-      echo "Created ${target_file} with new configuration."
+      log_info "Created ${target_file} with new configuration."
     fi
     return
   fi
 
   if [[ -e "${target_file}" ]] && cmp -s "${source_file}" "${target_file}"; then
-    echo "${target_file} is already up to date."
+    log_info "${target_file} is already up to date."
     return
   fi
 
   cp "${source_file}" "${target_file}"
-  echo "Installed ${target_file} from ${source_file}."
+  log_info "Installed ${target_file} from ${source_file}."
 }
 
 install_shell_configuration() {
@@ -973,14 +1070,14 @@ install_shell_configuration() {
   done < "${template}"
 
   mv "${tmp_file}" "${target}"
-  echo "Installed ${target} from ${template} with prompt configuration from ${ps1_source}."
+  log_info "Installed ${target} from ${template} with prompt configuration from ${ps1_source}."
 }
 
 configure_environment() {
   step "Apply configuration files"
 
   if [[ "${MODE}" == "packages" ]]; then
-    echo "Skipping configuration (packages-only mode)."
+    log_warn "Skipping configuration (packages-only mode)."
     return
   fi
 
@@ -1008,12 +1105,12 @@ configure_aliases() {
   step "Configure shell aliases"
 
   if [[ "${MODE}" == "packages" ]]; then
-    echo "Skipping alias configuration (packages-only mode)."
+    log_warn "Skipping alias configuration (packages-only mode)."
     return
   fi
 
   if [[ ! -f "${ALIASES_FILE}" ]]; then
-    echo "Aliases file not found: ${ALIASES_FILE}" >&2
+    log_error "Aliases file not found: ${ALIASES_FILE}"
     return
   fi
 
@@ -1024,7 +1121,7 @@ configure_aliases() {
 
   mkdir -p "${alias_dir}"
   cp "${ALIASES_FILE}" "${alias_list_target}"
-  echo "Installed alias definitions to ${alias_list_target}."
+  log_info "Installed alias definitions to ${alias_list_target}."
 
   if command -v python3 >/dev/null 2>&1; then
     python3 - <<'PY' "${alias_list_target}" "${fish_alias_target}"
@@ -1084,14 +1181,14 @@ for raw in source_path.read_text().splitlines():
 
 target_path.write_text("\n".join(lines) + "\n")
 PY
-    echo "Generated fish aliases at ${fish_alias_target}."
+    log_info "Generated fish aliases at ${fish_alias_target}."
   else
     {
       echo "# python3 not available; falling back to bash-compatible aliases"
       echo "# Source file: ${alias_list_target}"
     } > "${fish_alias_target}"
     cat "${alias_list_target}" >> "${fish_alias_target}"
-    echo "python3 not found. Copied aliases to ${fish_alias_target} without conversion."
+    log_warn "python3 not found. Copied aliases to ${fish_alias_target} without conversion."
   fi
 
   local posix_snippet="${REPO_ROOT}/home/.config/environment/snippets/aliases_posix.append"
@@ -1121,29 +1218,29 @@ install_starship_prompt() {
   step "Install Starship prompt"
 
   if [[ "${MODE}" == "packages" ]]; then
-    echo "Skipping Starship prompt setup (packages-only mode)."
+    log_warn "Skipping Starship prompt setup (packages-only mode)."
     STARSHIP_SKIPPED=true
     return
   fi
 
   if [[ "${INSTALL_STARSHIP}" != true ]]; then
-    echo "Starship prompt setup skipped."
+    log_warn "Starship prompt setup skipped."
     STARSHIP_SKIPPED=true
     local fish_starship_config="${HOME}/.config/fish/conf.d/starship.fish"
     if [[ -e "${fish_starship_config}" ]]; then
       rm -f "${fish_starship_config}"
-      echo "Removed ${fish_starship_config} to prevent Starship initialization."
+      log_warn "Removed ${fish_starship_config} to prevent Starship initialization."
     fi
     return
   fi
 
   if command -v starship >/dev/null 2>&1; then
-    echo "Starship prompt already installed."
+    log_info "Starship prompt already installed."
   else
     if curl -sS https://starship.rs/install.sh | sh -s -- -y; then
-      echo "Installed Starship prompt using the official installer."
+      log_info "Installed Starship prompt using the official installer."
     else
-      echo "Failed to install Starship prompt." >&2
+      log_error "Failed to install Starship prompt."
       exit 1
     fi
   fi
@@ -1156,7 +1253,7 @@ install_starship_prompt() {
     apply_config "${REPO_ROOT}/home/.config/fish/conf.d/starship.fish" "${HOME}/.config/fish/conf.d/starship.fish" "#"
   fi
 
-  echo "Aligned Starship prompt with the repository configuration."
+  log_info "Aligned Starship prompt with the repository configuration."
   STARSHIP_CONFIGURED=true
   STARSHIP_SKIPPED=false
 }
@@ -1165,7 +1262,7 @@ ensure_jetbrainsmono_nerd_font() {
   step "Ensure JetBrainsMono Nerd Font"
 
   if [[ "${MODE}" == "packages" ]]; then
-    echo "Skipping JetBrainsMono Nerd Font installation (packages-only mode)."
+    log_warn "Skipping JetBrainsMono Nerd Font installation (packages-only mode)."
     return
   fi
 
@@ -1184,7 +1281,7 @@ ensure_jetbrainsmono_nerd_font() {
   font_url="https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.zip"
 
   if [[ -f "${font_file}" ]]; then
-    echo "JetBrainsMono Nerd Font already present at ${font_file}."
+    log_info "JetBrainsMono Nerd Font already present at ${font_file}."
     JETBRAINS_FONT_INSTALLED=true
     return
   fi
@@ -1193,13 +1290,13 @@ ensure_jetbrainsmono_nerd_font() {
 
   temp_dir="$(mktemp -d)"
   if [[ -z "${temp_dir}" || ! -d "${temp_dir}" ]]; then
-    echo "Failed to create temporary directory for JetBrainsMono Nerd Font installation." >&2
+    log_error "Failed to create temporary directory for JetBrainsMono Nerd Font installation."
     exit 1
   fi
 
   archive="${temp_dir}/JetBrainsMono.zip"
   if ! curl -fsSL "${font_url}" -o "${archive}"; then
-    echo "Failed to download JetBrainsMono Nerd Font from ${font_url}." >&2
+    log_error "Failed to download JetBrainsMono Nerd Font from ${font_url}."
     rm -rf "${temp_dir}"
     exit 1
   fi
@@ -1209,7 +1306,7 @@ ensure_jetbrainsmono_nerd_font() {
 
   if command -v unzip >/dev/null 2>&1; then
     if ! unzip -oq "${archive}" -d "${extract_dir}"; then
-      echo "Failed to extract JetBrainsMono Nerd Font archive with unzip." >&2
+      log_error "Failed to extract JetBrainsMono Nerd Font archive with unzip."
       rm -rf "${temp_dir}"
       exit 1
     fi
@@ -1226,12 +1323,12 @@ target_dir.mkdir(parents=True, exist_ok=True)
 with zipfile.ZipFile(archive_path) as zf:
     zf.extractall(target_dir)
 PY
-      echo "Failed to extract JetBrainsMono Nerd Font archive with python3." >&2
+      log_error "Failed to extract JetBrainsMono Nerd Font archive with python3."
       rm -rf "${temp_dir}"
       exit 1
     fi
   else
-    echo "Neither unzip nor python3 is available to extract the JetBrainsMono Nerd Font archive." >&2
+    log_error "Neither unzip nor python3 is available to extract the JetBrainsMono Nerd Font archive."
     rm -rf "${temp_dir}"
     exit 1
   fi
@@ -1243,7 +1340,7 @@ PY
       if install -m 0644 "${font_path}" "${fonts_dir}/"; then
         copied=true
       else
-        echo "Failed to install font file ${font_path}." >&2
+        log_error "Failed to install font file ${font_path}."
         rm -rf "${temp_dir}"
         exit 1
       fi
@@ -1262,7 +1359,7 @@ PY
       if install -m 0644 "${font_path}" "${fonts_dir}/"; then
         copied=true
       else
-        echo "Failed to install font file ${font_path}." >&2
+        log_error "Failed to install font file ${font_path}."
         rm -rf "${temp_dir}"
         exit 1
       fi
@@ -1270,22 +1367,22 @@ PY
   fi
 
   if [[ "${copied}" == false ]]; then
-    echo "No font files were found in the JetBrainsMono Nerd Font archive." >&2
+    log_error "No font files were found in the JetBrainsMono Nerd Font archive."
     rm -rf "${temp_dir}"
     exit 1
   fi
 
   if command -v fc-cache >/dev/null 2>&1; then
     if fc-cache -f "${fonts_dir}" >/dev/null 2>&1; then
-      echo "Refreshed font cache via fc-cache."
+      log_info "Refreshed font cache via fc-cache."
     else
-      echo "Warning: failed to refresh font cache with fc-cache." >&2
+      log_warn "Warning: failed to refresh font cache with fc-cache."
     fi
   fi
 
   rm -rf "${temp_dir}"
 
-  echo "Installed JetBrainsMono Nerd Font to ${fonts_dir}."
+  log_info "Installed JetBrainsMono Nerd Font to ${fonts_dir}."
   JETBRAINS_FONT_INSTALLED=true
 }
 
@@ -1293,24 +1390,24 @@ ensure_tmux_plugin_manager() {
   step "Ensure tmux plugin manager"
 
   if [[ "${MODE}" == "packages" ]]; then
-    echo "Skipping tmux plugin manager setup (packages-only mode)."
+    log_warn "Skipping tmux plugin manager setup (packages-only mode)."
     return
   fi
 
   local tpm_dir="${HOME}/.tmux/plugins/tpm"
 
   if [[ -d "${tpm_dir}" ]]; then
-    echo "tmux plugin manager already installed at ${tpm_dir}."
+    log_info "tmux plugin manager already installed at ${tpm_dir}."
     TPM_INSTALLED=true
     return
   fi
 
   mkdir -p "${HOME}/.tmux/plugins"
   if git clone https://github.com/tmux-plugins/tpm "${tpm_dir}"; then
-    echo "Installed tmux plugin manager to ${tpm_dir}."
+    log_info "Installed tmux plugin manager to ${tpm_dir}."
     TPM_INSTALLED=true
   else
-    echo "Failed to install tmux plugin manager." >&2
+    log_error "Failed to install tmux plugin manager."
     exit 1
   fi
 }
@@ -1319,22 +1416,22 @@ install_tmux_plugins() {
   step "Install tmux plugins"
 
   if [[ "${MODE}" == "packages" ]]; then
-    echo "Skipping tmux plugin installation (packages-only mode)."
+    log_warn "Skipping tmux plugin installation (packages-only mode)."
     return
   fi
 
   local install_script="${HOME}/.tmux/plugins/tpm/scripts/install_plugins.sh"
 
   if [[ ! -f "${install_script}" ]]; then
-    echo "tmux plugin installer not found at ${install_script}." >&2
+    log_error "tmux plugin installer not found at ${install_script}."
     exit 1
   fi
 
   if bash "${install_script}"; then
-    echo "Installed tmux plugins via TPM."
+    log_info "Installed tmux plugins via TPM."
     TMUX_PLUGINS_INSTALLED=true
   else
-    echo "Failed to install tmux plugins via TPM." >&2
+    log_error "Failed to install tmux plugins via TPM."
     exit 1
   fi
 }
@@ -1343,65 +1440,65 @@ summarize() {
   step "Summary"
 
   if [[ "${PACKAGES_SKIPPED}" == true ]]; then
-    echo "Package installation was skipped."
+    log_warn "Package installation was skipped."
   elif ((${#ENSURED_PACKAGES[@]} > 0)); then
-    echo "Packages ensured:"
+    log_info "Packages ensured:"
     for pkg in "${ENSURED_PACKAGES[@]}"; do
-      echo "  - ${pkg}"
+      log_info "  - ${pkg}"
     done
   else
-    echo "No packages were installed by this run."
+    log_warn "No packages were installed by this run."
   fi
 
   if [[ "${CONFIG_APPLIED}" == true ]]; then
-    echo "Configuration files managed:"
-    echo "  - ~/.bashrc"
-    echo "  - ~/.bash_profile"
-    echo "  - ~/.profile"
-    echo "  - ~/.zshrc"
-    echo "  - ~/.vimrc"
-    echo "  - ~/.tmux.conf"
-    echo "  - ~/.config/nvim/init.vim"
+    log_info "Configuration files managed:"
+    log_info "  - ~/.bashrc"
+    log_info "  - ~/.bash_profile"
+    log_info "  - ~/.profile"
+    log_info "  - ~/.zshrc"
+    log_info "  - ~/.vimrc"
+    log_info "  - ~/.tmux.conf"
+    log_info "  - ~/.config/nvim/init.vim"
   else
-    echo "Configuration files were not updated."
+    log_warn "Configuration files were not updated."
   fi
 
   if [[ "${ALIASES_CONFIGURED}" == true ]]; then
-    echo "Shell aliases configured for:"
-    echo "  - bash"
-    echo "  - sh"
-    echo "  - zsh"
-    echo "  - fish"
+    log_info "Shell aliases configured for:"
+    log_info "  - bash"
+    log_info "  - sh"
+    log_info "  - zsh"
+    log_info "  - fish"
   else
-    echo "Shell aliases were not configured."
+    log_warn "Shell aliases were not configured."
   fi
 
   if [[ "${MODE}" != "packages" ]]; then
     if [[ "${STARSHIP_CONFIGURED}" == true ]]; then
-      echo "Starship prompt installed and aligned with the repository configuration."
+      log_info "Starship prompt installed and aligned with the repository configuration."
     elif [[ "${STARSHIP_SKIPPED}" == true ]]; then
-      echo "Starship prompt customization was skipped."
+      log_warn "Starship prompt customization was skipped."
     else
-      echo "Starship prompt was not changed."
+      log_info "Starship prompt was not changed."
     fi
   fi
 
   if [[ "${TPM_INSTALLED}" == true ]]; then
-    echo "tmux plugin manager ensured."
+    log_info "tmux plugin manager ensured."
   else
-    echo "tmux plugin manager was not changed."
+    log_warn "tmux plugin manager was not changed."
   fi
 
   if [[ "${TMUX_PLUGINS_INSTALLED}" == true ]]; then
-    echo "tmux plugins installed via TPM."
+    log_info "tmux plugins installed via TPM."
   else
-    echo "tmux plugins were not installed."
+    log_warn "tmux plugins were not installed."
   fi
 
   if [[ "${JETBRAINS_FONT_INSTALLED}" == true ]]; then
-    echo "JetBrainsMono Nerd Font ensured."
+    log_info "JetBrainsMono Nerd Font ensured."
   else
-    echo "JetBrainsMono Nerd Font was not changed."
+    log_warn "JetBrainsMono Nerd Font was not changed."
   fi
 }
 

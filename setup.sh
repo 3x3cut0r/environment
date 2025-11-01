@@ -246,12 +246,12 @@ display_environment_info() {
   shell_name="${SHELL:-unknown}"
   workdir="${PWD:-unknown}"
 
-  log_info "User: $(whoami 2>/dev/null || echo unknown)"
-  log_info "Host: $(hostname 2>/dev/null || echo unknown)"
+  log_info "  User: $(whoami 2>/dev/null || echo unknown)"
+  log_info "  Host: $(hostname 2>/dev/null || echo unknown)"
   os_label="${OPERATING_SYSTEM_LABEL:-unknown}"
 
-  log_info "Operating system: ${os_label} ${kernel}"
-  log_info "Architecture: ${arch}"
+  log_info "  Operating system: ${os_label} ${kernel}"
+  log_info "  Architecture: ${arch}"
 
   if [[ -r /etc/os-release ]]; then
     # shellcheck disable=SC1091
@@ -259,11 +259,11 @@ display_environment_info() {
     local distro_name distro_version
     distro_name="${NAME:-${ID:-unknown}}"
     distro_version="${VERSION:-${VERSION_ID:-unknown}}"
-    log_info "Distribution: ${distro_name} ${distro_version}"
+    log_info "  Distribution: ${distro_name} ${distro_version}"
   fi
 
-  log_info "Shell: ${shell_name}"
-  log_info "Working directory: ${workdir}"
+  log_info "  Shell: ${shell_name}"
+  log_info "  Working directory: ${workdir}"
 }
 
 usage() {

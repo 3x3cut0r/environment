@@ -1077,7 +1077,7 @@ install_shell_configuration() {
 
   local in_prompt_block=0
   while IFS= read -r line || [[ -n "${line}" ]]; do
-    if [[ "${line}" == "${start_marker}" ]]; then
+    if [[ "${line}" == *"${start_marker}" ]]; then
       echo "${line}" >> "${tmp_file}"
       if [[ -f "${ps1_source}" ]]; then
         cat "${ps1_source}" >> "${tmp_file}"
@@ -1086,7 +1086,7 @@ install_shell_configuration() {
       continue
     fi
 
-    if [[ "${line}" == "${end_marker}" ]]; then
+    if [[ "${line}" == *"${end_marker}" ]]; then
       in_prompt_block=0
       echo "${line}" >> "${tmp_file}"
       continue

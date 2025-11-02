@@ -168,7 +168,7 @@ confirm_execution() {
     if [ "${ENVIRONMENT_AUTO_CONFIRM:-no}" != "yes" ]; then
         local response=""
 
-        log_message INPUT "Continue with setup? [y/N] "
+        printf '[Environment][\033[35mINPUT\033[0m] %s' "$prompt"
 
         local read_status=0
         if [ -t 0 ]; then
@@ -188,7 +188,8 @@ confirm_execution() {
         fi
         case "$response" in
             y|Y|yes|YES)
-                log_message INFO "Confirmation received, proceeding with setup steps.\n"
+                log_message INFO "Confirmation received, proceeding with setup steps."
+                printf '\n'
                 return 0
                 ;;
             *)

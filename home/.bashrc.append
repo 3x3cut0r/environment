@@ -1,12 +1,13 @@
 export EDITOR="nvim"
 export VISUAL="nvim"
 
-# >>> PS1.bash >>>
-# Placeholder replaced by setup.sh with the contents of home/PS1.bash.
-# <<< PS1.bash <<<
+# <<< PS1 >>>
 
-# >>> Starship.bash >>>
 if command -v starship >/dev/null 2>&1; then
   eval "$(starship init bash)"
 fi
-# <<< Starship.bash <<<
+
+if [ -f "${HOME}/.config/aliases.list" ]; then
+  # shellcheck disable=SC1090
+  . "${HOME}/.config/aliases.list"
+fi

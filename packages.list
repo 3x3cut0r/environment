@@ -18,6 +18,7 @@ ranger
 ripgrep
 rsync
 sshpass
+sudo
 tcpdump
 termshark
 tmux

@@ -5,9 +5,8 @@ This repository provides a foundational setup script and configuration snippets 
 ## Repository layout
 
 - `setup.sh` – bootstrap and setup script that installs packages and applies configuration.
-- `home/` – configuration snippets that are appended to the user's home directory files.
-- `packages.list` – list of packages that are installed on supported platforms.
-- `aliases.list` – shell aliases that are merged into supported shells.
+- `home/` – configuration snippets that replaces or will append to the user's home directory files.
+- `vars/` – common variables, such as `packages.list`, `aliases.list` or `PS1`, that will applied or inserted into multiple files
 
 ## Usage
 
@@ -25,8 +24,6 @@ To run the script non-interactively (for example in automated setups), set `ENVI
 ENVIRONMENT_AUTO_CONFIRM=yes curl -fsSL https://raw.githubusercontent.com/3x3cut0r/environment/main/setup.sh | bash
 ```
 
-You can override the branch that should be executed by setting the `ENVIRONMENT_BRANCH` environment variable before running the command.
-
 ### Run from a local clone
 
 1. Clone the repository and change into its directory.
@@ -35,10 +32,17 @@ You can override the branch that should be executed by setting the `ENVIRONMENT_
    git clone https://github.com/3x3cut0r/environment.git
    cd environment
    ```
+
 2. Run the setup script:
 
    ```bash
    ./setup.sh
+   ```
+
+   **or**
+
+   ```bash
+   ENVIRONMENT_AUTO_CONFIRM=yes ./setup.sh
    ```
 
 3. When prompted, confirm the installation. The script will:

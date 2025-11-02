@@ -1,3 +1,0 @@
-if test -f "$HOME/.config/environment/aliases.fish"
-  source "$HOME/.config/environment/aliases.fish"
-end

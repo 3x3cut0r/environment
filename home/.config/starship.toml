@@ -5,10 +5,6 @@ add_newline = false
 format = """
 $directory${custom.prompt_symbol}
 """
-# Alternative formats:
-# $directory${custom.prompt_symbol}
-# $username$directory${custom.prompt_symbol}
-# $username$hostname$directory${custom.prompt_symbol}
 
 [fill]
 symbol = " "

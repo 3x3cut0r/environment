@@ -1326,17 +1326,23 @@ apply_config() {
 #   0 after updating the shell configuration file if applicable.
 install_shell_configuration() {
   local shell_name="$1"
-  local template="${REPO_ROOT}/home/.${shell_name}rc"
+  local template_base="${REPO_ROOT}/home/.${shell_name}rc"
+  local template_mode="auto"
+  local template=""
+  if [[ -f "${template_base}" ]]; then
+    template="${template_base}"
+  elif [[ -f "${template_base}.append" ]]; then
+    template="${template_base}.append"
+    template_mode="append"
+  else
+    return
+  fi
   local ps1_source="${REPO_ROOT}/home/PS1.${shell_name}"
   local target="${HOME}/.${shell_name}rc"
   local start_marker="# >>> PS1.${shell_name} >>>"
   local end_marker="# <<< PS1.${shell_name} <<<"
   local starship_start_marker="# >>> Starship.${shell_name} >>>"
   local starship_end_marker="# <<< Starship.${shell_name} <<<"
-
-  if [[ ! -f "${template}" ]]; then
-    return
-  fi
 
   mkdir -p "$(dirname "${target}")"
 
@@ -1438,8 +1444,47 @@ install_shell_configuration() {
     fi
   fi
 
+  if [[ "${template_mode}" == "append" ]]; then
+    apply_config "${tmp_file}" "${target}" "#" append
+    rm -f "${tmp_file}"
+    return
+  fi
+
   mv "${tmp_file}" "${target}"
   log_info "Installed ${target} from ${template} with prompt configuration from ${ps1_source}."
+}
+
+# apply_home_config()
+# Description:
+#   Applies a configuration file from the repository's home directory to the
+#   corresponding location in the user's home, supporting optional ".append"
+#   variants for append-only snippets.
+# Arguments:
+#   $1 - Relative path within the repository's home directory (leading dot
+#        should be included for dotfiles).
+#   $2 - Destination path in the user's home directory.
+#   $3 - Optional comment prefix for marker lines (default '#').
+# Returns:
+#   0 if a matching configuration file exists and is applied; otherwise 0
+#   without making changes.
+apply_home_config() {
+  local relative_path="$1"
+  local target_path="$2"
+  local comment_prefix="${3:-#}"
+  local base_path="${REPO_ROOT}/home/${relative_path}"
+  local source_path=""
+  local mode="auto"
+
+  if [[ -f "${base_path}" ]]; then
+    source_path="${base_path}"
+  elif [[ -f "${base_path}.append" ]]; then
+    source_path="${base_path}.append"
+    mode="append"
+  else
+    return
+  fi
+
+  apply_config "${source_path}" "${target_path}" "${comment_prefix}" "${mode}"
 }
 
 # configure_environment()
@@ -1460,24 +1505,19 @@ configure_environment() {
 
   if is_shell_available bash; then
     install_shell_configuration bash
-    if [[ -f "${REPO_ROOT}/home/.bash_profile" ]]; then
-      apply_config "${REPO_ROOT}/home/.bash_profile" "${HOME}/.bash_profile" "#"
-    fi
-    if [[ -f "${REPO_ROOT}/home/.profile" ]]; then
-      apply_config "${REPO_ROOT}/home/.profile" "${HOME}/.profile" "#"
-    fi
+    apply_home_config ".bash_profile" "${HOME}/.bash_profile" "#"
+    apply_home_config ".profile" "${HOME}/.profile" "#"
   fi
 
   if is_shell_available zsh; then
     install_shell_configuration zsh
-    if [[ -f "${REPO_ROOT}/home/.zprofile" ]]; then
-      apply_config "${REPO_ROOT}/home/.zprofile" "${HOME}/.zprofile" "#"
-    fi
+    apply_home_config ".zprofile" "${HOME}/.zprofile" "#"
   fi
 
-  apply_config "${REPO_ROOT}/home/.vimrc" "${HOME}/.vimrc" "\""
-  apply_config "${REPO_ROOT}/home/.tmux.conf" "${HOME}/.tmux.conf" "#"
-  apply_config "${REPO_ROOT}/home/.config/nvim/init.vim" "${HOME}/.config/nvim/init.vim" "\""
+  apply_home_config ".vimrc" "${HOME}/.vimrc" "\""
+  apply_home_config ".exrc" "${HOME}/.exrc" "\""
+  apply_home_config ".tmux.conf" "${HOME}/.tmux.conf" "#"
+  apply_home_config ".config/nvim/init.vim" "${HOME}/.config/nvim/init.vim" "\""
   CONFIG_APPLIED=true
 }
 

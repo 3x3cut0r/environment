@@ -258,7 +258,9 @@ confirm_execution() {
 main() {
     parse_args "$@"
     trap 'cleanup_temp_resources' EXIT
+    trap 'cleanup_temp_resources; exit 129' HUP
     trap 'cleanup_temp_resources; exit 130' INT
+    trap 'cleanup_temp_resources; exit 131' QUIT
     trap 'cleanup_temp_resources; exit 143' TERM
     create_temp_directory
     download_repository_contents

@@ -1261,31 +1261,70 @@ apply_config() {
 
     if [[ -e "${target_file}" ]]; then
       if grep -Fq "${start_marker}" "${target_file}"; then
-        local tmp_file
+        local tmp_file normalized_file
         tmp_file="$(mktemp)"
         awk -v start="${start_marker}" -v end="${end_marker}" '
           $0 == start {in_block=1; next}
           $0 == end {in_block=0; next}
           !in_block {print}
         ' "${target_file}" > "${tmp_file}"
-        if [[ -s "${tmp_file}" ]]; then
-          printf '\n' >> "${tmp_file}"
-        fi
+        normalized_file="$(mktemp)"
+        awk '
+          {
+            lines[NR] = $0
+          }
+          END {
+            last = NR
+            while (last > 0 && lines[last] ~ /^[[:space:]]*$/) {
+              last--
+            }
+            for (i = 1; i <= last; i++) {
+              print lines[i]
+            }
+            if (last > 0) {
+              print ""
+            }
+          }
+        ' "${tmp_file}" > "${normalized_file}"
+        mv "${normalized_file}" "${tmp_file}"
         {
           echo "${start_marker}"
           cat "${source_file}"
           echo "${end_marker}"
         } >> "${tmp_file}"
-        mv "${tmp_file}" "${target_file}"
+        cat "${tmp_file}" > "${target_file}"
+        rm -f "${tmp_file}"
         log_info "Updated configuration block in ${target_file}."
         return
       fi
+      local tmp_file normalized_file
+      tmp_file="$(mktemp)"
+      normalized_file="$(mktemp)"
+      awk '
+        {
+          lines[NR] = $0
+        }
+        END {
+          last = NR
+          while (last > 0 && lines[last] ~ /^[[:space:]]*$/) {
+            last--
+          }
+          for (i = 1; i <= last; i++) {
+            print lines[i]
+          }
+          if (last > 0) {
+            print ""
+          }
+        }
+      ' "${target_file}" > "${normalized_file}"
+      mv "${normalized_file}" "${tmp_file}"
       {
-        echo ""
         echo "${start_marker}"
         cat "${source_file}"
         echo "${end_marker}"
-      } >> "${target_file}"
+      } >> "${tmp_file}"
+      cat "${tmp_file}" > "${target_file}"
+      rm -f "${tmp_file}"
       log_info "Appended configuration to ${target_file}."
     else
       {

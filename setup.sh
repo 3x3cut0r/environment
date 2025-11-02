@@ -1460,6 +1460,9 @@ configure_environment() {
 
   if is_shell_available zsh; then
     install_shell_configuration zsh
+    if [[ -f "${REPO_ROOT}/home/.zprofile" ]]; then
+      apply_config "${REPO_ROOT}/home/.zprofile" "${HOME}/.zprofile" "#"
+    fi
   fi
 
   apply_config "${REPO_ROOT}/home/.vimrc" "${HOME}/.vimrc" "\""

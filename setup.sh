@@ -139,8 +139,6 @@ detect_operating_system() {
 }
 
 gather_environment_info() {
-    log_message INFO "Gathering environment information"
-
     detect_operating_system
     normalize_shell_list
 
@@ -199,7 +197,7 @@ confirm_execution() {
                 ;;
         esac
     else
-        log_message INFO "Auto confirmation enabled via ENVIRONMENT_AUTO_CONFIRM."
+        log_message WARN "Auto confirmation enabled via ENVIRONMENT_AUTO_CONFIRM."
     fi
 }
 
@@ -208,7 +206,6 @@ main() {
     gather_environment_info
     display_environment_info
     confirm_execution
-    log_message INFO "Setup steps will be implemented in future iterations."
 }
 
 main "$@"

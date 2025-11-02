@@ -240,7 +240,7 @@ confirm_execution() {
             printf '\n'
         fi
         case "$response" in
-            y|Y|yes|YES)
+            j|J|ja|JA|y|Y|yes|YES)
                 log_message INFO "Confirmation received, proceeding with setup steps."
                 printf '\n'
                 return 0

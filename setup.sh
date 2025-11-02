@@ -103,34 +103,6 @@ normalize_shell_list() {
     fi
 }
 
-resolve_active_shell_path() {
-    local shell_path="$1"
-
-    if [ -z "$shell_path" ] || [ "$shell_path" = "unknown" ]; then
-        echo "unknown"
-        return
-    fi
-
-    local login_shell="${shell_path#-}"
-    if [ "${login_shell#/}" = "$login_shell" ]; then
-        local command_path
-        command_path=$(command -v "$login_shell" 2>/dev/null || echo "$login_shell")
-        shell_path="$command_path"
-    else
-        shell_path="$login_shell"
-    fi
-
-    if [ "${shell_path#/}" != "$shell_path" ]; then
-        local resolved
-        resolved=$(readlink -f "$shell_path" 2>/dev/null)
-        if [ -n "$resolved" ]; then
-            shell_path="$resolved"
-        fi
-    fi
-
-    echo "$shell_path"
-}
-
 detect_operating_system() {
     OS_KERNEL=$(uname -s 2>/dev/null || echo "unknown")
     OS_ARCH=$(uname -m 2>/dev/null || echo "unknown")
@@ -172,7 +144,7 @@ gather_environment_info() {
     detect_operating_system
     normalize_shell_list
 
-    ACTIVE_SHELL=$(resolve_active_shell_path "${SHELL:-$(ps -p "$PPID" -o comm= 2>/dev/null || echo "unknown")}")
+    ACTIVE_SHELL=${SHELL:-$(ps -p "$PPID" -o comm= 2>/dev/null || echo "unknown")}
     CURRENT_USER=${USER:-$(id -un 2>/dev/null || echo "unknown")}
     HOSTNAME_VALUE=$(hostname 2>/dev/null || uname -n 2>/dev/null || echo "unknown")
     WORKING_DIRECTORY=$(pwd 2>/dev/null || echo "unknown")

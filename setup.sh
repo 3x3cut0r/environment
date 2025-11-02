@@ -94,7 +94,7 @@ normalize_shell_list() {
     if [ -f "$shells_file" ]; then
         INSTALLED_SHELLS=$(grep -vE '^\s*#' "$shells_file" \
             | awk -F/ 'NF { name = $NF; if (!seen[name]++) print name }' \
-            | paste -sd ',' -)
+            | paste -sd ', ' -)
         if [ -z "$INSTALLED_SHELLS" ]; then
             INSTALLED_SHELLS="Unknown"
         fi
@@ -149,7 +149,7 @@ gather_environment_info() {
 }
 
 display_environment_info() {
-    log_message INFO "Environment details:"
+    log_message INFO "OS details:"
     printf '  %-20s %s\n' "Kernel" "$OS_KERNEL"
     printf '  %-20s %s\n' "Operating System" "$OS_NAME"
     printf '  %-20s %s\n' "Version" "$OS_VERSION"

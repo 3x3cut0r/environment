@@ -11,3 +11,9 @@ if command -v starship >/dev/null 2>&1; then
   eval "$(starship init zsh)"
 fi
 # <<< Starship.zsh <<<
+
+if [[ $- == *i* ]]; then
+  bindkey -e
+  bindkey '^R' history-incremental-search-backward
+  bindkey '^S' history-incremental-search-forward
+fi

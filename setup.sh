@@ -190,7 +190,7 @@ confirm_execution() {
         fi
         case "$response" in
             y|Y|yes|YES)
-                log_message INFO "Confirmation received. Proceeding with setup steps (not yet implemented)."
+                log_message INFO "Confirmation received, proceeding with setup steps.\n"
                 return 0
                 ;;
             *)

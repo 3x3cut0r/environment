@@ -1321,6 +1321,8 @@ install_shell_configuration() {
   local target="${HOME}/.${shell_name}rc"
   local start_marker="# >>> PS1.${shell_name} >>>"
   local end_marker="# <<< PS1.${shell_name} <<<"
+  local starship_start_marker="# >>> Starship.${shell_name} >>>"
+  local starship_end_marker="# <<< Starship.${shell_name} <<<"
 
   if [[ ! -f "${template}" ]]; then
     return
@@ -1332,6 +1334,8 @@ install_shell_configuration() {
   tmp_file="$(mktemp)"
 
   local in_prompt_block=0
+  local in_starship_block=0
+  local -a starship_lines=()
   while IFS= read -r line || [[ -n "${line}" ]]; do
     if [[ "${line}" == *"${start_marker}" ]]; then
       echo "${line}" >> "${tmp_file}"
@@ -1342,9 +1346,47 @@ install_shell_configuration() {
       continue
     fi
 
+    if [[ "${line}" == *"${starship_start_marker}" ]]; then
+      echo "${line}" >> "${tmp_file}"
+      in_starship_block=1
+      starship_lines=()
+      continue
+    fi
+
     if [[ "${line}" == *"${end_marker}" ]]; then
       in_prompt_block=0
       echo "${line}" >> "${tmp_file}"
+      continue
+    fi
+
+    if [[ "${line}" == *"${starship_end_marker}" ]]; then
+      if [[ "${INSTALL_STARSHIP}" == true ]]; then
+        for starship_line in "${starship_lines[@]}"; do
+          echo "${starship_line}" >> "${tmp_file}"
+        done
+      else
+        for starship_line in "${starship_lines[@]}"; do
+          local indent="" content=""
+          if [[ "${starship_line}" =~ ^([[:space:]]*)(.*)$ ]]; then
+            indent="${BASH_REMATCH[1]}"
+            content="${BASH_REMATCH[2]}"
+          else
+            content="${starship_line}"
+          fi
+
+          if [[ -z "${content}" ]]; then
+            echo "${starship_line}" >> "${tmp_file}"
+          elif [[ "${content}" == \#* ]]; then
+            echo "${indent}${content}" >> "${tmp_file}"
+          else
+            echo "${indent}# ${content}" >> "${tmp_file}"
+          fi
+        done
+      fi
+
+      echo "${line}" >> "${tmp_file}"
+      in_starship_block=0
+      starship_lines=()
       continue
     fi
 
@@ -1352,8 +1394,39 @@ install_shell_configuration() {
       continue
     fi
 
+    if (( in_starship_block )); then
+      starship_lines+=("${line}")
+      continue
+    fi
+
     echo "${line}" >> "${tmp_file}"
   done < "${template}"
+
+  if (( in_starship_block )); then
+    if [[ "${INSTALL_STARSHIP}" == true ]]; then
+      for starship_line in "${starship_lines[@]}"; do
+        echo "${starship_line}" >> "${tmp_file}"
+      done
+    else
+      for starship_line in "${starship_lines[@]}"; do
+        local indent="" content=""
+        if [[ "${starship_line}" =~ ^([[:space:]]*)(.*)$ ]]; then
+          indent="${BASH_REMATCH[1]}"
+          content="${BASH_REMATCH[2]}"
+        else
+          content="${starship_line}"
+        fi
+
+        if [[ -z "${content}" ]]; then
+          echo "${starship_line}" >> "${tmp_file}"
+        elif [[ "${content}" == \#* ]]; then
+          echo "${indent}${content}" >> "${tmp_file}"
+        else
+          echo "${indent}# ${content}" >> "${tmp_file}"
+        fi
+      done
+    fi
+  fi
 
   mv "${tmp_file}" "${target}"
   log_info "Installed ${target} from ${template} with prompt configuration from ${ps1_source}."

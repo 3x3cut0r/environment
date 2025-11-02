@@ -1252,11 +1252,12 @@ apply_config() {
 
   mkdir -p "$(dirname "${target_file}")"
 
-  if [[ "${mode}" == append || "${source_file}" == *.append ]]; then
-    local start_marker end_marker
+  local target_name start_marker end_marker
+  target_name="$(basename "${target_file}")"
+  start_marker="${comment_prefix} >>> environment ${target_name} >>>"
+  end_marker="${comment_prefix} <<< environment ${target_name} <<<"
 
-    start_marker="${comment_prefix} >>> environment repo config >>>"
-    end_marker="${comment_prefix} <<< environment repo config <<<"
+  if [[ "${mode}" == append || "${source_file}" == *.append ]]; then
 
     if [[ -e "${target_file}" ]]; then
       if grep -Fq "${start_marker}" "${target_file}"; then
@@ -1297,13 +1298,22 @@ apply_config() {
     return
   fi
 
-  if [[ -e "${target_file}" ]] && cmp -s "${source_file}" "${target_file}"; then
-    log_info "${target_file} is already up to date."
-    return
+  local tmp_file action
+  tmp_file="$(mktemp)"
+  {
+    echo "${start_marker}"
+    cat "${source_file}"
+    echo "${end_marker}"
+  } > "${tmp_file}"
+
+  if [[ -e "${target_file}" ]]; then
+    action="Updated"
+  else
+    action="Installed"
   fi
 
-  cp "${source_file}" "${target_file}"
-  log_info "Installed ${target_file} from ${source_file}."
+  mv "${tmp_file}" "${target_file}"
+  log_info "${action} ${target_file} from ${source_file}."
 }
 
 # install_shell_configuration()

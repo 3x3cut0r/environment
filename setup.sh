@@ -92,10 +92,43 @@ WORKING_DIRECTORY=""
 normalize_shell_list() {
     local shells_file="/etc/shells"
     if [ -f "$shells_file" ]; then
-        INSTALLED_SHELLS=$(grep -vE '^\s*#' "$shells_file" | awk 'NF' | tr '\n' ',' | sed 's/,$//')
+        INSTALLED_SHELLS=$(grep -vE '^\s*#' "$shells_file" \
+            | awk -F/ 'NF { name = $NF; if (!seen[name]++) print name }' \
+            | paste -sd ',' -)
+        if [ -z "$INSTALLED_SHELLS" ]; then
+            INSTALLED_SHELLS="Unknown"
+        fi
     else
         INSTALLED_SHELLS="Unknown"
     fi
+}
+
+resolve_active_shell_path() {
+    local shell_path="$1"
+
+    if [ -z "$shell_path" ] || [ "$shell_path" = "unknown" ]; then
+        echo "unknown"
+        return
+    fi
+
+    local login_shell="${shell_path#-}"
+    if [ "${login_shell#/}" = "$login_shell" ]; then
+        local command_path
+        command_path=$(command -v "$login_shell" 2>/dev/null || echo "$login_shell")
+        shell_path="$command_path"
+    else
+        shell_path="$login_shell"
+    fi
+
+    if [ "${shell_path#/}" != "$shell_path" ]; then
+        local resolved
+        resolved=$(readlink -f "$shell_path" 2>/dev/null)
+        if [ -n "$resolved" ]; then
+            shell_path="$resolved"
+        fi
+    fi
+
+    echo "$shell_path"
 }
 
 detect_operating_system() {
@@ -139,7 +172,7 @@ gather_environment_info() {
     detect_operating_system
     normalize_shell_list
 
-    ACTIVE_SHELL=${SHELL:-$(ps -p "$PPID" -o comm= 2>/dev/null || echo "unknown")}
+    ACTIVE_SHELL=$(resolve_active_shell_path "${SHELL:-$(ps -p "$PPID" -o comm= 2>/dev/null || echo "unknown")}")
     CURRENT_USER=${USER:-$(id -un 2>/dev/null || echo "unknown")}
     HOSTNAME_VALUE=$(hostname 2>/dev/null || uname -n 2>/dev/null || echo "unknown")
     WORKING_DIRECTORY=$(pwd 2>/dev/null || echo "unknown")
@@ -158,12 +191,32 @@ display_environment_info() {
     printf '  %-20s %s\n' "Hostname" "$HOSTNAME_VALUE"
     printf '  %-20s %s\n' "Current user" "$CURRENT_USER"
     printf '  %-20s %s\n' "Working directory" "$WORKING_DIRECTORY"
+    printf '\n'
 }
 
 confirm_execution() {
     if [ "${ENVIRONMENT_AUTO_CONFIRM:-no}" != "yes" ]; then
-        printf '[Environment][\033[35mINPUT\033[0m] %s' "Continue with setup? [y/N] "
-        read -r response
+        local prompt="Continue with setup? [y/N] "
+        local response=""
+
+        printf '[Environment][\033[35mINPUT\033[0m] %s' "$prompt"
+
+        local read_status=0
+        if [ -t 0 ]; then
+            if ! read -r response; then
+                read_status=$?
+                response=""
+            fi
+        else
+            if ! read -r response </dev/tty; then
+                read_status=$?
+                response=""
+            fi
+        fi
+
+        if [ $read_status -ne 0 ]; then
+            printf '\n'
+        fi
         case "$response" in
             y|Y|yes|YES)
                 log_message INFO "Confirmation received. Proceeding with setup steps (not yet implemented)."

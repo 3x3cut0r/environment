@@ -1249,13 +1249,19 @@ apply_config() {
   local target_file="$2"
   local comment_prefix="${3:-#}"
   local mode="${4:-auto}"
+  local marker_label="${5:-}"
 
   mkdir -p "$(dirname "${target_file}")"
 
   local target_name start_marker end_marker
   target_name="$(basename "${target_file}")"
-  start_marker="${comment_prefix} >>> environment ${target_name} >>>"
-  end_marker="${comment_prefix} <<< environment ${target_name} <<<"
+
+  if [[ -z "${marker_label}" ]]; then
+    marker_label="${target_name}"
+  fi
+
+  start_marker="${comment_prefix} >>> environment ${marker_label} >>>"
+  end_marker="${comment_prefix} <<< environment ${marker_label} <<<"
 
   if [[ "${mode}" == append || "${source_file}" == *.append ]]; then
 
@@ -1659,23 +1665,27 @@ PY
   fi
 
   local posix_snippet="${REPO_ROOT}/home/.config/environment/snippets/aliases_posix.append"
+  local posix_label
+  posix_label="$(basename "${posix_snippet}")"
   if [[ -f "${posix_snippet}" ]]; then
     if is_shell_available bash; then
-      apply_config "${posix_snippet}" "${HOME}/.bashrc" "#" append
+      apply_config "${posix_snippet}" "${HOME}/.bashrc" "#" append "${posix_label}"
       if [[ -f "${HOME}/.profile" ]]; then
-        apply_config "${posix_snippet}" "${HOME}/.profile" "#" append
+        apply_config "${posix_snippet}" "${HOME}/.profile" "#" append "${posix_label}"
       fi
     elif [[ -f "${HOME}/.profile" ]]; then
-      apply_config "${posix_snippet}" "${HOME}/.profile" "#" append
+      apply_config "${posix_snippet}" "${HOME}/.profile" "#" append "${posix_label}"
     fi
     if is_shell_available zsh; then
-      apply_config "${posix_snippet}" "${HOME}/.zshrc" "#" append
+      apply_config "${posix_snippet}" "${HOME}/.zshrc" "#" append "${posix_label}"
     fi
   fi
 
   local fish_snippet="${REPO_ROOT}/home/.config/environment/snippets/aliases_fish.append"
+  local fish_label
+  fish_label="$(basename "${fish_snippet}")"
   if is_shell_available fish && [[ -f "${fish_snippet}" ]]; then
-    apply_config "${fish_snippet}" "${HOME}/.config/fish/config.fish" "#" append
+    apply_config "${fish_snippet}" "${HOME}/.config/fish/config.fish" "#" append "${fish_label}"
   fi
 
   ALIASES_CONFIGURED=true

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
 parse_args() {
     SHOW_HELP=0
@@ -88,13 +89,63 @@ CURRENT_USER=""
 HOSTNAME_VALUE=""
 # shellcheck disable=SC2034
 WORKING_DIRECTORY=""
+# shellcheck disable=SC2034
+TEMP_DIR=""
+# shellcheck disable=SC2034
+TEMP_ARCHIVE=""
+
+cleanup_temp_resources() {
+    if [ -n "${TEMP_ARCHIVE:-}" ] && [ -f "$TEMP_ARCHIVE" ]; then
+        rm -f "$TEMP_ARCHIVE"
+    fi
+
+    if [ -n "${TEMP_DIR:-}" ] && [ -d "$TEMP_DIR" ]; then
+        rm -rf "$TEMP_DIR"
+    fi
+}
+
+create_temp_directory() {
+    TEMP_DIR=$(mktemp -d "${TMPDIR:-/tmp}/environment-XXXXXX")
+    log_message INFO "Created temporary directory at $TEMP_DIR"
+}
+
+download_repository_contents() {
+    local repo_tarball_url="https://codeload.github.com/3x3cut0r/environment/tar.gz/refs/heads/main"
+    TEMP_ARCHIVE=$(mktemp "${TMPDIR:-/tmp}/environment-archive-XXXXXX.tar.gz")
+
+    log_message INFO "Downloading repository contents"
+    curl -fsSL -H 'Cache-Control: no-cache, no-store, must-revalidate' \
+        -H 'Pragma: no-cache' \
+        -o "$TEMP_ARCHIVE" \
+        "$repo_tarball_url"
+
+    log_message INFO "Extracting repository archive"
+    tar -xzf "$TEMP_ARCHIVE" -C "$TEMP_DIR" --strip-components=1
+    rm -f "$TEMP_ARCHIVE"
+    TEMP_ARCHIVE=""
+    log_message INFO "Repository extracted to $TEMP_DIR"
+}
 
 normalize_shell_list() {
     local shells_file="/etc/shells"
     if [ -f "$shells_file" ]; then
-        INSTALLED_SHELLS=$(grep -vE '^\s*#' "$shells_file" \
-            | awk -F/ 'NF { name = $NF; if (!seen[name]++) print name }' \
-            | paste -sd ',' -)
+        INSTALLED_SHELLS=$(awk -F/ '
+            /^[ \t]*#/ { next }
+            NF {
+                name = $NF
+                if (!seen[name]++) {
+                    shells[++count] = name
+                }
+            }
+            END {
+                for (i = 1; i <= count; i++) {
+                    printf "%s", shells[i]
+                    if (i < count) {
+                        printf ","
+                    }
+                }
+            }
+        ' "$shells_file")
         if [ -z "$INSTALLED_SHELLS" ]; then
             INSTALLED_SHELLS="Unknown"
         fi
@@ -161,6 +212,7 @@ display_environment_info() {
     printf '  %-20s %s\n' "Hostname" "$HOSTNAME_VALUE"
     printf '  %-20s %s\n' "Current user" "$CURRENT_USER"
     printf '  %-20s %s\n' "Working directory" "$WORKING_DIRECTORY"
+    printf '  %-20s %s\n' "Temp directory" "$TEMP_DIR"
     printf '\n'
 }
 
@@ -205,6 +257,11 @@ confirm_execution() {
 
 main() {
     parse_args "$@"
+    trap 'cleanup_temp_resources' EXIT
+    trap 'cleanup_temp_resources; exit 130' INT
+    trap 'cleanup_temp_resources; exit 143' TERM
+    create_temp_directory
+    download_repository_contents
     gather_environment_info
     display_environment_info
     confirm_execution

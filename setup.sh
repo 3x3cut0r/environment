@@ -166,10 +166,9 @@ display_environment_info() {
 
 confirm_execution() {
     if [ "${ENVIRONMENT_AUTO_CONFIRM:-no}" != "yes" ]; then
-        local prompt="Continue with setup? [y/N] "
         local response=""
 
-        printf '[Environment][\033[35mINPUT\033[0m] %s' "$prompt"
+        printf '[Environment][\033[35mINPUT\033[0m] %s' "Continue with setup? [y/N] "
 
         local read_status=0
         if [ -t 0 ]; then

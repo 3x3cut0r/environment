@@ -1582,21 +1582,21 @@ PY
   local posix_snippet="${REPO_ROOT}/home/.config/environment/snippets/aliases_posix.append"
   if [[ -f "${posix_snippet}" ]]; then
     if is_shell_available bash; then
-      apply_config "${posix_snippet}" "${HOME}/.bashrc" "# alias" append
+      apply_config "${posix_snippet}" "${HOME}/.bashrc" "#" append
       if [[ -f "${HOME}/.profile" ]]; then
-        apply_config "${posix_snippet}" "${HOME}/.profile" "# alias" append
+        apply_config "${posix_snippet}" "${HOME}/.profile" "#" append
       fi
     elif [[ -f "${HOME}/.profile" ]]; then
-      apply_config "${posix_snippet}" "${HOME}/.profile" "# alias" append
+      apply_config "${posix_snippet}" "${HOME}/.profile" "#" append
     fi
     if is_shell_available zsh; then
-      apply_config "${posix_snippet}" "${HOME}/.zshrc" "# alias" append
+      apply_config "${posix_snippet}" "${HOME}/.zshrc" "#" append
     fi
   fi
 
   local fish_snippet="${REPO_ROOT}/home/.config/environment/snippets/aliases_fish.append"
   if is_shell_available fish && [[ -f "${fish_snippet}" ]]; then
-    apply_config "${fish_snippet}" "${HOME}/.config/fish/config.fish" "# alias" append
+    apply_config "${fish_snippet}" "${HOME}/.config/fish/config.fish" "#" append
   fi
 
   ALIASES_CONFIGURED=true

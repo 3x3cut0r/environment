@@ -359,6 +359,180 @@ install_packages() {
     done
 }
 
+file_has_trailing_newline() {
+    local file_path="$1"
+    if [ ! -s "$file_path" ]; then
+        return 0
+    fi
+
+    local last_byte
+    last_byte=$(tail -c1 "$file_path" 2>/dev/null | od -An -t x1 | tr -d ' \n')
+    if [ "$last_byte" = "0a" ]; then
+        return 0
+    fi
+    return 1
+}
+
+insert_file_content() {
+    local input_file="$1"
+    local output_file="$2"
+    local marker_regex='^# <<< (.+)$'
+
+    while IFS= read -r line || [ -n "$line" ]; do
+        if [[ "$line" =~ $marker_regex ]]; then
+            local include_path="${BASH_REMATCH[1]}"
+            local include_file="${REPOSITORY_DIR:-.}/$include_path"
+            if [ -f "$include_file" ]; then
+                if [ -s "$include_file" ]; then
+                    cat "$include_file" >>"$output_file"
+                    if file_has_trailing_newline "$include_file"; then
+                        :
+                    else
+                        printf '\n' >>"$output_file"
+                    fi
+                fi
+            else
+                log_message WARN "Include file '$include_path' referenced in '$input_file' not found."
+                printf '%s\n' "$line" >>"$output_file"
+            fi
+        else
+            printf '%s\n' "$line" >>"$output_file"
+        fi
+    done <"$input_file"
+}
+
+remove_existing_marker_block() {
+    local source_file_identifier="$1"
+    local target_file="$2"
+
+    local start_marker="# >>> environment ~/$source_file_identifier >>>"
+    local end_marker="# <<< environment ~/$source_file_identifier <<<"
+
+    awk -v start="$start_marker" -v end="$end_marker" '
+        $0 == start {in_block=1; next}
+        $0 == end {in_block=0; next}
+        in_block {next}
+        {print}
+    ' "$target_file"
+}
+
+ensure_trailing_newline() {
+    local file_path="$1"
+    if [ ! -s "$file_path" ]; then
+        return
+    fi
+
+    if file_has_trailing_newline "$file_path"; then
+        return
+    fi
+
+    printf '\n' >>"$file_path"
+}
+
+configure_environment() {
+    local source_home="${REPOSITORY_DIR:-.}/home"
+    if [ ! -d "$source_home" ]; then
+        log_message WARN "No home directory in repository. Skipping environment configuration."
+        return
+    fi
+
+    local target_home="$HOME"
+    if [ -z "$target_home" ]; then
+        if command -v getent >/dev/null 2>&1 && [ -n "$CURRENT_USER" ]; then
+            target_home=$(getent passwd "$CURRENT_USER" | cut -d: -f6)
+        fi
+    fi
+
+    if [ -z "$target_home" ]; then
+        log_message ERROR "Unable to determine target home directory."
+        return 1
+    fi
+
+    if [ ! -d "$target_home" ]; then
+        log_message WARN "Target home directory '$target_home' does not exist. Skipping environment configuration."
+        return
+    fi
+
+    local file_path relative_path marker_identifier target_relative target_path target_directory append_mode
+    while IFS= read -r -d '' file_path; do
+        relative_path=${file_path#"$source_home/"}
+        marker_identifier="$relative_path"
+
+        append_mode=0
+        target_relative="$relative_path"
+        if [[ "$target_relative" == *.append ]]; then
+            append_mode=1
+            target_relative="${target_relative%.append}"
+        fi
+
+        local path_segment
+        local traversal_detected=0
+        local path_segments=()
+        IFS='/' read -r -a path_segments <<<"$target_relative"
+        for path_segment in "${path_segments[@]}"; do
+            if [ "$path_segment" = ".." ]; then
+                traversal_detected=1
+                break
+            fi
+        done
+
+        if [ $traversal_detected -eq 1 ]; then
+            log_message WARN "Skipping '$relative_path' because the path attempts to traverse directories."
+            continue
+        fi
+
+        target_path="$target_home/$target_relative"
+        target_directory=$(dirname "$target_path")
+        mkdir -p "$target_directory"
+
+        local processed_file
+        processed_file=$(mktemp)
+        : >"$processed_file"
+        insert_file_content "$file_path" "$processed_file"
+
+        local start_marker="# >>> environment ~/$marker_identifier >>>"
+        local end_marker="# <<< environment ~/$marker_identifier <<<"
+
+        if [ "$append_mode" -eq 1 ]; then
+            local cleaned_target
+            cleaned_target=$(mktemp)
+            : >"$cleaned_target"
+            if [ -f "$target_path" ]; then
+                remove_existing_marker_block "$marker_identifier" "$target_path" >"$cleaned_target"
+            fi
+
+            if [ -s "$cleaned_target" ]; then
+                ensure_trailing_newline "$cleaned_target"
+                printf '\n' >>"$cleaned_target"
+            fi
+
+            printf '%s\n' "$start_marker" >>"$cleaned_target"
+            if [ -s "$processed_file" ]; then
+                cat "$processed_file" >>"$cleaned_target"
+                ensure_trailing_newline "$cleaned_target"
+            fi
+            printf '%s\n' "$end_marker" >>"$cleaned_target"
+
+            mv "$cleaned_target" "$target_path"
+        else
+            local new_file
+            new_file=$(mktemp)
+            : >"$new_file"
+            printf '%s\n' "$start_marker" >>"$new_file"
+            if [ -s "$processed_file" ]; then
+                cat "$processed_file" >>"$new_file"
+                ensure_trailing_newline "$new_file"
+            fi
+            printf '%s\n' "$end_marker" >>"$new_file"
+
+            mv "$new_file" "$target_path"
+        fi
+
+        rm -f "$processed_file"
+        log_message INFO "Configured $target_relative"
+    done < <(find "$source_home" -type f -print0)
+}
+
 main() {
     parse_args "$@"
     trap 'cleanup_temp_resources' EXIT
@@ -372,6 +546,7 @@ main() {
     display_environment_info
     confirm_execution
     install_packages
+    configure_environment
 }
 
 main "$@"

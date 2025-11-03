@@ -90,6 +90,8 @@ HOSTNAME_VALUE=""
 # shellcheck disable=SC2034
 WORKING_DIRECTORY=""
 # shellcheck disable=SC2034
+AVAILABLE_PACKAGE_MANAGERS=()
+# shellcheck disable=SC2034
 TEMP_DIR=""
 # shellcheck disable=SC2034
 TEMP_ARCHIVE=""
@@ -151,6 +153,43 @@ normalize_shell_list() {
         fi
     else
         INSTALLED_SHELLS="Unknown"
+    fi
+}
+
+detect_package_managers() {
+    AVAILABLE_PACKAGE_MANAGERS=()
+
+    local manager_mappings=(
+        "apt-get:apt-get install -y"
+        "apt:apt install -y"
+        "dnf:dnf install -y"
+        "yum:yum install -y"
+        "zypper:zypper install -y"
+        "pacman:pacman -Sy --noconfirm"
+        "yay:yay -Sy --noconfirm"
+        "brew:brew install"
+        "apk:apk add --no-cache"
+        "pkg:pkg install -y"
+        "emerge:emerge --ask=n"
+    )
+
+    local mapping manager install_cmd
+    for mapping in "${manager_mappings[@]}"; do
+        manager=${mapping%%:*}
+        install_cmd=${mapping#*:}
+        if command -v "$manager" >/dev/null 2>&1; then
+            AVAILABLE_PACKAGE_MANAGERS+=("$manager:$install_cmd")
+        fi
+    done
+
+    if [ ${#AVAILABLE_PACKAGE_MANAGERS[@]} -gt 0 ]; then
+        local detected_names=()
+        for mapping in "${AVAILABLE_PACKAGE_MANAGERS[@]}"; do
+            detected_names+=("${mapping%%:*}")
+        done
+        log_message INFO "Detected package managers: ${detected_names[*]}"
+    else
+        log_message WARN "No supported package managers detected. Skipping package installation."
     fi
 }
 
@@ -255,6 +294,54 @@ confirm_execution() {
     fi
 }
 
+install_packages() {
+    if [ ! -f packages.list ]; then
+        log_message WARN "packages.list not found. Skipping package installation."
+        return
+    fi
+
+    detect_package_managers
+    if [ ${#AVAILABLE_PACKAGE_MANAGERS[@]} -eq 0 ]; then
+        return
+    fi
+
+    local packages=()
+    local line trimmed
+    while IFS= read -r line || [ -n "$line" ]; do
+        trimmed=$(printf '%s\n' "$line" | sed 's/#.*//; s/^[ \t]*//; s/[ \t]*$//')
+        if [ -n "$trimmed" ]; then
+            packages+=("$trimmed")
+        fi
+    done < packages.list
+
+    if [ ${#packages[@]} -eq 0 ]; then
+        log_message WARN "No packages specified in packages.list."
+        return
+    fi
+
+    local package mapping manager install_cmd
+    for package in "${packages[@]}"; do
+        local installed_with_manager=0
+        for mapping in "${AVAILABLE_PACKAGE_MANAGERS[@]}"; do
+            manager=${mapping%%:*}
+            install_cmd=${mapping#*:}
+
+            IFS=' ' read -r -a install_parts <<< "$install_cmd"
+            if "${install_parts[@]}" "$package" >/dev/null 2>&1; then
+                log_message INFO "Installed $package using $manager."
+                installed_with_manager=1
+                break
+            else
+                log_message WARN "Failed to install $package using $manager."
+            fi
+        done
+
+        if [ $installed_with_manager -eq 0 ]; then
+            log_message WARN "Unable to install package '$package' with detected package managers."
+        fi
+    done
+}
+
 main() {
     parse_args "$@"
     trap 'cleanup_temp_resources' EXIT
@@ -267,6 +354,7 @@ main() {
     gather_environment_info
     display_environment_info
     confirm_execution
+    install_packages
 }
 
 main "$@"

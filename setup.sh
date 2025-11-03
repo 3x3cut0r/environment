@@ -313,7 +313,7 @@ install_packages() {
     local packages=()
     local line trimmed
     while IFS= read -r line || [ -n "$line" ]; do
-        trimmed=$(printf '%s\n' "$line" | sed 's/#.*//; s/^[ \t]*//; s/[ \t]*$//')
+        trimmed=$(printf '%s\n' "$line" | sed -e 's/#.*//' -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
         if [ -n "$trimmed" ]; then
             packages+=("$trimmed")
         fi

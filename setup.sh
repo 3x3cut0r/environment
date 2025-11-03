@@ -324,25 +324,37 @@ install_packages() {
         return
     fi
 
-    local package mapping manager install_cmd
-    for package in "${packages[@]}"; do
-        local installed_with_manager=0
-        for mapping in "${AVAILABLE_PACKAGE_MANAGERS[@]}"; do
-            manager=${mapping%%:*}
-            install_cmd=${mapping#*:}
+    local mapping manager install_cmd
+    local package_line packages_in_line package
+    for package_line in "${packages[@]}"; do
+        IFS=' ' read -r -a packages_in_line <<< "$package_line"
+        if [ ${#packages_in_line[@]} -eq 0 ]; then
+            continue
+        fi
 
-            IFS=' ' read -r -a install_parts <<< "$install_cmd"
-            if "${install_parts[@]}" "$package" >/dev/null 2>&1; then
-                log_message INFO "Installed $package using $manager."
-                installed_with_manager=1
+        local line_installed=0
+        for package in "${packages_in_line[@]}"; do
+            local installed_with_manager=0
+            for mapping in "${AVAILABLE_PACKAGE_MANAGERS[@]}"; do
+                manager=${mapping%%:*}
+                install_cmd=${mapping#*:}
+
+                IFS=' ' read -r -a install_parts <<< "$install_cmd"
+                if "${install_parts[@]}" "$package" >/dev/null 2>&1; then
+                    log_message INFO "Installed $package using $manager."
+                    installed_with_manager=1
+                    line_installed=1
+                    break
+                fi
+            done
+
+            if [ $installed_with_manager -eq 1 ]; then
                 break
-            else
-                log_message WARN "Failed to install $package using $manager."
             fi
         done
 
-        if [ $installed_with_manager -eq 0 ]; then
-            log_message WARN "Unable to install package '$package' with detected package managers."
+        if [ $line_installed -eq 0 ]; then
+            log_message WARN "Unable to install any package from line: ${packages_in_line[*]}"
         fi
     done
 }

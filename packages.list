@@ -1,14 +1,14 @@
 bash-completion
 curl
-bind-utils, dnsutils, bind
+bind-utils dnsutils bind
 dog
-eza, exa
+eza exa
 git
 jq
 lazydocker
 lshw
-make, gmake
-mtr, mtr-tiny
+make gmake
+mtr mtr-tiny
 nano
 ncdu
 neovim
@@ -22,11 +22,11 @@ tcpdump
 termshark
 tmux
 unp
-unzip, info-zip
-vi, nvi
-vim, vim-enhanced
-watch, procps-ng, procps
+unzip info-zip
+vi nvi
+vim vim-enhanced
+watch procps-ng procps
 wget
-magic-wormhole, wormhole
-zip, info-zip
+magic-wormhole wormhole
+zip info-zip
 zoxide

@@ -1,7 +1,7 @@
 export EDITOR="nvim"
 export VISUAL="nvim"
 
-# <<< PS1 >>>
+# <<< vars/PS1.zsh
 
 if command -v starship >/dev/null 2>&1; then
   eval "$(starship init bash)"

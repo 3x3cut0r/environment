@@ -95,6 +95,8 @@ AVAILABLE_PACKAGE_MANAGERS=()
 TEMP_DIR=""
 # shellcheck disable=SC2034
 TEMP_ARCHIVE=""
+# shellcheck disable=SC2034
+REPOSITORY_DIR=""
 
 cleanup_temp_resources() {
     if [ -n "${TEMP_ARCHIVE:-}" ] && [ -f "$TEMP_ARCHIVE" ]; then
@@ -125,6 +127,7 @@ download_repository_contents() {
     tar -xzf "$TEMP_ARCHIVE" -C "$TEMP_DIR" --strip-components=1
     rm -f "$TEMP_ARCHIVE"
     TEMP_ARCHIVE=""
+    REPOSITORY_DIR="$TEMP_DIR"
     log_message INFO "Repository extracted to $TEMP_DIR"
 }
 
@@ -295,7 +298,9 @@ confirm_execution() {
 }
 
 install_packages() {
-    if [ ! -f packages.list ]; then
+    local packages_file="${REPOSITORY_DIR:-.}/packages.list"
+
+    if [ ! -f "$packages_file" ]; then
         log_message WARN "packages.list not found. Skipping package installation."
         return
     fi
@@ -312,7 +317,7 @@ install_packages() {
         if [ -n "$trimmed" ]; then
             packages+=("$trimmed")
         fi
-    done < packages.list
+    done < "$packages_file"
 
     if [ ${#packages[@]} -eq 0 ]; then
         log_message WARN "No packages specified in packages.list."

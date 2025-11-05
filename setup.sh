@@ -405,16 +405,16 @@ determine_comment_prefix() {
     local relative_path="$1"
     local mapping_file=""
 
-    if [ -n "${REPOSITORY_DIR:-}" ] && [ -f "$REPOSITORY_DIR/vars/comment_char.list" ]; then
-        mapping_file="$REPOSITORY_DIR/vars/comment_char.list"
+    if [ -n "${REPOSITORY_DIR:-}" ] && [ -f "$REPOSITORY_DIR/vars/comment_prefix.list" ]; then
+        mapping_file="$REPOSITORY_DIR/vars/comment_prefix.list"
     else
         local script_source
         script_source="${BASH_SOURCE[0]:-$0}"
         if [ -n "$script_source" ]; then
             local script_dir
             script_dir=$(cd "$(dirname "$script_source")" && pwd)
-            if [ -f "$script_dir/vars/comment_char.list" ]; then
-                mapping_file="$script_dir/vars/comment_char.list"
+            if [ -f "$script_dir/vars/comment_prefix.list" ]; then
+                mapping_file="$script_dir/vars/comment_prefix.list"
             fi
         fi
     fi

@@ -401,12 +401,61 @@ insert_file_content() {
     done <"$input_file"
 }
 
+determine_comment_prefix() {
+    local relative_path="$1"
+    local mapping_file=""
+
+    if [ -n "${REPOSITORY_DIR:-}" ] && [ -f "$REPOSITORY_DIR/vars/comment_char.list" ]; then
+        mapping_file="$REPOSITORY_DIR/vars/comment_char.list"
+    else
+        local script_source
+        script_source="${BASH_SOURCE[0]:-$0}"
+        if [ -n "$script_source" ]; then
+            local script_dir
+            script_dir=$(cd "$(dirname "$script_source")" && pwd)
+            if [ -f "$script_dir/vars/comment_char.list" ]; then
+                mapping_file="$script_dir/vars/comment_char.list"
+            fi
+        fi
+    fi
+
+    if [ -n "$mapping_file" ]; then
+        local line pattern prefix
+        while IFS= read -r line || [ -n "$line" ]; do
+            case "$line" in
+                ''|'#'*)
+                    continue
+                    ;;
+            esac
+
+            IFS=$' \t' read -r pattern prefix _ <<<"$line"
+            if [ -z "$pattern" ] || [ -z "$prefix" ]; then
+                continue
+            fi
+
+            case "$relative_path" in
+                $pattern)
+                    printf '%s' "$prefix"
+                    return
+                    ;;
+            esac
+        done <"$mapping_file"
+    fi
+
+    printf '%s' '#'
+}
+
 remove_existing_marker_block() {
     local source_file_identifier="$1"
     local target_file="$2"
 
-    local start_marker="# >>> environment ~/$source_file_identifier >>>"
-    local end_marker="# <<< environment ~/$source_file_identifier <<<"
+    local comment_prefix="$3"
+    if [ -z "$comment_prefix" ]; then
+        comment_prefix="#"
+    fi
+
+    local start_marker="$comment_prefix >>> environment ~/$source_file_identifier >>>"
+    local end_marker="$comment_prefix <<< environment ~/$source_file_identifier <<<"
 
     awk -v start="$start_marker" -v end="$end_marker" '
         $0 == start {in_block=1; next}
@@ -490,15 +539,18 @@ configure_environment() {
         : >"$processed_file"
         insert_file_content "$file_path" "$processed_file"
 
-        local start_marker="# >>> environment ~/$marker_identifier >>>"
-        local end_marker="# <<< environment ~/$marker_identifier <<<"
+        local comment_prefix
+        comment_prefix=$(determine_comment_prefix "$target_relative")
+
+        local start_marker="$comment_prefix >>> environment ~/$marker_identifier >>>"
+        local end_marker="$comment_prefix <<< environment ~/$marker_identifier <<<"
 
         if [ "$append_mode" -eq 1 ]; then
             local cleaned_target
             cleaned_target=$(mktemp)
             : >"$cleaned_target"
             if [ -f "$target_path" ]; then
-                remove_existing_marker_block "$marker_identifier" "$target_path" >"$cleaned_target"
+                remove_existing_marker_block "$marker_identifier" "$target_path" "$comment_prefix" >"$cleaned_target"
             fi
 
             if [ -s "$cleaned_target" ]; then

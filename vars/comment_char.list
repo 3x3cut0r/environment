@@ -1,0 +1,8 @@
+# Mapping of target file patterns to their comment prefix
+# Format: <glob-pattern> <comment-prefix>
+.vimrc "
+.gvimrc "
+.exrc "
+.vim/* "
+*.vim "
+.editorconfig ;

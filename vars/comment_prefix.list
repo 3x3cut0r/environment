@@ -1,5 +1,6 @@
 # Mapping of target file patterns to their comment prefix
 # Format: <glob-pattern> <comment-prefix>
+# Default comment prefix (used when no match is found): #
 .vimrc "
 .gvimrc "
 .exrc "

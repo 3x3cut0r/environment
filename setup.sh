@@ -515,6 +515,59 @@ ensure_trailing_newline() {
     printf '\n' >>"$file_path"
 }
 
+install_starship() {
+    if command -v starship >/dev/null 2>&1; then
+        log_message INFO "Starship prompt is already installed. Skipping installation step."
+        printf '\n'
+        return 0
+    fi
+
+    local response=""
+    local proceed=0
+
+    if [ "${ENVIRONMENT_AUTO_CONFIRM:-no}" = "yes" ]; then
+        log_message WARN "Auto confirmation enabled via ENVIRONMENT_AUTO_CONFIRM. Installing Starship without prompt."
+        proceed=1
+    else
+        local prompt="Install Starship prompt? [y/N] "
+        printf '[Environment][\033[35mINPUT\033[0m] %s' "$prompt"
+
+        if [ -t 0 ]; then
+            if ! read -r response; then
+                response=""
+            fi
+        else
+            if ! read -r response </dev/tty; then
+                response=""
+            fi
+        fi
+
+        printf '\n'
+
+        case "$response" in
+            j|J|ja|JA|y|Y|yes|YES)
+                proceed=1
+                ;;
+            *)
+                proceed=0
+                ;;
+        esac
+    fi
+
+    if [ $proceed -eq 1 ]; then
+        log_message INFO "Installing Starship prompt using official installer."
+        if curl -fsSL https://starship.rs/install.sh | sh -s -- --yes; then
+            log_message INFO "Starship installation completed successfully."
+        else
+            log_message ERROR "Starship installation failed."
+        fi
+    else
+        log_message INFO "Starship installation skipped by user."
+    fi
+
+    printf '\n'
+}
+
 configure_environment() {
     local source_home="${REPOSITORY_DIR:-.}/home"
     if [ ! -d "$source_home" ]; then
@@ -635,6 +688,7 @@ main() {
     display_environment_info
     confirm_execution
     install_packages
+    install_starship
     configure_environment
 }
 

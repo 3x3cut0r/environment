@@ -639,6 +639,81 @@ install_starship() {
     printf '\n'
 }
 
+install_tmux_plugin_manager() {
+    if ! command -v tmux >/dev/null 2>&1; then
+        log_message INFO "tmux is not installed. Skipping tmux plugin manager setup."
+        printf '\n'
+        return 0
+    fi
+
+    local target_home="$HOME"
+    if [ -z "$target_home" ] && command -v getent >/dev/null 2>&1 && [ -n "$CURRENT_USER" ]; then
+        target_home=$(getent passwd "$CURRENT_USER" | cut -d: -f6)
+    fi
+
+    if [ -z "$target_home" ] || [ ! -d "$target_home" ]; then
+        log_message WARN "Unable to determine a valid home directory for tmux plugin installation."
+        printf '\n'
+        return 0
+    fi
+
+    local plugins_dir="$target_home/.tmux/plugins"
+    local tpm_dir="$plugins_dir/tpm"
+
+    mkdir -p "$plugins_dir"
+
+    if [ ! -d "$tpm_dir" ]; then
+        log_message INFO "Installing tmux plugin manager (TPM)."
+        if git clone --depth 1 https://github.com/tmux-plugins/tpm "$tpm_dir" >/dev/null 2>&1; then
+            log_message INFO "TPM installed successfully."
+        else
+            log_message ERROR "Failed to install TPM."
+            printf '\n'
+            return 1
+        fi
+    else
+        log_message INFO "tmux plugin manager already present. Updating existing installation."
+        if git -C "$tpm_dir" pull --ff-only --quiet >/dev/null 2>&1; then
+            log_message INFO "TPM updated successfully."
+        else
+            log_message WARN "Unable to update TPM automatically. Continuing with existing version."
+        fi
+    fi
+
+    local tmux_conf="$target_home/.tmux.conf"
+    local temporary_conf=0
+    if [ ! -f "$tmux_conf" ]; then
+        if [ -n "${REPOSITORY_DIR:-}" ] && [ -f "$REPOSITORY_DIR/home/.tmux.conf" ]; then
+            cp "$REPOSITORY_DIR/home/.tmux.conf" "$tmux_conf"
+            temporary_conf=1
+        else
+            log_message WARN "No tmux configuration file found. Skipping plugin installation."
+            printf '\n'
+            return 0
+        fi
+    fi
+
+    if ! tmux start-server >/dev/null 2>&1; then
+        log_message WARN "Unable to start tmux server. Plugin installation may fail."
+    fi
+
+    if ! tmux set-environment -g TMUX_PLUGIN_MANAGER_PATH "$plugins_dir" >/dev/null 2>&1; then
+        log_message WARN "Failed to set TMUX_PLUGIN_MANAGER_PATH for tmux. Using default value."
+    fi
+
+    if TMUX_PLUGIN_MANAGER_PATH="$plugins_dir" "$tpm_dir/bin/install_plugins" >/dev/null 2>&1; then
+        log_message INFO "tmux plugins installed successfully."
+    else
+        log_message WARN "tmux plugin installation encountered issues."
+    fi
+
+    if [ $temporary_conf -eq 1 ]; then
+        rm -f "$tmux_conf"
+    fi
+
+    printf '\n'
+}
+
 configure_environment() {
     local source_home="${REPOSITORY_DIR:-.}/home"
     if [ ! -d "$source_home" ]; then
@@ -761,6 +836,7 @@ main() {
     install_packages
     install_nerd_font
     install_starship
+    install_tmux_plugin_manager
     configure_environment
 }
 

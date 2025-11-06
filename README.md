@@ -10,6 +10,17 @@ This repository provides a foundational setup script and configuration snippets 
 
 ## Usage
 
+```
+Environment bootstrap script
+
+Usage:
+  setup.sh [options]
+
+Options:
+  -h, --help        Show this help message and exit
+  -y, --yes         Automatically answer prompts with yes
+```
+
 ### Run directly (recommended)
 
 Execute the setup without cloning the repository by streaming the bootstrap script:
@@ -33,7 +44,7 @@ ENVIRONMENT_AUTO_CONFIRM=yes curl -fsSL https://raw.githubusercontent.com/3x3cut
    cd environment
    ```
 
-2. Run the setup script:
+2. Execute the setup script with one of the following commands.
 
    ```bash
    ./setup.sh
@@ -46,7 +57,7 @@ ENVIRONMENT_AUTO_CONFIRM=yes curl -fsSL https://raw.githubusercontent.com/3x3cut
    ```
 
 3. When prompted, confirm the installation. The script will:
-   - Install the tools listed in [`packages.list`](packages.list) using the appropriate package manager.
-   - Append the repository's configuration snippets from the [`home/`](home/) directory to the corresponding files in your home directory, adding markers to avoid duplicate entries.
+   - Install packages from [`packages.list`](packages.list).
+   - Merge the configuration snippets from [`home/`](home/) into your home directory.
 
 The script requires administrative privileges to install packages and will request elevation with `sudo` or `doas` when necessary.

@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+AUTO_CONFIRM="${ENVIRONMENT_AUTO_CONFIRM:-no}"
+
 parse_args() {
     SHOW_HELP=0
     POSITIONAL_ARGS=""
@@ -9,6 +11,10 @@ parse_args() {
         case "$1" in
             -h|--help)
                 SHOW_HELP=1
+                shift
+                ;;
+            -f|--force|--autoconfirm|-y|--yes)
+                AUTO_CONFIRM="yes"
                 shift
                 ;;
             --)
@@ -34,7 +40,9 @@ Usage:
   setup.sh [options]
 
 Options:
-  -h, --help    Show this help message and exit
+  -h, --help                   Show this help message and exit
+  -f, --force, --autoconfirm,
+      -y, --yes                Automatically answer prompts with yes
 USAGE
         exit 0
     fi
@@ -45,22 +53,22 @@ log_message() {
     shift
     local message="$*"
 
-    local color reset="\033[0m"
+    local color reset="\033[0m" # reset
     case "$level" in
         INFO)
-            color="\033[32m"
+            color="\033[32m" # green
             ;;
         WARN)
-            color="\033[33m"
+            color="\033[33m" # yellow
             ;;
         ERROR)
-            color="\033[31m"
+            color="\033[31m" # red
             ;;
         INPUT)
-            color="\033[35m"
+            color="\033[35m" # magenta
             ;;
         *)
-            color="\033[0m"
+            color="\033[0m" # default
             ;;
     esac
 
@@ -292,7 +300,7 @@ display_environment_info() {
 }
 
 confirm_execution() {
-    if [ "${ENVIRONMENT_AUTO_CONFIRM:-no}" != "yes" ]; then
+    if [ "$AUTO_CONFIRM" != "yes" ]; then
         local prompt="Continue with setup? [y/N] "
         local response=""
 
@@ -326,7 +334,7 @@ confirm_execution() {
                 ;;
         esac
     else
-        log_message WARN "Auto confirmation enabled via ENVIRONMENT_AUTO_CONFIRM."
+        log_message WARN "Auto confirmation enabled. Proceeding without prompt."
         printf '\n'
     fi
 }
@@ -596,8 +604,8 @@ install_starship() {
     local response=""
     local proceed=0
 
-    if [ "${ENVIRONMENT_AUTO_CONFIRM:-no}" = "yes" ]; then
-        log_message WARN "Auto confirmation enabled via ENVIRONMENT_AUTO_CONFIRM. Installing Starship without prompt."
+    if [ "$AUTO_CONFIRM" = "yes" ]; then
+        log_message WARN "Auto confirmation enabled. Installing Starship without prompt."
         proceed=1
     else
         local prompt="Install Starship prompt? [y/N] "

@@ -396,6 +396,77 @@ install_packages() {
     printf '\n'
 }
 
+install_nerd_font() {
+    local font_url="https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.zip"
+    local font_destination=""
+
+    case "$OS_KERNEL" in
+        Darwin)
+            font_destination="$HOME/Library/Fonts"
+            ;;
+        *)
+            font_destination="$HOME/.local/share/fonts"
+            ;;
+    esac
+
+    local existing_font=""
+    if [ -d "$font_destination" ]; then
+        existing_font=$(find "$font_destination" -maxdepth 1 -type f -name 'JetBrains Mono * Nerd Font*.ttf' -print -quit 2>/dev/null || true)
+        if [ -n "$existing_font" ]; then
+            log_message INFO "JetBrainsMono Nerd Font already installed. Skipping installation step."
+            printf '\n'
+            return 0
+        fi
+    fi
+
+    if ! command -v curl >/dev/null 2>&1; then
+        log_message ERROR "curl is required to download JetBrainsMono Nerd Font."
+        printf '\n'
+        return 1
+    fi
+
+    if ! command -v unzip >/dev/null 2>&1; then
+        log_message WARN "unzip is required to install JetBrainsMono Nerd Font. Skipping installation."
+        printf '\n'
+        return 1
+    fi
+
+    local temp_dir
+    temp_dir=$(mktemp -d) || {
+        log_message ERROR "Unable to create temporary directory for JetBrainsMono Nerd Font installation."
+        printf '\n'
+        return 1
+    }
+
+    local archive_path="$temp_dir/JetBrainsMono.zip"
+    if ! curl -fsSL -o "$archive_path" "$font_url"; then
+        log_message ERROR "Failed to download JetBrainsMono Nerd Font."
+        rm -rf "$temp_dir"
+        printf '\n'
+        return 1
+    fi
+
+    mkdir -p "$font_destination"
+
+    if ! unzip -o "$archive_path" -d "$font_destination" >/dev/null 2>&1; then
+        log_message ERROR "Failed to extract JetBrainsMono Nerd Font archive."
+        rm -rf "$temp_dir"
+        printf '\n'
+        return 1
+    fi
+
+    rm -rf "$temp_dir"
+
+    if command -v fc-cache >/dev/null 2>&1; then
+        if ! fc-cache -f "$font_destination" >/dev/null 2>&1; then
+            log_message WARN "Failed to refresh font cache. You may need to run 'fc-cache -f'."
+        fi
+    fi
+
+    log_message INFO "Installed JetBrainsMono Nerd Font."
+    printf '\n'
+}
+
 file_has_trailing_newline() {
     local file_path="$1"
     if [ ! -s "$file_path" ]; then
@@ -688,6 +759,7 @@ main() {
     display_environment_info
     confirm_execution
     install_packages
+    install_nerd_font
     install_starship
     configure_environment
 }

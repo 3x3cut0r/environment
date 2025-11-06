@@ -196,6 +196,37 @@ detect_package_managers() {
     fi
 }
 
+ensure_homebrew_for_macos() {
+    local os_id_lower os_name_lower
+    os_id_lower=$(printf '%s' "${OS_ID:-}" | tr '[:upper:]' '[:lower:]')
+    os_name_lower=$(printf '%s' "${OS_NAME:-}" | tr '[:upper:]' '[:lower:]')
+
+    if [ "$OS_KERNEL" != "Darwin" ] && [ "$os_id_lower" != "macos" ] && [ "$os_name_lower" != "macos" ]; then
+        return
+    fi
+
+    if command -v brew >/dev/null 2>&1; then
+        return
+    fi
+
+    log_message INFO "Homebrew not detected. Installing Homebrew."
+
+    NONINTERACTIVE=1 /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+    local potential_brew
+    for potential_brew in /opt/homebrew/bin/brew /usr/local/bin/brew; do
+        if [ -x "$potential_brew" ]; then
+            eval "$($potential_brew shellenv)"
+        fi
+    done
+
+    if command -v brew >/dev/null 2>&1; then
+        log_message INFO "Homebrew installation completed."
+    else
+        log_message WARN "Homebrew installation did not make the 'brew' command available."
+    fi
+}
+
 detect_operating_system() {
     OS_KERNEL=$(uname -s 2>/dev/null || echo "unknown")
     OS_ARCH=$(uname -m 2>/dev/null || echo "unknown")
@@ -305,6 +336,7 @@ install_packages() {
         return
     fi
 
+    ensure_homebrew_for_macos
     detect_package_managers
     if [ ${#AVAILABLE_PACKAGE_MANAGERS[@]} -eq 0 ]; then
         return

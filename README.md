@@ -51,5 +51,11 @@ ENVIRONMENT_AUTO_CONFIRM=yes curl -fsSL https://raw.githubusercontent.com/3x3cut
    ```
 
 3. When prompted, confirm the installation. The script will:
-   - Install packages from [`packages.list`](packages.list).
-   - Merge the configuration snippets from [`home/`](home/) into your home directory.
+   - Collect details about the operating system, shell, user, and working directory.
+   - Show a summary of the detected environment information.
+   - Ask for confirmation before continuing unless automatic approval is enabled.
+   - Install the packages declared in [`packages.list`](packages.list) with the available package manager.
+   - Download and install the JetBrainsMono Nerd Font if it is not already present.
+   - Offer to install the Starship prompt and run the official installer when accepted.
+   - Set up the tmux plugin manager (TPM) and install plugins when tmux is available.
+   - Apply the configuration snippets from [`home/`](home/) into the user's home directory with managed markers.

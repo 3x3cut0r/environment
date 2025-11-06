@@ -50,14 +50,6 @@ ENVIRONMENT_AUTO_CONFIRM=yes curl -fsSL https://raw.githubusercontent.com/3x3cut
    ./setup.sh
    ```
 
-   **or**
-
-   ```bash
-   ENVIRONMENT_AUTO_CONFIRM=yes ./setup.sh
-   ```
-
 3. When prompted, confirm the installation. The script will:
    - Install packages from [`packages.list`](packages.list).
    - Merge the configuration snippets from [`home/`](home/) into your home directory.
-
-The script requires administrative privileges to install packages and will request elevation with `sudo` or `doas` when necessary.

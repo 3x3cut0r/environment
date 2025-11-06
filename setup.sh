@@ -13,7 +13,7 @@ parse_args() {
                 SHOW_HELP=1
                 shift
                 ;;
-            -f|--force|--autoconfirm|-y|--yes)
+            -y|--yes)
                 AUTO_CONFIRM="yes"
                 shift
                 ;;
@@ -40,9 +40,8 @@ Usage:
   setup.sh [options]
 
 Options:
-  -h, --help                   Show this help message and exit
-  -f, --force, --autoconfirm,
-      -y, --yes                Automatically answer prompts with yes
+  -h, --help        Show this help message and exit
+  -y, --yes         Automatically answer prompts with yes
 USAGE
         exit 0
     fi

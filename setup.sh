@@ -194,6 +194,8 @@ detect_package_managers() {
     else
         log_message WARN "No supported package managers detected. Skipping package installation."
     fi
+
+    printf '\n'
 }
 
 ensure_homebrew_for_macos() {
@@ -325,6 +327,7 @@ confirm_execution() {
         esac
     else
         log_message WARN "Auto confirmation enabled via ENVIRONMENT_AUTO_CONFIRM."
+        printf '\n'
     fi
 }
 
@@ -389,6 +392,8 @@ install_packages() {
             log_message WARN "Unable to install any package from line: ${packages_in_line[*]}"
         fi
     done
+
+    printf '\n'
 }
 
 file_has_trailing_newline() {

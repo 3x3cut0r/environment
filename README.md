@@ -8,6 +8,35 @@ This repository provides a foundational setup script and configuration snippets 
 - `home/` – configuration snippets that replaces or will append to the user's home directory files.
 - `vars/` – common variables, such as `packages.list`, `aliases.list` or `PS1`, that will applied or inserted into multiple files
 
+### Projektstruktur
+
+```
+.
+├── LICENSE
+├── README.md
+├── home/
+│   ├── .bash_profile.append
+│   ├── .bashrc.append
+│   ├── .config/
+│   │   ├── aliases.list
+│   │   └── starship.toml
+│   ├── .exrc
+│   ├── .profile.append
+│   ├── .tmux.conf
+│   ├── .vimrc
+│   ├── .zprofile.append
+│   └── .zshrc.append
+├── packages.list
+├── setup.sh
+├── vars/
+│   ├── PS1
+│   ├── PS1.zsh
+│   └── comment_prefix.list
+└── .vscode/
+    ├── extensions.json
+    └── settings.json
+```
+
 ## Usage
 
 ```

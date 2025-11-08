@@ -746,7 +746,8 @@ install_tmux_plugin_manager() {
         log_message WARN "Unable to start tmux server. Plugin installation may fail."
     fi
 
-    if ! tmux set-environment -g TMUX_PLUGIN_MANAGER_PATH "$plugins_dir" >/dev/null 2>&1; then
+    # if ! tmux set-environment -g TMUX_PLUGIN_MANAGER_PATH "$plugins_dir" >/dev/null 2>&1; then
+    if ! setenv -g TMUX_PLUGIN_MANAGER_PATH "$plugins_dir" >/dev/null 2>&1; then
         log_message WARN "Failed to set TMUX_PLUGIN_MANAGER_PATH for tmux. Using default value."
     fi
 

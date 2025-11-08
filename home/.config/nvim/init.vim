@@ -1,3 +1,7 @@
+call plug#begin(stdpath('data') . '/plugged')
+Plug 'catppuccin/nvim', { 'as': 'catppuccin' }
+call plug#end()
+
 set encoding=utf-8      "Use UTF-8 encoding that supports unicode.
 set number              "Show line numbers on the sidebar.
 set norelativenumber    "Show line number on the current line and disable (no) relative numbers on all other lines.
@@ -17,11 +21,15 @@ set history=1000        "Increase the undo limit.
 set mouse=a             "Enable Mouse support in all modes.
 
 if has('termguicolors')
-    set termguicolors   "Enable true color support when available."
+  set termguicolors     "Enable true color support when available.
 endif
 
-let g:lightline = {'colorscheme': 'catppuccin_mocha'}
-let g:airline_theme = 'catppuccin_mocha'
-colorscheme catppuccin_mocha
+lua <<'LUA'
+require('catppuccin').setup({
+  flavour = 'mocha',
+})
+LUA
+
+colorscheme catppuccin
 
 syntax enable           "Enable syntax highlighting

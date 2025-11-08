@@ -1,3 +1,7 @@
+call plug#begin('~/.vim/plugged')
+Plug 'catppuccin/vim', { 'as': 'catppuccin' }
+call plug#end()
+
 set encoding=utf-8      "Use UTF-8 encoding that supports unicode.
 set number              "Show line numbers on the sidebar.
 set norelativenumber    "Show line number on the current line and disable (no) relative numbers on all other lines.
@@ -20,8 +24,7 @@ if has('termguicolors')
     set termguicolors   "Enable true color support when available.
 endif
 
-let g:lightline = {'colorscheme': 'catppuccin_mocha'}
-let g:airline_theme = 'catppuccin_mocha'
-colorscheme catppuccin_mocha
+let g:catppuccin_flavour = "mocha"
+colorscheme catppuccin
 
 syntax enable           "Enable syntax highlighting

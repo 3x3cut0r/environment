@@ -22,6 +22,6 @@ endif
 
 let g:lightline = {'colorscheme': 'catppuccin_mocha'}
 let g:airline_theme = 'catppuccin_mocha'
-colorscheme catppuccin_moacha
+colorscheme catppuccin_mocha
 
 syntax enable           "Enable syntax highlighting

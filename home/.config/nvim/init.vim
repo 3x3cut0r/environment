@@ -24,12 +24,12 @@ if has('termguicolors')
   set termguicolors     "Enable true color support when available.
 endif
 
-lua <<'LUA'
-require('catppuccin').setup({
+lua <<'EOF'
+local catppuccin = require('catppuccin')
+catppuccin.setup({
   flavour = 'mocha',
 })
-LUA
-
-colorscheme catppuccin
+vim.cmd.colorscheme('catppuccin')
+EOF
 
 syntax enable           "Enable syntax highlighting

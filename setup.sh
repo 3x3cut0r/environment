@@ -762,91 +762,91 @@ install_tmux_plugin_manager() {
     printf '\n'
 }
 
-install_catppuccin_vim() {
-    local repo_url="https://github.com/catppuccin/vim.git"
-    local pack_dir="$HOME/.vim/pack/vendor/start"
-    local theme_dir="$pack_dir/catppuccin"
+install_vim_plugin_manager() {
+    local plug_url="https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim"
+    local vim_plug_path="$HOME/.vim/autoload/plug.vim"
+    local nvim_plug_path="$HOME/.local/share/nvim/site/autoload/plug.vim"
 
-    if ! command -v git >/dev/null 2>&1; then
-        log_message WARN "git is required to install the Catppuccin theme for Vim. Skipping installation."
+    if ! command -v curl >/dev/null 2>&1; then
+        log_message WARN "curl is required to install vim-plug. Skipping installation."
         printf '\n'
         return 1
     fi
 
-    mkdir -p "$pack_dir"
-
-    if [ -d "$theme_dir/.git" ]; then
-        log_message INFO "Updating Catppuccin theme for Vim."
-        if ! git -C "$theme_dir" pull --ff-only >/dev/null 2>&1; then
-            log_message WARN "Failed to update Catppuccin theme for Vim. Leaving existing installation in place."
-            printf '\n'
-            return 1
-        fi
+    mkdir -p "$(dirname "$vim_plug_path")"
+    if curl -fLo "$vim_plug_path" --create-dirs "$plug_url" >/dev/null 2>&1; then
+        log_message INFO "Installed vim-plug for Vim at $vim_plug_path."
     else
-        if [ -d "$theme_dir" ]; then
-            rm -rf "$theme_dir"
-        fi
-
-        log_message INFO "Installing Catppuccin theme for Vim."
-        if ! git clone --depth 1 "$repo_url" "$theme_dir" >/dev/null 2>&1; then
-            log_message WARN "Failed to clone Catppuccin theme for Vim."
-            printf '\n'
-            return 1
-        fi
+        log_message WARN "Failed to install vim-plug for Vim."
     fi
 
-    log_message INFO "Catppuccin theme for Vim is installed at $theme_dir."
+    mkdir -p "$(dirname "$nvim_plug_path")"
+    if curl -fLo "$nvim_plug_path" --create-dirs "$plug_url" >/dev/null 2>&1; then
+        log_message INFO "Installed vim-plug for Neovim at $nvim_plug_path."
+    else
+        log_message WARN "Failed to install vim-plug for Neovim."
+    fi
+
+    printf '\n'
+}
+
+install_catppuccin_vim() {
+    local source_vimrc="${REPOSITORY_DIR:-.}/home/.vimrc"
+
+    if ! command -v vim >/dev/null 2>&1; then
+        log_message WARN "Vim is required to install plugins. Skipping Catppuccin installation for Vim."
+        printf '\n'
+        return 1
+    fi
+
+    if [ ! -f "$HOME/.vim/autoload/plug.vim" ]; then
+        log_message WARN "vim-plug is not installed for Vim. Skipping Catppuccin installation for Vim."
+        printf '\n'
+        return 1
+    fi
+
+    if [ ! -f "$source_vimrc" ]; then
+        log_message WARN "Vim configuration with Catppuccin plugin definition not found. Skipping installation."
+        printf '\n'
+        return 1
+    fi
+
+    log_message INFO "Installing Catppuccin theme for Vim using vim-plug."
+    if vim -es -u "$source_vimrc" +'PlugInstall --sync' +qall </dev/null >/dev/null 2>&1; then
+        log_message INFO "Catppuccin theme for Vim installed successfully via vim-plug."
+    else
+        log_message WARN "Failed to install Catppuccin theme for Vim using vim-plug."
+    fi
     printf '\n'
 }
 
 install_catppuccin_neovim() {
-    local repo_url="https://github.com/catppuccin/nvim.git"
-    local pack_dir="$HOME/.local/share/nvim/site/pack/colors/start"
-    local theme_dir="$pack_dir/catppuccin"
     local source_init="${REPOSITORY_DIR:-.}/home/.config/nvim/init.vim"
-    local target_init="$HOME/.config/nvim/init.vim"
 
-    if ! command -v git >/dev/null 2>&1; then
-        log_message WARN "git is required to install the Catppuccin theme for Neovim. Skipping installation."
+    if ! command -v nvim >/dev/null 2>&1; then
+        log_message WARN "Neovim is required to install plugins. Skipping Catppuccin installation for Neovim."
         printf '\n'
         return 1
     fi
 
-    mkdir -p "$pack_dir"
-
-    if [ -d "$theme_dir/.git" ]; then
-        log_message INFO "Updating Catppuccin theme for Neovim."
-        if ! git -C "$theme_dir" pull --ff-only >/dev/null 2>&1; then
-            log_message WARN "Failed to update Catppuccin theme for Neovim. Leaving existing installation in place."
-            printf '\n'
-            return 1
-        fi
-    else
-        if [ -d "$theme_dir" ]; then
-            rm -rf "$theme_dir"
-        fi
-
-        log_message INFO "Installing Catppuccin theme for Neovim."
-        if ! git clone --depth 1 "$repo_url" "$theme_dir" >/dev/null 2>&1; then
-            log_message WARN "Failed to clone Catppuccin theme for Neovim."
-            printf '\n'
-            return 1
-        fi
+    if [ ! -f "$HOME/.local/share/nvim/site/autoload/plug.vim" ]; then
+        log_message WARN "vim-plug is not installed for Neovim. Skipping Catppuccin installation for Neovim."
+        printf '\n'
+        return 1
     fi
 
-    log_message INFO "Catppuccin theme for Neovim is installed at $theme_dir."
-
-    if [ -f "$source_init" ]; then
-        mkdir -p "$(dirname "$target_init")"
-        if cp "$source_init" "$target_init"; then
-            log_message INFO "Configured Neovim init.vim with Catppuccin settings at $target_init."
-        else
-            log_message WARN "Failed to copy Catppuccin settings to $target_init."
-        fi
-    else
-        log_message WARN "Catppuccin settings for Neovim not found in repository. Skipping init.vim configuration."
+    if [ ! -f "$source_init" ]; then
+        log_message WARN "Neovim configuration with Catppuccin plugin definition not found. Skipping installation."
+        printf '\n'
+        return 1
     fi
 
+    log_message INFO "Installing Catppuccin theme for Neovim using vim-plug."
+    if nvim --headless -u "$source_init" +'PlugInstall --sync' +qa </dev/null >/dev/null 2>&1; then
+        log_message INFO "Catppuccin theme for Neovim installed successfully via vim-plug."
+    else
+        log_message WARN "Failed to install Catppuccin theme for Neovim using vim-plug."
+    fi
     printf '\n'
 }
 
@@ -986,6 +986,7 @@ main() {
     else
         install_starship
     fi
+    install_vim_plugin_manager
     install_tmux_plugin_manager
     if [ "$SKIP_CATPPUCCIN_VIM" = "yes" ]; then
         log_message WARN "Skipping Catppuccin installation for Vim as requested."

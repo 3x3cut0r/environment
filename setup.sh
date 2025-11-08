@@ -721,6 +721,43 @@ install_tmux_plugin_manager() {
     printf '\n'
 }
 
+install_catppuccin_vim() {
+    local repo_url="https://github.com/catppuccin/vim.git"
+    local pack_dir="$HOME/.vim/pack/colors/start"
+    local theme_dir="$pack_dir/catppuccin"
+
+    if ! command -v git >/dev/null 2>&1; then
+        log_message WARN "git is required to install the Catppuccin theme for Vim. Skipping installation."
+        printf '\n'
+        return 1
+    fi
+
+    mkdir -p "$pack_dir"
+
+    if [ -d "$theme_dir/.git" ]; then
+        log_message INFO "Updating Catppuccin theme for Vim."
+        if ! git -C "$theme_dir" pull --ff-only >/dev/null 2>&1; then
+            log_message WARN "Failed to update Catppuccin theme for Vim. Leaving existing installation in place."
+            printf '\n'
+            return 1
+        fi
+    else
+        if [ -d "$theme_dir" ]; then
+            rm -rf "$theme_dir"
+        fi
+
+        log_message INFO "Installing Catppuccin theme for Vim."
+        if ! git clone --depth 1 "$repo_url" "$theme_dir" >/dev/null 2>&1; then
+            log_message WARN "Failed to clone Catppuccin theme for Vim."
+            printf '\n'
+            return 1
+        fi
+    fi
+
+    log_message INFO "Catppuccin theme for Vim is installed at $theme_dir."
+    printf '\n'
+}
+
 configure_environment() {
     local source_home="${REPOSITORY_DIR:-.}/home"
     if [ ! -d "$source_home" ]; then
@@ -844,6 +881,7 @@ main() {
     install_nerd_font
     install_starship
     install_tmux_plugin_manager
+    install_catppuccin_vim
     configure_environment
 }
 

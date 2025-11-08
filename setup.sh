@@ -8,22 +8,6 @@ SKIP_STARSHIP="no"
 SKIP_CATPPUCCIN_VIM="no"
 SKIP_CATPPUCCIN_NEOVIM="no"
 
-STEP_LABELS=(
-    "Install packages"
-    "Install Nerd Font"
-    "Install Starship"
-    "Install Catppuccin for Vim"
-    "Install Catppuccin for Neovim"
-)
-
-STEP_VARIABLES=(
-    "SKIP_PACKAGES"
-    "SKIP_NERD_FONT"
-    "SKIP_STARSHIP"
-    "SKIP_CATPPUCCIN_VIM"
-    "SKIP_CATPPUCCIN_NEOVIM"
-)
-
 parse_args() {
     SHOW_HELP=0
     POSITIONAL_ARGS=""
@@ -356,200 +340,9 @@ display_environment_info() {
     printf '\n'
 }
 
-render_step_menu() {
-    local -n labels_ref=$1
-    local -n selection_ref=$2
-    local current_index=$3
-    local output_fd=$4
-    local count=${#labels_ref[@]}
-
-    printf >&"$output_fd" 'Select setup steps to run:\n'
-    printf >&"$output_fd" 'Use ↑/↓ arrows or j/k to navigate, SPACE to toggle, ENTER to confirm, q to cancel.\n'
-    printf >&"$output_fd" '\n'
-
-    for ((i = 0; i < count; i++)); do
-        local marker='[ ]'
-        if [ "${selection_ref[i]}" -eq 1 ]; then
-            marker='[x]'
-        fi
-
-        local prefix=' '
-        if [ "$i" -eq "$current_index" ]; then
-            prefix='>'
-        fi
-
-        printf >&"$output_fd" '%s %s %s\n' "$prefix" "$marker" "${labels_ref[i]}"
-    done
-
-    printf >&"$output_fd" '\nPress ENTER to continue with the selected steps.\n'
-}
-
-interactive_step_selection() {
-    local input_fd=0
-    local output_fd=1
-    local tty_fd=""
-
-    if [ ! -t "$input_fd" ] || [ ! -t "$output_fd" ]; then
-        if [ -r /dev/tty ] && [ -w /dev/tty ]; then
-            if exec {tty_fd}<>/dev/tty; then
-                input_fd=$tty_fd
-                output_fd=$tty_fd
-            else
-                tty_fd=""
-            fi
-        fi
-    fi
-
-    if [ ! -t "$input_fd" ] || [ ! -t "$output_fd" ]; then
-        if [ -n "$tty_fd" ]; then
-            exec {tty_fd}>&-
-        fi
-        log_message WARN "Interactive selection unavailable (terminal is not interactive). Using current step selections."
-        return 0
-    fi
-
-    if ! command -v tput >/dev/null 2>&1; then
-        if [ -n "$tty_fd" ]; then
-            exec {tty_fd}>&-
-        fi
-        log_message WARN "Interactive selection unavailable (missing tput). Using current step selections."
-        return 0
-    fi
-
-    local count=${#STEP_LABELS[@]}
-    if [ "$count" -eq 0 ]; then
-        return 0
-    fi
-
-    local -a selection=()
-    for ((i = 0; i < count; i++)); do
-        local var_name="${STEP_VARIABLES[i]}"
-        local -n var_ref="$var_name"
-        if [ "$var_ref" = "yes" ]; then
-            selection[i]=0
-        else
-            selection[i]=1
-        fi
-    done
-
-    local current_index=0
-    local total_lines=$((count + 6))
-    local cursor_hidden=0
-
-    if tput civis >&"$output_fd" 2>/dev/null; then
-        cursor_hidden=1
-    fi
-
-    while true; do
-        render_step_menu STEP_LABELS selection "$current_index" "$output_fd"
-
-        IFS= read -rsn1 -u "$input_fd" key
-        local redraw=1
-
-        case "$key" in
-            ""|$'\n'|$'\r')
-                redraw=0
-                break
-                ;;
-            " ")
-                if [ "${selection[current_index]}" -eq 1 ]; then
-                    selection[current_index]=0
-                else
-                    selection[current_index]=1
-                fi
-                ;;
-            q|Q)
-                if [ "$cursor_hidden" -eq 1 ]; then
-                    tput cnorm >&"$output_fd" 2>/dev/null || true
-                fi
-                printf >&"$output_fd" '\n'
-                log_message WARN "Execution cancelled by the user."
-                exit 0
-                ;;
-            $'\x1b')
-                local key2=""
-                local key3=""
-                if read -rsn1 -t 0.1 -u "$input_fd" key2 && [ "$key2" = "[" ]; then
-                    read -rsn1 -t 0.1 -u "$input_fd" key3 || key3=""
-                    case "$key3" in
-                        A)
-                            current_index=$(((current_index - 1 + count) % count))
-                            ;;
-                        B)
-                            current_index=$(((current_index + 1) % count))
-                            ;;
-                        *)
-                            redraw=0
-                            ;;
-                    esac
-                else
-                    redraw=0
-                fi
-                ;;
-            j|J)
-                current_index=$(((current_index + 1) % count))
-                ;;
-            k|K)
-                current_index=$(((current_index - 1 + count) % count))
-                ;;
-            *)
-                redraw=0
-                ;;
-        esac
-
-        if [ "$redraw" -eq 1 ]; then
-            tput cuu "$total_lines" >&"$output_fd" 2>/dev/null || true
-        fi
-    done
-
-    if [ "$cursor_hidden" -eq 1 ]; then
-        tput cnorm >&"$output_fd" 2>/dev/null || true
-    fi
-
-    printf >&"$output_fd" '\n'
-
-    for ((i = 0; i < count; i++)); do
-        local var_name="${STEP_VARIABLES[i]}"
-        local -n var_ref="$var_name"
-        if [ "${selection[i]}" -eq 1 ]; then
-            var_ref="no"
-        else
-            var_ref="yes"
-        fi
-    done
-
-    if [ -n "$tty_fd" ]; then
-        exec {tty_fd}>&-
-    fi
-
-    return 0
-}
-
-print_selected_steps_summary() {
-    local count=${#STEP_LABELS[@]}
-    if [ "$count" -eq 0 ]; then
-        return
-    fi
-
-    log_message INFO "Setup steps selection:"
-    for ((i = 0; i < count; i++)); do
-        local var_name="${STEP_VARIABLES[i]}"
-        local -n var_ref="$var_name"
-        local status="Run"
-        if [ "$var_ref" = "yes" ]; then
-            status="Skip"
-        fi
-        printf '  %-30s %s\n' "${STEP_LABELS[i]}" "$status"
-    done
-    printf '\n'
-}
-
 confirm_execution() {
     if [ "$AUTO_CONFIRM" != "yes" ]; then
-        interactive_step_selection
-        print_selected_steps_summary
-
-        local prompt="Proceed with selected steps? [y/N] "
+        local prompt="Continue with setup? [y/N] "
         local response=""
 
         printf '[Environment][\033[35mINPUT\033[0m] %s' "$prompt"
@@ -583,7 +376,6 @@ confirm_execution() {
         esac
     else
         log_message WARN "Auto confirmation enabled. Proceeding without prompt."
-        print_selected_steps_summary
         printf '\n'
     fi
 }

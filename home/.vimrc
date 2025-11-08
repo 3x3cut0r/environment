@@ -20,7 +20,8 @@ if has('termguicolors')
     set termguicolors   "Enable true color support when available.
 endif
 
-let g:catppuccin_flavour = "mocha"
-colorscheme catppuccin
+let g:lightline = {'colorscheme': 'catppuccin_mocha'}
+let g:airline_theme = 'catppuccin_mocha'
+colorscheme catppuccin_moacha
 
 syntax enable           "Enable syntax highlighting

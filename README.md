@@ -48,6 +48,18 @@ Usage:
 Options:
   -h, --help        Show this help message and exit
   -y, --yes         Automatically answer prompts with yes
+      --skip-packages
+                     Skip package installation step
+      --skip-nerd-font, --skip-nerdfont
+                     Skip Nerd Font installation
+      --skip-starship
+                     Skip Starship installation
+      --skip-catppuccin
+                     Skip Catppuccin installations for Vim and Neovim
+      --skip-catppuccin-vim
+                     Skip Catppuccin installation for Vim
+      --skip-catppuccin-nvim, --skip-catppuccin-neovim
+                     Skip Catppuccin installation for Neovim
 ```
 
 ### Run directly (recommended)

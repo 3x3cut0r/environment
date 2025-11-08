@@ -25,6 +25,6 @@ if has('termguicolors')
 endif
 
 let g:catppuccin_flavour = "mocha"
-colorscheme catppuccin
+colorscheme catppuccin_mocha
 
 syntax enable           "Enable syntax highlighting

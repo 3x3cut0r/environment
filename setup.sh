@@ -758,6 +758,57 @@ install_catppuccin_vim() {
     printf '\n'
 }
 
+install_catppuccin_neovim() {
+    local repo_url="https://github.com/catppuccin/nvim.git"
+    local pack_dir="$HOME/.local/share/nvim/site/pack/colors/start"
+    local theme_dir="$pack_dir/catppuccin"
+    local source_init="${REPOSITORY_DIR:-.}/home/.config/nvim/init.vim"
+    local target_init="$HOME/.config/nvim/init.vim"
+
+    if ! command -v git >/dev/null 2>&1; then
+        log_message WARN "git is required to install the Catppuccin theme for Neovim. Skipping installation."
+        printf '\n'
+        return 1
+    fi
+
+    mkdir -p "$pack_dir"
+
+    if [ -d "$theme_dir/.git" ]; then
+        log_message INFO "Updating Catppuccin theme for Neovim."
+        if ! git -C "$theme_dir" pull --ff-only >/dev/null 2>&1; then
+            log_message WARN "Failed to update Catppuccin theme for Neovim. Leaving existing installation in place."
+            printf '\n'
+            return 1
+        fi
+    else
+        if [ -d "$theme_dir" ]; then
+            rm -rf "$theme_dir"
+        fi
+
+        log_message INFO "Installing Catppuccin theme for Neovim."
+        if ! git clone --depth 1 "$repo_url" "$theme_dir" >/dev/null 2>&1; then
+            log_message WARN "Failed to clone Catppuccin theme for Neovim."
+            printf '\n'
+            return 1
+        fi
+    fi
+
+    log_message INFO "Catppuccin theme for Neovim is installed at $theme_dir."
+
+    if [ -f "$source_init" ]; then
+        mkdir -p "$(dirname "$target_init")"
+        if cp "$source_init" "$target_init"; then
+            log_message INFO "Configured Neovim init.vim with Catppuccin settings at $target_init."
+        else
+            log_message WARN "Failed to copy Catppuccin settings to $target_init."
+        fi
+    else
+        log_message WARN "Catppuccin settings for Neovim not found in repository. Skipping init.vim configuration."
+    fi
+
+    printf '\n'
+}
+
 configure_environment() {
     local source_home="${REPOSITORY_DIR:-.}/home"
     if [ ! -d "$source_home" ]; then
@@ -882,6 +933,7 @@ main() {
     install_starship
     install_tmux_plugin_manager
     install_catppuccin_vim
+    install_catppuccin_neovim
     configure_environment
 }
 

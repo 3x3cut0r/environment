@@ -742,18 +742,9 @@ install_tmux_plugin_manager() {
         fi
     fi
 
-    if ! tmux start-server >/dev/null 2>&1; then
-        log_message WARN "Unable to start tmux server. Plugin installation may fail."
-    else
-        if ! tmux new-session -d -s bootstrap >/dev/null 2>&1; then
-            log_message WARN "Unable to create new tmux session."
-        fi
-    fi
-
-    if ! tmux set-environment -g TMUX_PLUGIN_MANAGER_PATH "$plugins_dir" >/dev/null 2>&1; then
-        log_message WARN "Failed to set TMUX_PLUGIN_MANAGER_PATH for tmux. Using default value."
-    fi
-
+    tmux start-server >/dev/null 2>&1 || true
+    tmux new-session -d -s bootstrap || true
+    tmux set-environment -g TMUX_PLUGIN_MANAGER_PATH "$plugins_dir" >/dev/null 2>&1 || true
     tmux kill-session -t bootstrap >/dev/null 2>&1 || true
 
     if TMUX_PLUGIN_MANAGER_PATH="$plugins_dir" "$tpm_dir/bin/install_plugins" >/dev/null 2>&1; then

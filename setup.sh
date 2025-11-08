@@ -22,28 +22,28 @@ parse_args() {
                 AUTO_CONFIRM="yes"
                 shift
                 ;;
-            --skip-packages)
+            --skip-packages|-sp)
                 SKIP_PACKAGES="yes"
                 shift
                 ;;
-            --skip-nerd-font|--skip-nerdfont)
+            --skip-nerd-font|--skip-nerdfont|-sn)
                 SKIP_NERD_FONT="yes"
                 shift
                 ;;
-            --skip-starship)
+            --skip-starship|-ss)
                 SKIP_STARSHIP="yes"
                 shift
                 ;;
-            --skip-catppuccin)
+            --skip-catppuccin|-sc)
                 SKIP_CATPPUCCIN_VIM="yes"
                 SKIP_CATPPUCCIN_NEOVIM="yes"
                 shift
                 ;;
-            --skip-catppuccin-vim)
+            --skip-catppuccin-vim|-scv)
                 SKIP_CATPPUCCIN_VIM="yes"
                 shift
                 ;;
-            --skip-catppuccin-nvim|--skip-catppuccin-neovim)
+            --skip-catppuccin-nvim|--skip-catppuccin-neovim|-scn)
                 SKIP_CATPPUCCIN_NEOVIM="yes"
                 shift
                 ;;
@@ -744,7 +744,17 @@ install_tmux_plugin_manager() {
 
     if ! tmux start-server >/dev/null 2>&1; then
         log_message WARN "Unable to start tmux server. Plugin installation may fail."
+    else
+        if ! tmux new-session -d -s bootstrap >/dev/null 2>&1; then
+            log_message WARN "Unable to create new tmux session."
+        fi
     fi
+
+    if ! tmux set-environment -g TMUX_PLUGIN_MANAGER_PATH "$plugins_dir" >/dev/null 2>&1; then
+        log_message WARN "Failed to set TMUX_PLUGIN_MANAGER_PATH for tmux. Using default value."
+    fi
+
+    tmux kill-session -t bootstrap >/dev/null 2>&1 || true
 
     if TMUX_PLUGIN_MANAGER_PATH="$plugins_dir" "$tpm_dir/bin/install_plugins" >/dev/null 2>&1; then
         log_message INFO "tmux plugins installed successfully."
@@ -752,9 +762,7 @@ install_tmux_plugin_manager() {
         log_message WARN "tmux plugin installation encountered issues."
     fi
 
-    if ! tmux set-environment -g TMUX_PLUGIN_MANAGER_PATH "$plugins_dir" >/dev/null 2>&1; then
-        log_message WARN "Failed to set TMUX_PLUGIN_MANAGER_PATH for tmux. Using default value."
-    fi
+
 
     if [ $temporary_conf -eq 1 ]; then
         rm -f "$tmux_conf"

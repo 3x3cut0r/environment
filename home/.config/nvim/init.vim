@@ -2,26 +2,26 @@ call plug#begin(stdpath('data') . '/plugged')
 Plug 'catppuccin/nvim', { 'as': 'catppuccin' }
 call plug#end()
 
-set encoding=utf-8
-set number
-set norelativenumber
-set expandtab
-set smarttab
-set tabstop=4
-set shiftwidth=4
-set hlsearch
-set ignorecase
-set scrolloff=2
-set ruler
-set cursorline
-set visualbell
-set title
-set background=dark
-set history=1000
-set mouse=a
+set encoding=utf-8      "Use UTF-8 encoding that supports unicode.
+set number              "Show line numbers on the sidebar.
+set norelativenumber    "Show line number on the current line and disable (no) relative numbers on all other lines.
+set expandtab           "Convert tabs to spaces.
+set smarttab            "Insert 'tabstop' number of spaces when the 'tab' key is pressed.
+set tabstop=4           "Indent using four spaces.
+set shiftwidth=4        "When shifting, indent using four spaces.
+set hlsearch            "Enable search highlighting.
+set ignorecase          "Ignore case when searching.
+set scrolloff=2         "The number of screen lines to keep above and below the cursor.
+set ruler               "Always show cursor position.
+set cursorline          "Highlight the line currently under cursor.
+set visualbell          "Flash the screen instead of beeping on errors.
+set title               "Set the window's title, reflecting the file currently being edited.
+set background=dark     "Use colors that suit a dark background.
+set history=1000        "Increase the undo limit.
+set mouse=a             "Enable Mouse support in all modes.
 
 if has('termguicolors')
-  set termguicolors
+  set termguicolors     "Enable true color support when available.
 endif
 
 lua <<'LUA'
@@ -32,4 +32,4 @@ LUA
 
 colorscheme catppuccin
 
-syntax enable
+syntax enable           "Enable syntax highlighting

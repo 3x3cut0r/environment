@@ -765,7 +765,7 @@ install_tmux_plugin_manager() {
 
 install_catppuccin_vim() {
     local repo_url="https://github.com/catppuccin/vim.git"
-    local pack_dir="$HOME/.vim/pack/colors/start"
+    local pack_dir="$HOME/.vim/pack/vendor/start"
     local theme_dir="$pack_dir/catppuccin"
 
     if ! command -v git >/dev/null 2>&1; then

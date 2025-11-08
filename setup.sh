@@ -2,6 +2,11 @@
 set -euo pipefail
 
 AUTO_CONFIRM="${ENVIRONMENT_AUTO_CONFIRM:-no}"
+SKIP_PACKAGES="no"
+SKIP_NERD_FONT="no"
+SKIP_STARSHIP="no"
+SKIP_CATPPUCCIN_VIM="no"
+SKIP_CATPPUCCIN_NEOVIM="no"
 
 parse_args() {
     SHOW_HELP=0
@@ -15,6 +20,31 @@ parse_args() {
                 ;;
             -y|--yes)
                 AUTO_CONFIRM="yes"
+                shift
+                ;;
+            --skip-packages)
+                SKIP_PACKAGES="yes"
+                shift
+                ;;
+            --skip-nerd-font|--skip-nerdfont)
+                SKIP_NERD_FONT="yes"
+                shift
+                ;;
+            --skip-starship)
+                SKIP_STARSHIP="yes"
+                shift
+                ;;
+            --skip-catppuccin)
+                SKIP_CATPPUCCIN_VIM="yes"
+                SKIP_CATPPUCCIN_NEOVIM="yes"
+                shift
+                ;;
+            --skip-catppuccin-vim)
+                SKIP_CATPPUCCIN_VIM="yes"
+                shift
+                ;;
+            --skip-catppuccin-nvim|--skip-catppuccin-neovim)
+                SKIP_CATPPUCCIN_NEOVIM="yes"
                 shift
                 ;;
             --)
@@ -42,6 +72,18 @@ Usage:
 Options:
   -h, --help        Show this help message and exit
   -y, --yes         Automatically answer prompts with yes
+      --skip-packages
+                     Skip package installation step
+      --skip-nerd-font, --skip-nerdfont
+                     Skip Nerd Font installation
+      --skip-starship
+                     Skip Starship installation
+      --skip-catppuccin
+                     Skip Catppuccin installations for Vim and Neovim
+      --skip-catppuccin-vim
+                     Skip Catppuccin installation for Vim
+      --skip-catppuccin-nvim, --skip-catppuccin-neovim
+                     Skip Catppuccin installation for Neovim
 USAGE
         exit 0
     fi
@@ -928,12 +970,35 @@ main() {
     gather_environment_info
     display_environment_info
     confirm_execution
-    install_packages
-    install_nerd_font
-    install_starship
+    if [ "$SKIP_PACKAGES" = "yes" ]; then
+        log_message WARN "Skipping package installation as requested."
+    else
+        install_packages
+    fi
+
+    if [ "$SKIP_NERD_FONT" = "yes" ]; then
+        log_message WARN "Skipping Nerd Font installation as requested."
+    else
+        install_nerd_font
+    fi
+
+    if [ "$SKIP_STARSHIP" = "yes" ]; then
+        log_message WARN "Skipping Starship installation as requested."
+    else
+        install_starship
+    fi
     install_tmux_plugin_manager
-    install_catppuccin_vim
-    install_catppuccin_neovim
+    if [ "$SKIP_CATPPUCCIN_VIM" = "yes" ]; then
+        log_message WARN "Skipping Catppuccin installation for Vim as requested."
+    else
+        install_catppuccin_vim
+    fi
+
+    if [ "$SKIP_CATPPUCCIN_NEOVIM" = "yes" ]; then
+        log_message WARN "Skipping Catppuccin installation for Neovim as requested."
+    else
+        install_catppuccin_neovim
+    fi
     configure_environment
 }
 

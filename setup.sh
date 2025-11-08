@@ -690,7 +690,7 @@ install_starship() {
 
 install_tmux_plugin_manager() {
     if ! command -v tmux >/dev/null 2>&1; then
-        log_message INFO "tmux is not installed. Skipping tmux plugin manager setup."
+        log_message INFO "tmux is not installed. Skipping TPM (tmux plugin manager) setup."
         printf '\n'
         return 0
     fi
@@ -712,7 +712,7 @@ install_tmux_plugin_manager() {
     mkdir -p "$plugins_dir"
 
     if [ ! -d "$tpm_dir" ]; then
-        log_message INFO "Installing tmux plugin manager (TPM)."
+        log_message INFO "Installing TPM (tmux plugin manager)."
         if git clone --depth 1 https://github.com/tmux-plugins/tpm "$tpm_dir" >/dev/null 2>&1; then
             log_message INFO "TPM installed successfully."
         else
@@ -721,7 +721,7 @@ install_tmux_plugin_manager() {
             return 1
         fi
     else
-        log_message INFO "tmux plugin manager already present. Updating existing installation."
+        log_message INFO "TPM (tmux plugin manager) already present. Updating existing installation."
         if git -C "$tpm_dir" pull --ff-only --quiet >/dev/null 2>&1; then
             log_message INFO "TPM updated successfully."
         else

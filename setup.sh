@@ -360,11 +360,12 @@ render_step_menu() {
     local -n labels_ref=$1
     local -n selection_ref=$2
     local current_index=$3
+    local output_fd=$4
     local count=${#labels_ref[@]}
 
-    printf 'Select setup steps to run:\n'
-    printf 'Use ↑/↓ arrows or j/k to navigate, SPACE to toggle, ENTER to confirm, q to cancel.\n'
-    printf '\n'
+    printf >&"$output_fd" 'Select setup steps to run:\n'
+    printf >&"$output_fd" 'Use ↑/↓ arrows or j/k to navigate, SPACE to toggle, ENTER to confirm, q to cancel.\n'
+    printf >&"$output_fd" '\n'
 
     for ((i = 0; i < count; i++)); do
         local marker='[ ]'
@@ -377,19 +378,40 @@ render_step_menu() {
             prefix='>'
         fi
 
-        printf '%s %s %s\n' "$prefix" "$marker" "${labels_ref[i]}"
+        printf >&"$output_fd" '%s %s %s\n' "$prefix" "$marker" "${labels_ref[i]}"
     done
 
-    printf '\nPress ENTER to continue with the selected steps.\n'
+    printf >&"$output_fd" '\nPress ENTER to continue with the selected steps.\n'
 }
 
 interactive_step_selection() {
-    if [ ! -t 0 ] || [ ! -t 1 ]; then
+    local input_fd=0
+    local output_fd=1
+    local tty_fd=""
+
+    if [ ! -t "$input_fd" ] || [ ! -t "$output_fd" ]; then
+        if [ -r /dev/tty ] && [ -w /dev/tty ]; then
+            if exec {tty_fd}<>/dev/tty; then
+                input_fd=$tty_fd
+                output_fd=$tty_fd
+            else
+                tty_fd=""
+            fi
+        fi
+    fi
+
+    if [ ! -t "$input_fd" ] || [ ! -t "$output_fd" ]; then
+        if [ -n "$tty_fd" ]; then
+            exec {tty_fd}>&-
+        fi
         log_message WARN "Interactive selection unavailable (terminal is not interactive). Using current step selections."
         return 0
     fi
 
     if ! command -v tput >/dev/null 2>&1; then
+        if [ -n "$tty_fd" ]; then
+            exec {tty_fd}>&-
+        fi
         log_message WARN "Interactive selection unavailable (missing tput). Using current step selections."
         return 0
     fi
@@ -414,14 +436,14 @@ interactive_step_selection() {
     local total_lines=$((count + 6))
     local cursor_hidden=0
 
-    if tput civis >/dev/null 2>&1; then
+    if tput civis >&"$output_fd" 2>/dev/null; then
         cursor_hidden=1
     fi
 
     while true; do
-        render_step_menu STEP_LABELS selection "$current_index"
+        render_step_menu STEP_LABELS selection "$current_index" "$output_fd"
 
-        IFS= read -rsn1 key
+        IFS= read -rsn1 -u "$input_fd" key
         local redraw=1
 
         case "$key" in
@@ -438,17 +460,17 @@ interactive_step_selection() {
                 ;;
             q|Q)
                 if [ "$cursor_hidden" -eq 1 ]; then
-                    tput cnorm >/dev/null 2>&1 || true
+                    tput cnorm >&"$output_fd" 2>/dev/null || true
                 fi
-                printf '\n'
+                printf >&"$output_fd" '\n'
                 log_message WARN "Execution cancelled by the user."
                 exit 0
                 ;;
             $'\x1b')
                 local key2=""
                 local key3=""
-                if read -rsn1 -t 0.1 key2 && [ "$key2" = "[" ]; then
-                    read -rsn1 -t 0.1 key3 || key3=""
+                if read -rsn1 -t 0.1 -u "$input_fd" key2 && [ "$key2" = "[" ]; then
+                    read -rsn1 -t 0.1 -u "$input_fd" key3 || key3=""
                     case "$key3" in
                         A)
                             current_index=$(((current_index - 1 + count) % count))
@@ -476,15 +498,15 @@ interactive_step_selection() {
         esac
 
         if [ "$redraw" -eq 1 ]; then
-            tput cuu "$total_lines" >/dev/null 2>&1 || true
+            tput cuu "$total_lines" >&"$output_fd" 2>/dev/null || true
         fi
     done
 
     if [ "$cursor_hidden" -eq 1 ]; then
-        tput cnorm >/dev/null 2>&1 || true
+        tput cnorm >&"$output_fd" 2>/dev/null || true
     fi
 
-    printf '\n'
+    printf >&"$output_fd" '\n'
 
     for ((i = 0; i < count; i++)); do
         local var_name="${STEP_VARIABLES[i]}"
@@ -495,6 +517,10 @@ interactive_step_selection() {
             var_ref="yes"
         fi
     done
+
+    if [ -n "$tty_fd" ]; then
+        exec {tty_fd}>&-
+    fi
 
     return 0
 }

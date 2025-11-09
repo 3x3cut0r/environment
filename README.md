@@ -4,12 +4,6 @@ This repository provides a foundational setup script and configuration snippets 
 
 ## Repository layout
 
-- `setup.sh` – bootstrap and setup script that installs packages and applies configuration.
-- `home/` – configuration snippets that replaces or will append to the user's home directory files.
-- `vars/` – common variables, such as `packages.list`, `aliases.list` or `PS1`, that will applied or inserted into multiple files
-
-### Projektstruktur
-
 ```
 .
 ├── LICENSE

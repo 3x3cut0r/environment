@@ -1,4 +1,4 @@
-# environment
+# Environment
 
 This repository provides a foundational setup script and configuration snippets to prepare a workstation with common tooling. The script detects the host environment, installs required packages, and merges configuration updates into existing dotfiles.
 

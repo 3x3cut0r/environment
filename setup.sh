@@ -1002,8 +1002,8 @@ main() {
     install_packages
     install_nerd_font
     install_starship
-    install_vim_plugin_manager
     install_tmux_plugin_manager
+    install_vim_plugin_manager
     install_catppuccin_vim
     install_catppuccin_neovim
     configure_environment

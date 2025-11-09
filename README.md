@@ -1,8 +1,17 @@
 # Environment
 
-This repository provides a foundational setup script and configuration snippets to prepare a workstation with common tooling. The script detects the host environment, installs required packages, and merges configuration updates into existing dotfiles.
+This repository provides a setup script that performs fundamental shell customizations and merges curated configuration snippets into an existing workstation.
 
-## Repository layout
+- `install_packages`: Installs the baseline package set required for the configured tooling.
+- `install_nerd_font`: Downloads and installs the Nerd Font variant used across prompts and editors.
+- `install_starship`: Sets up the Starship prompt with the repository's theme defaults.
+- `install_tmux_plugin_manager`: Fetches and configures the tmux plugin manager (TPM) for plugin handling.
+- `install_vim_plugin_manager`: Installs the Vim/Neovim plugin manager to bootstrap editor plugins.
+- `install_catppuccin_vim`: Applies the Catppuccin color scheme to the Vim configuration.
+- `install_catppuccin_neovim`: Mirrors the Catppuccin theme setup for Neovim.
+- `configure_environment`: Applies the curated dotfile snippets, Starship theme settings, and environment variables.
+
+## Repository overview
 
 ```
 .

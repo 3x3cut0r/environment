@@ -20,11 +20,11 @@ set background=dark     "Use colors that suit a dark background.
 set history=1000        "Increase the undo limit.
 set mouse=a             "Enable Mouse support in all modes.
 
+syntax enable           "Enable syntax highlighting
+
 if has('termguicolors')
     set termguicolors   "Enable true color support when available.
 endif
 
 let g:catppuccin_flavour = "mocha"
 colorscheme catppuccin_mocha
-
-syntax enable           "Enable syntax highlighting

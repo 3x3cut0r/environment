@@ -381,6 +381,12 @@ confirm_execution() {
 }
 
 install_packages() {
+    if [ "${SKIP_PACKAGES:-no}" = "yes" ]; then
+        log_message WARN "Skipping package installation as requested."
+        printf '\n'
+        return 0
+    fi
+
     local packages_file="${REPOSITORY_DIR:-.}/packages.list"
 
     if [ ! -f "$packages_file" ]; then
@@ -446,6 +452,12 @@ install_packages() {
 }
 
 install_nerd_font() {
+    if [ "${SKIP_NERD_FONT:-no}" = "yes" ]; then
+        log_message WARN "Skipping Nerd Font installation as requested."
+        printf '\n'
+        return 0
+    fi
+
     local font_url="https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.zip"
     local font_destination=""
 
@@ -636,6 +648,12 @@ ensure_trailing_newline() {
 }
 
 install_starship() {
+    if [ "${SKIP_STARSHIP:-no}" = "yes" ]; then
+        log_message WARN "Skipping Starship installation as requested."
+        printf '\n'
+        return 0
+    fi
+
     if command -v starship >/dev/null 2>&1; then
         log_message INFO "Starship prompt is already installed. Skipping installation step."
         printf '\n'
@@ -791,6 +809,12 @@ install_vim_plugin_manager() {
 }
 
 install_catppuccin_vim() {
+    if [ "${SKIP_CATPPUCCIN_VIM:-no}" = "yes" ]; then
+        log_message WARN "Skipping Catppuccin installation for Vim as requested."
+        printf '\n'
+        return 0
+    fi
+
     local source_vimrc="${REPOSITORY_DIR:-.}/home/.vimrc"
 
     if ! command -v vim >/dev/null 2>&1; then
@@ -821,6 +845,12 @@ install_catppuccin_vim() {
 }
 
 install_catppuccin_neovim() {
+    if [ "${SKIP_CATPPUCCIN_NEOVIM:-no}" = "yes" ]; then
+        log_message WARN "Skipping Catppuccin installation for Neovim as requested."
+        printf '\n'
+        return 0
+    fi
+
     local source_init="${REPOSITORY_DIR:-.}/home/.config/nvim/init.vim"
 
     if ! command -v nvim >/dev/null 2>&1; then
@@ -969,36 +999,13 @@ main() {
     gather_environment_info
     display_environment_info
     confirm_execution
-    if [ "$SKIP_PACKAGES" = "yes" ]; then
-        log_message WARN "Skipping package installation as requested."
-    else
-        install_packages
-    fi
-
-    if [ "$SKIP_NERD_FONT" = "yes" ]; then
-        log_message WARN "Skipping Nerd Font installation as requested."
-    else
-        install_nerd_font
-    fi
-
-    if [ "$SKIP_STARSHIP" = "yes" ]; then
-        log_message WARN "Skipping Starship installation as requested."
-    else
-        install_starship
-    fi
+    install_packages
+    install_nerd_font
+    install_starship
     install_vim_plugin_manager
     install_tmux_plugin_manager
-    if [ "$SKIP_CATPPUCCIN_VIM" = "yes" ]; then
-        log_message WARN "Skipping Catppuccin installation for Vim as requested."
-    else
-        install_catppuccin_vim
-    fi
-
-    if [ "$SKIP_CATPPUCCIN_NEOVIM" = "yes" ]; then
-        log_message WARN "Skipping Catppuccin installation for Neovim as requested."
-    else
-        install_catppuccin_neovim
-    fi
+    install_catppuccin_vim
+    install_catppuccin_neovim
     configure_environment
 }
 

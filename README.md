@@ -6,29 +6,32 @@ This repository provides a foundational setup script and configuration snippets 
 
 ```
 .
-├── LICENSE
-├── README.md
-├── home/
-│   ├── .bash_profile.append
-│   ├── .bashrc.append
-│   ├── .config/
-│   │   ├── aliases.list
-│   │   └── starship.toml
-│   ├── .exrc
-│   ├── .profile.append
-│   ├── .tmux.conf
-│   ├── .vimrc
-│   ├── .zprofile.append
-│   └── .zshrc.append
-├── packages.list
-├── setup.sh
-├── vars/
-│   ├── PS1
-│   ├── PS1.zsh
-│   └── comment_prefix.list
-└── .vscode/
-    ├── extensions.json
-    └── settings.json
+├── .gitignore                       # Ignored files configuration for the repository
+├── .vscode/                         # Editor recommendations for VS Code users
+│   ├── extensions.json              # Suggested VS Code extensions
+│   └── settings.json                # Workspace-specific VS Code settings
+├── LICENSE                          # Repository license (MIT)
+├── README.md                        # Project documentation and usage guide
+├── home/                            # Dotfile snippets applied to the target system
+│   ├── .bash_profile.append         # Additional Bash profile configuration
+│   ├── .bashrc.append               # Additional Bash runtime configuration
+│   ├── .config/                     # Configuration directory for assorted tools
+│   │   ├── aliases.list             # Common shell aliases to append
+│   │   ├── nvim/                    # Neovim configuration directory for themed setup
+│   │   │   └── init.vim             # Neovim configuration with Catppuccin theme support
+│   │   └── starship.toml            # Starship prompt theme configuration
+│   ├── .exrc                        # Ex/Vi editor configuration
+│   ├── .profile.append              # POSIX shell profile additions
+│   ├── .tmux.conf                   # tmux configuration with TPM setup
+│   ├── .vimrc                       # Vim configuration with Catppuccin theme support
+│   ├── .zprofile.append             # Zsh login shell profile additions
+│   └── .zshrc.append                # Zsh interactive shell configuration
+├── packages.list                    # Packages to install with the detected package manager
+├── setup.sh                         # Bootstrap script orchestrating the environment setup
+└── vars/                            # Prompt and helper data consumed by the setup script
+    ├── PS1                          # Bash prompt template snippet
+    ├── PS1.zsh                      # Zsh prompt template snippet
+    └── comment_prefix.list          # Prefix tokens used when merging config files
 ```
 
 ## Usage
@@ -40,20 +43,16 @@ Usage:
   setup.sh [options]
 
 Options:
-  -h, --help        Show this help message and exit
-  -y, --yes         Automatically answer prompts with yes
-      --skip-packages
-                     Skip package installation step
-      --skip-nerd-font, --skip-nerdfont
-                     Skip Nerd Font installation
-      --skip-starship
-                     Skip Starship installation
-      --skip-catppuccin
-                     Skip Catppuccin installations for Vim and Neovim
-      --skip-catppuccin-vim
-                     Skip Catppuccin installation for Vim
-      --skip-catppuccin-nvim, --skip-catppuccin-neovim
-                     Skip Catppuccin installation for Neovim
+  -h, --help                      Show this help message and exit
+  -y, --yes                       Automatically answer prompts with yes
+  --skip-packages, -sp            Skip package installation step
+  --skip-nerd-font, --skip-nerdfont, -sn
+                                  Skip Nerd Font installation
+  --skip-starship, -ss            Skip Starship installation
+  --skip-catppuccin, -sc          Skip Catppuccin installations for Vim and Neovim
+  --skip-catppuccin-vim, -scv     Skip Catppuccin installation for Vim only
+  --skip-catppuccin-nvim, --skip-catppuccin-neovim, -scn
+                                  Skip Catppuccin installation for Neovim only
 ```
 
 ### Run directly (recommended)

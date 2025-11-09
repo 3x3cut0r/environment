@@ -61,6 +61,10 @@ Execute the setup without cloning the repository by streaming the bootstrap scri
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/3x3cut0r/environment/main/setup.sh | bash
+# or run the script non-interactively
+curl -fsSL https://raw.githubusercontent.com/3x3cut0r/environment/main/setup.sh | bash -s -- -y
+# or run teh script and skip packages
+curl -fsSL https://raw.githubusercontent.com/3x3cut0r/environment/main/setup.sh | bash -s -- --skip-packages
 ```
 
 To run the script non-interactively (for example in automated setups), set `ENVIRONMENT_AUTO_CONFIRM=yes` before invoking it to bypass the confirmation prompt:

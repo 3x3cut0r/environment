@@ -3,7 +3,7 @@ palette = "catppuccin_mocha"
 add_newline = false
 
 format = """
-$directory${custom.prompt_symbol}
+$os$directory${custom.prompt_symbol}
 """
 
 [fill]
@@ -21,30 +21,23 @@ when = "true"
 [username]
 format = "$user"
 show_always = true
-style_user = "plain"
-style_root = "plain"
+style_user = 'white bold'
+style_root = 'red bold'
 disabled = true
 
 [hostname]
 ssh_only = false
-format = "@$hostname"
+ssh_symbol = ' ssh://'
+format = "$ssh_symbol$hostname"
 trim_at = "."
 style = "plain"
-disabled = true
+disabled = false
 
 [directory]
 truncate_to_repo = false
 style = "plain"
 format = "$path "
 truncation_length = 1
-
-[git_branch]
-style = "fg:crust bg:mauve"
-format = "[[](fg:mauve)[  $symbol$branch ]($style)[](fg:mauve)] "
-
-[git_status]
-style = "fg:peach bg:surface0"
-format = "[[](fg:surface0)[ $all_status$ahead_behind ]($style)[](fg:surface0)] "
 
 [time]
 disabled = false
@@ -164,3 +157,228 @@ surface0 = "#313244"
 base = "#1e1e2e"
 mantle = "#181825"
 crust = "#11111b"
+
+# Symbol definitions
+[aws]
+symbol = '  '
+
+[buf]
+symbol = ' '
+
+[c]
+format = '[─](fg:current_line)[](fg:blue)[$symbol](fg:primary bg:blue)[](fg:blue bg:box)[ $version](fg:foreground bg:box)[](fg:box)'
+symbol = ' C'
+
+[cmake]
+symbol = ' '
+
+[conda]
+disabled = false
+ignore_base = true
+format = '[─](fg:base)[](fg:green)[$symbol](fg:primary bg:green)[](fg:green bg:box)[ $environment](fg:foreground bg:box)[](fg:box)'
+symbol = ' '
+
+[crystal]
+symbol = ' '
+
+[custom.svn_global]
+symbol = " "
+description = "Show SVN (global) revision when visiting a WC"
+when = "svn --non-interactive info >/dev/null 2>&1"
+command = "svn --non-interactive info --no-newline --show-item revision"
+ 
+[custom.svn_local]
+symbol = " "
+description = "Show SVN last-changed-revision for the current working directory when visiting a WC"
+when = "svn --non-interactive info >/dev/null 2>&1"
+command = "svn --non-interactive info --no-newline --show-item last-changed-revision"
+ 
+[custom.svn_status]
+symbol = " "
+description = "Show a summary of SVN status flags for the current working directory when visiting a WC"
+when = "svn --non-interactive info >/dev/null 2>&1"
+command = "~/starship-svn-status.sh"
+
+[dart]
+symbol = ' '
+
+[docker_context]
+disabled = false
+only_with_files = true
+format = '[─](fg:base)[](fg:cyan)[$symbol](fg:primary bg:cyan)[](fg:cyan bg:box)'
+symbol = ' docker'
+
+[dotnet]
+format = '[─](fg:current_line)[](fg:purple)[$symbol](fg:primary bg:purple)[](fg:purple bg:box)[ $tfm](fg:foreground bg:box)[](fg:box)'
+symbol = ' .NET'
+
+[elixir]
+symbol = ' '
+
+[elm]
+symbol = ' '
+
+[erlang]
+symbol = "ⓔ "
+
+[fennel]
+symbol = ' '
+
+[fossil_branch]
+symbol = ' '
+
+[git_branch]
+style = "fg:crust bg:mauve"
+format = "[[](fg:mauve)[  $symbol$branch ]($style)[](fg:mauve)] "
+
+[git_status]
+style = "fg:peach bg:surface0"
+format = "[[](fg:surface0)[ $all_status$ahead_behind ]($style)[](fg:surface0)] "
+
+[git_metrics]
+disabled = false
+format = ' [+$added]($added_style)/[-$deleted]($deleted_style) '
+added_style = 'green'
+
+[git_commit]
+tag_symbol = '  '
+
+[golang]
+symbol = ' '
+
+[guix_shell]
+symbol = ' '
+
+[haskell]
+symbol = ' '
+
+[haxe]
+symbol = ' '
+
+[hg_branch]
+symbol = ' '
+
+[java]
+format = '[─](fg:current_line)[](fg:red)[$symbol](fg:primary bg:red)[](fg:red bg:box)[ $version](fg:foreground bg:box)[](fg:box)'
+symbol = ' Java'
+
+[julia]
+symbol = ' '
+
+[kotlin]
+symbol = ' '
+
+[lua]
+symbol = ' '
+
+[memory_usage]
+symbol = '󰍛 '
+
+[meson]
+symbol = '󰔷 '
+
+[nim]
+symbol = '󰆥 '
+
+[nix_shell]
+symbol = ' '
+
+[nodejs]
+format = '[─](fg:current_line)[](fg:green)[$symbol](fg:primary bg:green)[](fg:green bg:box)[ $version](fg:foreground bg:box)[](fg:box)'
+symbol = '󰎙 Node.js'
+
+[ocaml]
+symbol = ' '
+
+[os]
+disabled = false
+format = "$symbol"
+
+[os.symbols]
+Alpaquita = ' '
+Alpine = ' '
+AlmaLinux = ' '
+Amazon = ' '
+Android = ' '
+Arch = ' '
+Artix = ' '
+CachyOS = ' '
+CentOS = ' '
+Debian = ' '
+DragonFly = ' '
+Emscripten = ' '
+EndeavourOS = ' '
+Fedora = ' '
+FreeBSD = ' '
+Garuda = ' '
+Gentoo = ' '
+HardenedBSD = '󰞌 '
+Illumos = '󰈸 '
+Kali = ' '
+Linux = ' '
+Mabox = ' '
+Macos = ' '
+Manjaro = ' '
+Mariner = ' '
+MidnightBSD = ' '
+Mint = ' '
+NetBSD = ' '
+NixOS = ' '
+Nobara = ' '
+OpenBSD = ' '
+OpenCloudOS = ' '
+openEuler = ' '
+openSUSE = ' '
+OracleLinux = '⊂⊃ '
+Pop = ' '
+Raspbian = ' '
+Redhat = ' '
+RedHatEnterprise = ' '
+RockyLinux = ' '
+Redox = '󰀘 '
+Solus = ' '
+SUSE = ' '
+Ubuntu = ' '
+Unknown = ' '
+Void = ' '
+Windows = ' '
+
+[package]
+symbol = '󰏗 '
+
+[perl]
+symbol = ' '
+
+[php]
+symbol = ' '
+
+[pijul_channel]
+symbol = ' '
+
+[python]
+format = '[─](fg:current_line)[](fg:green)[$symbol](fg:primary bg:green)[](fg:green bg:box)[ $version](fg:foreground bg:box)[](fg:box)'
+symbol = ' python'
+
+[rlang]
+symbol = '󰟔 '
+
+[ruby]
+symbol = ' '
+
+[rust]
+symbol = '󱘗 '
+
+[scala]
+symbol = ' '
+
+[swift]
+symbol = ' '
+
+[typst]
+symbol = "t "
+
+[zig]
+symbol = ' '
+
+[gradle]
+symbol = ' '

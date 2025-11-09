@@ -6,12 +6,6 @@ This repository provides a foundational setup script and configuration snippets 
 
 ```
 .
-├── .gitignore                       # Ignored files configuration for the repository
-├── .vscode/                         # Editor recommendations for VS Code users
-│   ├── extensions.json              # Suggested VS Code extensions
-│   └── settings.json                # Workspace-specific VS Code settings
-├── LICENSE                          # Repository license (MIT)
-├── README.md                        # Project documentation and usage guide
 ├── home/                            # Dotfile snippets applied to the target system
 │   ├── .bash_profile.append         # Additional Bash profile configuration
 │   ├── .bashrc.append               # Additional Bash runtime configuration
@@ -36,64 +30,29 @@ This repository provides a foundational setup script and configuration snippets 
 
 ## Usage
 
-```
-Environment bootstrap script
-
-Usage:
-  setup.sh [options]
-
-Options:
-  -h, --help                      Show this help message and exit
-  -y, --yes                       Automatically answer prompts with yes
-  --skip-packages, -sp            Skip package installation step
-  --skip-nerd-font, --skip-nerdfont, -sn
-                                  Skip Nerd Font installation
-  --skip-starship, -ss            Skip Starship installation
-  --skip-catppuccin, -sc          Skip Catppuccin installations for Vim and Neovim
-  --skip-catppuccin-vim, -scv     Skip Catppuccin installation for Vim only
-  --skip-catppuccin-nvim, --skip-catppuccin-neovim, -scn
-                                  Skip Catppuccin installation for Neovim only
-```
-
-### Run directly (recommended)
-
-Execute the setup without cloning the repository by streaming the bootstrap script:
+Run the bootstrap script directly from GitHub (recommended):
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/3x3cut0r/environment/main/setup.sh | bash
-# or run the script non-interactively
-curl -fsSL https://raw.githubusercontent.com/3x3cut0r/environment/main/setup.sh | bash -s -- -y
-# or run teh script and skip packages
-curl -fsSL https://raw.githubusercontent.com/3x3cut0r/environment/main/setup.sh | bash -s -- --skip-packages
 ```
 
-To run the script non-interactively (for example in automated setups), set `ENVIRONMENT_AUTO_CONFIRM=yes` before invoking it to bypass the confirmation prompt:
+Append flags after `--` to tailor the bootstrap:
+
+```bash
+# answer prompts automatically
+curl -fsSL https://raw.githubusercontent.com/3x3cut0r/environment/main/setup.sh | bash -s -- -y
+
+# skip package installation
+curl -fsSL https://raw.githubusercontent.com/3x3cut0r/environment/main/setup.sh | bash -s -- --skip-packages
+
+# skip Nerd Font, Starship, or Catppuccin steps
+curl -fsSL https://raw.githubusercontent.com/3x3cut0r/environment/main/setup.sh | bash -s -- --skip-nerd-font --skip-starship --skip-catppuccin
+```
+
+Set `ENVIRONMENT_AUTO_CONFIRM=yes` to bypass the confirmation prompt entirely:
 
 ```bash
 ENVIRONMENT_AUTO_CONFIRM=yes curl -fsSL https://raw.githubusercontent.com/3x3cut0r/environment/main/setup.sh | bash
 ```
 
-### Run from a local clone
-
-1. Clone the repository and change into its directory.
-
-   ```bash
-   git clone https://github.com/3x3cut0r/environment.git
-   cd environment
-   ```
-
-2. Execute the setup script with one of the following commands.
-
-   ```bash
-   ./setup.sh
-   ```
-
-3. When prompted, confirm the installation. The script will:
-   - Collect details about the operating system, shell, user, and working directory.
-   - Show a summary of the detected environment information.
-   - Ask for confirmation before continuing unless automatic approval is enabled.
-   - Install the packages declared in [`packages.list`](packages.list) with the available package manager.
-   - Download and install the JetBrainsMono Nerd Font if it is not already present.
-   - Offer to install the Starship prompt and run the official installer when accepted.
-   - Set up the tmux plugin manager (TPM) and install plugins when tmux is available.
-   - Apply the configuration snippets from [`home/`](home/) into the user's home directory with managed markers.
+Prefer a local clone? Fetch the repository and run `./setup.sh` from its root directory.

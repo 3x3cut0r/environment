@@ -7,6 +7,7 @@ SKIP_NERD_FONT="no"
 SKIP_STARSHIP="no"
 SKIP_CATPPUCCIN_VIM="no"
 SKIP_CATPPUCCIN_NEOVIM="no"
+RECONFIGURE_MODE="no"
 
 parse_args() {
     SHOW_HELP=0
@@ -20,6 +21,15 @@ parse_args() {
                 ;;
             -y|--yes)
                 AUTO_CONFIRM="yes"
+                shift
+                ;;
+            -r|--reconfigure)
+                RECONFIGURE_MODE="yes"
+                SKIP_PACKAGES="yes"
+                SKIP_NERD_FONT="yes"
+                SKIP_STARSHIP="yes"
+                SKIP_CATPPUCCIN_VIM="yes"
+                SKIP_CATPPUCCIN_NEOVIM="yes"
                 shift
                 ;;
             --skip-packages|-sp)
@@ -72,8 +82,9 @@ Usage:
 Options:
   -h,   --help              Show this help message and exit
   -y,   --yes               Automatically answer prompts with yes
+  -r,   --reconfigure       Reconfigure environment without installing dependencies
   -sp,  --skip-packages     Skip package installation step
-  -sn,  --skip-nerd-font, 
+  -sn,  --skip-nerd-font,
         --skip-nerdfont     Skip Nerd Font installation
   -ss,  --skip-starship     Skip Starship installation
   -sc,  --skip-catppuccin   Skip Catppuccin installations for Vim and Neovim
@@ -992,13 +1003,17 @@ main() {
     gather_environment_info
     display_environment_info
     confirm_execution
-    install_packages
-    install_nerd_font
-    install_starship
-    install_tmux_plugin_manager
-    install_vim_plugin_manager
-    install_catppuccin_vim
-    install_catppuccin_neovim
+    if [ "$RECONFIGURE_MODE" = "yes" ]; then
+        log_message INFO "Reconfigure mode enabled. Skipping installation steps."
+    else
+        install_packages
+        install_nerd_font
+        install_starship
+        install_tmux_plugin_manager
+        install_vim_plugin_manager
+        install_catppuccin_vim
+        install_catppuccin_neovim
+    fi
     configure_environment
 }
 

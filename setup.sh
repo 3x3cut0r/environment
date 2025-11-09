@@ -171,6 +171,8 @@ TEMP_ARCHIVE=""
 REPOSITORY_DIR=""
 
 cleanup_temp_resources() {
+    log_message INFO "Removing temporary directory at $TEMP_DIR"
+
     if [ -n "${TEMP_ARCHIVE:-}" ] && [ -f "$TEMP_ARCHIVE" ]; then
         rm -f "$TEMP_ARCHIVE"
     fi
@@ -1019,6 +1021,8 @@ configure_environment() {
         rm -f "$processed_file"
         log_message INFO "Configured $target_relative"
     done < <(find "$source_home" -type f -print0)
+
+    printf '\n'
 }
 
 main() {

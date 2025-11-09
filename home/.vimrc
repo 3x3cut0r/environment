@@ -28,5 +28,5 @@ endif
 
 let g:catppuccin_flavour = "mocha"
 if exists('g:plugs') && has_key(g:plugs, 'catppuccin') && isdirectory(g:plugs['catppuccin'].dir)
-  colorscheme catppuccin_mocha
+    colorscheme catppuccin_mocha
 endif

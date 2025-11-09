@@ -771,8 +771,6 @@ install_tmux_plugin_manager() {
         log_message WARN "tmux plugin installation encountered issues."
     fi
 
-
-
     if [ $temporary_conf -eq 1 ]; then
         rm -f "$tmux_conf"
     fi
@@ -836,11 +834,7 @@ install_catppuccin_vim() {
     fi
 
     log_message INFO "Installing Catppuccin theme for Vim using vim-plug."
-    if vim -es -u "$source_vimrc" +'PlugInstall --sync' +qall </dev/null >/dev/null 2>&1; then
-        log_message INFO "Catppuccin theme for Vim installed successfully via vim-plug."
-    else
-        log_message WARN "Failed to install Catppuccin theme for Vim using vim-plug."
-    fi
+    vim -es -u "$source_vimrc" +'PlugInstall --sync' +qall </dev/null >/dev/null 2>&1 || true
     printf '\n'
 }
 
@@ -872,11 +866,7 @@ install_catppuccin_neovim() {
     fi
 
     log_message INFO "Installing Catppuccin theme for Neovim using vim-plug."
-    if nvim --headless -u "$source_init" +'PlugInstall --sync' +qa </dev/null >/dev/null 2>&1; then
-        log_message INFO "Catppuccin theme for Neovim installed successfully via vim-plug."
-    else
-        log_message WARN "Failed to install Catppuccin theme for Neovim using vim-plug."
-    fi
+    nvim --headless -u "$source_init" +'PlugInstall --sync' +qa </dev/null >/dev/null 2>&1 || true
     printf '\n'
 }
 

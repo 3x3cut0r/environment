@@ -27,9 +27,11 @@ if has('termguicolors')
 endif
 
 lua << LUA
-local catppuccin = require('catppuccin')
-catppuccin.setup({
-  flavour = 'mocha',
-})
-vim.cmd.colorscheme('catppuccin')
+local ok, catppuccin = pcall(require, "catppuccin")
+if ok then
+  catppuccin.setup({
+    flavour = "mocha",
+  })
+  vim.cmd.colorscheme("catppuccin")
+end
 LUA

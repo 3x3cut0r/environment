@@ -40,6 +40,7 @@ This repository provides a setup script that performs fundamental shell customiz
 ## Usage
 
 Run the bootstrap script directly from GitHub (recommended):
+<span style="color:red">⚠️ <strong>Warning:</strong> This script overwrites existing configurations.</span>
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/3x3cut0r/environment/main/setup.sh | bash
@@ -54,8 +55,8 @@ curl -fsSL https://raw.githubusercontent.com/3x3cut0r/environment/main/setup.sh 
 # skip package installation
 curl -fsSL https://raw.githubusercontent.com/3x3cut0r/environment/main/setup.sh | bash -s -- --skip-packages
 
-# skip Nerd Font, Starship, or Catppuccin steps
-curl -fsSL https://raw.githubusercontent.com/3x3cut0r/environment/main/setup.sh | bash -s -- --skip-nerd-font --skip-starship --skip-catppuccin
+# or both
+curl -fsSL https://raw.githubusercontent.com/3x3cut0r/environment/main/setup.sh | bash -s -- --skip-packages -y
 ```
 
 Set `ENVIRONMENT_AUTO_CONFIRM=yes` to bypass the confirmation prompt entirely:

@@ -39,7 +39,7 @@ This repository provides a setup script that performs fundamental shell customiz
 
 ## Usage
 
-Run the bootstrap script directly from GitHub (recommended):
+Run the bootstrap script directly from GitHub (recommended):  
 <span style="color:red">⚠️ <strong>Warning:</strong> This script overwrites existing configurations.</span>
 
 ```bash

@@ -79,17 +79,16 @@ Usage:
 Options:
   -h, --help        Show this help message and exit
   -y, --yes         Automatically answer prompts with yes
-      --skip-packages
+      --skip-packages, -sp
                      Skip package installation step
-      --skip-nerd-font, --skip-nerdfont
+      --skip-nerd-font, --skip-nerdfont, -sn
                      Skip Nerd Font installation
-      --skip-starship
+      --skip-starship, -ss
                      Skip Starship installation
-      --skip-catppuccin
+      --skip-catppuccin, -sc
                      Skip Catppuccin installations for Vim and Neovim
-      --skip-catppuccin-vim
+      --skip-catppuccin-vim, -scv
                      Skip Catppuccin installation for Vim
-      --skip-catppuccin-nvim, --skip-catppuccin-neovim
+      --skip-catppuccin-nvim, --skip-catppuccin-neovim, -scn
                      Skip Catppuccin installation for Neovim
-
 ```

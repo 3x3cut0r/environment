@@ -49,17 +49,11 @@ Run the bootstrap script directly from GitHub (recommended):
 curl -fsSL https://raw.githubusercontent.com/3x3cut0r/environment/main/setup.sh | bash
 ```
 
-Append flags after `--` to tailor the bootstrap:
+Append flags after `--` to tailor the bootstrap.  
+For example add `--reconfigure --yes` to update the configuration files only:
 
 ```bash
-# answer prompts automatically
-curl -fsSL https://raw.githubusercontent.com/3x3cut0r/environment/main/setup.sh | bash -s -- -y
-
-# skip package installation
-curl -fsSL https://raw.githubusercontent.com/3x3cut0r/environment/main/setup.sh | bash -s -- --skip-packages
-
-# or both
-curl -fsSL https://raw.githubusercontent.com/3x3cut0r/environment/main/setup.sh | bash -s -- --skip-packages -y
+curl -fsSL https://raw.githubusercontent.com/3x3cut0r/environment/main/setup.sh | bash -s -- --reconfigure --yes
 ```
 
 Prefer a local clone? Fetch the repository and run `./setup.sh` from its root directory.
@@ -79,6 +73,7 @@ Usage:
 Options:
   -h,   --help              Show this help message and exit
   -y,   --yes               Automatically answer prompts with yes
+  -r,   --reconfigure       Reconfigure environment without installing dependencies
   -sp,  --skip-packages     Skip package installation step
   -sn,  --skip-nerd-font,
         --skip-nerdfont     Skip Nerd Font installation

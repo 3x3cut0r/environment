@@ -70,20 +70,18 @@ Usage:
   setup.sh [options]
 
 Options:
-  -h, --help        Show this help message and exit
-  -y, --yes         Automatically answer prompts with yes
-      --skip-packages, -sp
-                     Skip package installation step
-      --skip-nerd-font, --skip-nerdfont, -sn
-                     Skip Nerd Font installation
-      --skip-starship, -ss
-                     Skip Starship installation
-      --skip-catppuccin, -sc
-                     Skip Catppuccin installations for Vim and Neovim
-      --skip-catppuccin-vim, -scv
-                     Skip Catppuccin installation for Vim
-      --skip-catppuccin-nvim, --skip-catppuccin-neovim, -scn
-                     Skip Catppuccin installation for Neovim
+  -h,   --help              Show this help message and exit
+  -y,   --yes               Automatically answer prompts with yes
+  -sp,  --skip-packages     Skip package installation step
+  -sn,  --skip-nerd-font, 
+        --skip-nerdfont     Skip Nerd Font installation
+  -ss,  --skip-starship     Skip Starship installation
+  -sc,  --skip-catppuccin   Skip Catppuccin installations for Vim and Neovim
+  -scv, --skip-catppuccin-vim
+                            Skip Catppuccin installation for Vim
+  -scn, --skip-catppuccin-nvim,
+        --skip-catppuccin-neovim 
+                            Skip Catppuccin installation for Neovim
 USAGE
         exit 0
     fi

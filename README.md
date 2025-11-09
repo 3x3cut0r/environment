@@ -68,6 +68,9 @@ Prefer a local clone? Fetch the repository and run `./setup.sh` from its root di
 git clone https://github.com/3x3cut0r/environment.git
 cd environment
 ./setup.sh --help
+```
+
+```bash
 Environment bootstrap script
 
 Usage:

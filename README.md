@@ -78,6 +78,8 @@ Options:
   -sn,  --skip-nerd-font,
         --skip-nerdfont     Skip Nerd Font installation
   -ss,  --skip-starship     Skip Starship installation
+  -st,  --skip-tpm          Skip tmux plugin manager installation
+  -sv,  --skip-vim-plug     Skip vim plugin manager installation
   -sc,  --skip-catppuccin   Skip Catppuccin installations for Vim and Neovim
   -scv, --skip-catppuccin-vim
                             Skip Catppuccin installation for Vim

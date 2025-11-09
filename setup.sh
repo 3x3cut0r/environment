@@ -5,6 +5,8 @@ AUTO_CONFIRM="${ENVIRONMENT_AUTO_CONFIRM:-no}"
 SKIP_PACKAGES="no"
 SKIP_NERD_FONT="no"
 SKIP_STARSHIP="no"
+SKIP_TMUX_PLUGIN_MANAGER="no"
+SKIP_VIM_PLUGIN_MANAGER="no"
 SKIP_CATPPUCCIN_VIM="no"
 SKIP_CATPPUCCIN_NEOVIM="no"
 RECONFIGURE_MODE="no"
@@ -28,6 +30,8 @@ parse_args() {
                 SKIP_PACKAGES="yes"
                 SKIP_NERD_FONT="yes"
                 SKIP_STARSHIP="yes"
+                SKIP_TMUX_PLUGIN_MANAGER="yes"
+                SKIP_VIM_PLUGIN_MANAGER="yes"
                 SKIP_CATPPUCCIN_VIM="yes"
                 SKIP_CATPPUCCIN_NEOVIM="yes"
                 shift
@@ -42,6 +46,14 @@ parse_args() {
                 ;;
             --skip-starship|-ss)
                 SKIP_STARSHIP="yes"
+                shift
+                ;;
+            --skip-tpm|-st)
+                SKIP_TMUX_PLUGIN_MANAGER="yes"
+                shift
+                ;;
+            --skip-vim-plug|-sv)
+                SKIP_VIM_PLUGIN_MANAGER="yes"
                 shift
                 ;;
             --skip-catppuccin|-sc)
@@ -87,6 +99,8 @@ Options:
   -sn,  --skip-nerd-font,
         --skip-nerdfont     Skip Nerd Font installation
   -ss,  --skip-starship     Skip Starship installation
+  -st,  --skip-tpm          Skip tmux plugin manager installation
+  -sv,  --skip-vim-plug     Skip vim plugin manager installation
   -sc,  --skip-catppuccin   Skip Catppuccin installations for Vim and Neovim
   -scv, --skip-catppuccin-vim
                             Skip Catppuccin installation for Vim
@@ -396,7 +410,7 @@ confirm_execution() {
 
 install_packages() {
     if [ "${SKIP_PACKAGES:-no}" = "yes" ]; then
-        log_message WARN "Skipping package installation as requested."
+        log_message WARN "Skipping package installation."
         printf '\n'
         return 0
     fi
@@ -467,7 +481,7 @@ install_packages() {
 
 install_nerd_font() {
     if [ "${SKIP_NERD_FONT:-no}" = "yes" ]; then
-        log_message WARN "Skipping Nerd Font installation as requested."
+        log_message WARN "Skipping Nerd Font installation."
         printf '\n'
         return 0
     fi
@@ -663,7 +677,7 @@ ensure_trailing_newline() {
 
 install_starship() {
     if [ "${SKIP_STARSHIP:-no}" = "yes" ]; then
-        log_message WARN "Skipping Starship installation as requested."
+        log_message WARN "Skipping Starship installation."
         printf '\n'
         return 0
     fi
@@ -721,8 +735,14 @@ install_starship() {
 }
 
 install_tmux_plugin_manager() {
+    if [ "${SKIP_TMUX_PLUGIN_MANAGER:-no}" = "yes" ]; then
+        log_message WARN "Skipping TPM (tmux plugin manager) installation."
+        printf '\n'
+        return 0
+    fi
+
     if ! command -v tmux >/dev/null 2>&1; then
-        log_message INFO "tmux is not installed. Skipping TPM (tmux plugin manager) setup."
+        log_message INFO "tmux is not installed. Skipping TPM (tmux plugin manager) installation."
         printf '\n'
         return 0
     fi
@@ -793,6 +813,12 @@ install_tmux_plugin_manager() {
 }
 
 install_vim_plugin_manager() {
+    if [ "${SKIP_VIM_PLUGIN_MANAGER:-no}" = "yes" ]; then
+        log_message WARN "Skipping vim-plug (vim plugin manager) installation"
+        printf '\n'
+        return 0
+    fi
+
     local plug_url="https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim"
     local vim_plug_path="$HOME/.vim/autoload/plug.vim"
     local nvim_plug_path="$HOME/.local/share/nvim/site/autoload/plug.vim"
@@ -810,6 +836,8 @@ install_vim_plugin_manager() {
         log_message WARN "Failed to install vim-plug for Vim."
     fi
 
+    printf '\n'
+
     mkdir -p "$(dirname "$nvim_plug_path")"
     if curl -fLo "$nvim_plug_path" --create-dirs "$plug_url" >/dev/null 2>&1; then
         log_message INFO "Installed vim-plug for Neovim at $nvim_plug_path."
@@ -822,7 +850,7 @@ install_vim_plugin_manager() {
 
 install_catppuccin_vim() {
     if [ "${SKIP_CATPPUCCIN_VIM:-no}" = "yes" ]; then
-        log_message WARN "Skipping Catppuccin installation for Vim as requested."
+        log_message WARN "Skipping Catppuccin installation for Vim."
         printf '\n'
         return 0
     fi
@@ -854,7 +882,7 @@ install_catppuccin_vim() {
 
 install_catppuccin_neovim() {
     if [ "${SKIP_CATPPUCCIN_NEOVIM:-no}" = "yes" ]; then
-        log_message WARN "Skipping Catppuccin installation for Neovim as requested."
+        log_message WARN "Skipping Catppuccin installation for Neovim."
         printf '\n'
         return 0
     fi
@@ -907,6 +935,8 @@ configure_environment() {
         log_message WARN "Target home directory '$target_home' does not exist. Skipping environment configuration."
         return
     fi
+
+    log_message INFO "Configure environment files from 'home/' to '$target_home'."
 
     local file_path relative_path marker_identifier target_relative target_path target_directory append_mode
     while IFS= read -r -d '' file_path; do
@@ -1004,16 +1034,16 @@ main() {
     display_environment_info
     confirm_execution
     if [ "$RECONFIGURE_MODE" = "yes" ]; then
-        log_message INFO "Reconfigure mode enabled. Skipping installation steps."
-    else
-        install_packages
-        install_nerd_font
-        install_starship
-        install_tmux_plugin_manager
-        install_vim_plugin_manager
-        install_catppuccin_vim
-        install_catppuccin_neovim
+        log_message INFO "Reconfigure mode enabled. Skipping all installation steps."
+        printf '\n'
     fi
+    install_packages
+    install_nerd_font
+    install_starship
+    install_tmux_plugin_manager
+    install_vim_plugin_manager
+    install_catppuccin_vim
+    install_catppuccin_neovim
     configure_environment
 }
 

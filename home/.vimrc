@@ -27,4 +27,6 @@ if has('termguicolors')
 endif
 
 let g:catppuccin_flavour = "mocha"
-colorscheme catppuccin_mocha
+if exists('g:plugs') && has_key(g:plugs, 'catppuccin')
+  colorscheme catppuccin_mocha
+endif

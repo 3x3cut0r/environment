@@ -178,6 +178,11 @@ download_repository_contents() {
     TEMP_ARCHIVE=""
     REPOSITORY_DIR="$TEMP_DIR"
     log_message INFO "Repository extracted to $TEMP_DIR"
+
+    if [ -d "$REPOSITORY_DIR" ]; then
+        log_message INFO "Setting execute permissions on repository shell scripts"
+        find "$REPOSITORY_DIR" -type f -name '*.sh' -exec chmod 755 {} +
+    fi
 }
 
 normalize_shell_list() {

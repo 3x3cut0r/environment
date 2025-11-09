@@ -82,7 +82,7 @@ Usage:
 Options:
   -h,   --help              Show this help message and exit
   -y,   --yes               Automatically answer prompts with yes
-  -r,   --reconfigure       Reconfigure environment without installing dependencies
+  -r,   --reconfigure       Reconfigure environment (update config files only)
   -sp,  --skip-packages     Skip package installation step
   -sn,  --skip-nerd-font,
         --skip-nerdfont     Skip Nerd Font installation

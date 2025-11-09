@@ -25,6 +25,7 @@ This repository provides a setup script that performs fundamental shell customiz
 │   │   ├── nvim/                    # Neovim configuration directory for themed setup
 │   │   │   └── init.vim             # Neovim configuration with Catppuccin theme support
 │   │   └── starship.toml            # Starship prompt theme configuration
+│   ├── tmux.example.sh              # Example tmux session bootstrap script
 │   ├── .exrc                        # Ex/Vi editor configuration
 │   ├── .profile.append              # POSIX shell profile additions
 │   ├── .tmux.conf                   # tmux configuration with TPM setup
@@ -68,3 +69,9 @@ ENVIRONMENT_AUTO_CONFIRM=yes curl -fsSL https://raw.githubusercontent.com/3x3cut
 ```
 
 Prefer a local clone? Fetch the repository and run `./setup.sh` from its root directory.
+
+Need a quick overview of available flags? Append `-h` to display the built-in help:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/3x3cut0r/environment/main/setup.sh | bash -s -- -h
+```

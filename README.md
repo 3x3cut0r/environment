@@ -1,6 +1,6 @@
 # Environment
 
-<img width="1038" height="713" alt="tmux example" src="https://github.com/user-attachments/assets/2e307b02-9b49-4c7c-93fe-7b2c26baf27d" />
+<img width="1082" height="757" alt="tmux example" src="https://github.com/user-attachments/assets/87a59d70-66a2-458e-a72e-021f813d5b57" />
 
 This repository provides a setup script that performs fundamental shell customizations and merges curated configuration snippets into an existing workstation.
 

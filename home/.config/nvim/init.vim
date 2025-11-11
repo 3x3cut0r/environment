@@ -37,7 +37,6 @@ if has('autocmd')
     augroup END
 endif
 
-
 lua << LUA
 local ok, catppuccin = pcall(require, "catppuccin")
 if ok then

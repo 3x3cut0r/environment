@@ -277,6 +277,17 @@ detect_package_managers() {
     printf '\n'
 }
 
+manager_requires_privilege() {
+    case "$1" in
+        apt-get|apt|dnf|yum|zypper|pacman|apk|pkg|emerge)
+            return 0
+            ;;
+        *)
+            return 1
+            ;;
+    esac
+}
+
 ensure_homebrew_for_macos() {
     local os_id_lower os_name_lower
     os_id_lower=$(printf '%s' "${OS_ID:-}" | tr '[:upper:]' '[:lower:]')
@@ -460,6 +471,16 @@ install_packages() {
                 install_cmd=${mapping#*:}
 
                 IFS=' ' read -r -a install_parts <<< "$install_cmd"
+
+                if manager_requires_privilege "$manager" && [ "${EUID:-$(id -u)}" -ne 0 ]; then
+                    if command -v sudo >/dev/null 2>&1; then
+                        install_parts=("sudo" "${install_parts[@]}")
+                    else
+                        log_message WARN "Cannot install $package using $manager: elevated privileges required but sudo not available."
+                        continue
+                    fi
+                fi
+
                 if "${install_parts[@]}" "$package" >/dev/null 2>&1; then
                     log_message INFO "Installed $package using $manager."
                     installed_with_manager=1

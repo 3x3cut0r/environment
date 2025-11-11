@@ -28,11 +28,15 @@ endif
 
 " Restore last cursor position when reopening a file.
 if has('autocmd')
-  augroup restore_cursor_position
-    autocmd!
-    autocmd BufReadPost * if line("'\"") > 0 && line("'\"") <= line("$") | execute "normal! g`\"" | endif
-  augroup END
+    augroup restore_cursor_position
+        autocmd!
+        autocmd BufReadPost *
+            \ if line("'\"") > 1 && line("'\"") <= line("$") |
+            \     execute "normal! g`\"" |
+            \ endif
+    augroup END
 endif
+
 
 lua << LUA
 local ok, catppuccin = pcall(require, "catppuccin")

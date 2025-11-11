@@ -26,6 +26,14 @@ if has('termguicolors')
     set termguicolors   "Enable true color support when available.
 endif
 
+" Restore last cursor position when reopening a file.
+if has('autocmd')
+    augroup restore_cursor_position
+        autocmd!
+        autocmd BufReadPost * if line("'\"") > 0 && line("'\"") <= line("$") | execute "normal! g`\"" | endif
+    augroup END
+endif
+
 let g:catppuccin_flavour = "mocha"
 if exists('g:plugs') && has_key(g:plugs, 'catppuccin') && isdirectory(g:plugs['catppuccin'].dir)
     colorscheme catppuccin_mocha

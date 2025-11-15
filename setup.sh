@@ -509,36 +509,37 @@ install_nerd_font() {
         return 0
     fi
 
-    local font_url="https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.zip"
-    local font_destination=""
+    local font_name="JetBrainsMono"
+    local data_home="${XDG_DATA_HOME:-$HOME/.local/share}"
+    local legacy_font_dir=""
+    local nerd_font_dir=""
 
     case "$OS_KERNEL" in
         Darwin)
-            font_destination="$HOME/Library/Fonts"
+            legacy_font_dir="$HOME/Library/Fonts"
+            nerd_font_dir="$legacy_font_dir/NerdFonts"
             ;;
         *)
-            font_destination="$HOME/.local/share/fonts"
+            legacy_font_dir="$data_home/fonts"
+            nerd_font_dir="$legacy_font_dir/NerdFonts"
             ;;
     esac
 
+    local search_paths=("$nerd_font_dir" "$legacy_font_dir")
     local existing_font=""
-    if [ -d "$font_destination" ]; then
-        existing_font=$(find "$font_destination" -maxdepth 1 -type f -name 'JetBrains Mono * Nerd Font*.ttf' -print -quit 2>/dev/null || true)
-        if [ -n "$existing_font" ]; then
-            log_message INFO "JetBrainsMono Nerd Font already installed. Skipping installation step."
-            printf '\n'
-            return 0
+    for font_path in "${search_paths[@]}"; do
+        if [ -d "$font_path" ]; then
+            existing_font=$(find "$font_path" -type f -name 'JetBrainsMono*NerdFont*.ttf' -print -quit 2>/dev/null || true)
+            if [ -n "$existing_font" ]; then
+                log_message INFO "JetBrainsMono Nerd Font already installed. Skipping installation step."
+                printf '\n'
+                return 0
+            fi
         fi
-    fi
+    done
 
-    if ! command -v curl >/dev/null 2>&1; then
-        log_message ERROR "curl is required to download JetBrainsMono Nerd Font."
-        printf '\n'
-        return 1
-    fi
-
-    if ! command -v unzip >/dev/null 2>&1; then
-        log_message WARN "unzip is required to install JetBrainsMono Nerd Font. Skipping installation."
+    if ! command -v git >/dev/null 2>&1; then
+        log_message ERROR "git is required to install JetBrainsMono Nerd Font via the Nerd Fonts install script."
         printf '\n'
         return 1
     fi
@@ -550,18 +551,17 @@ install_nerd_font() {
         return 1
     }
 
-    local archive_path="$temp_dir/JetBrainsMono.zip"
-    if ! curl -fsSL -o "$archive_path" "$font_url"; then
-        log_message ERROR "Failed to download JetBrainsMono Nerd Font."
+    local repo_dir="$temp_dir/nerd-fonts"
+    log_message INFO "Cloning Nerd Fonts repository to run install script."
+    if ! git clone --depth 1 https://github.com/ryanoasis/nerd-fonts.git "$repo_dir" >/dev/null 2>&1; then
+        log_message ERROR "Failed to clone the Nerd Fonts repository."
         rm -rf "$temp_dir"
         printf '\n'
         return 1
     fi
 
-    mkdir -p "$font_destination"
-
-    if ! unzip -o "$archive_path" -d "$font_destination" >/dev/null 2>&1; then
-        log_message ERROR "Failed to extract JetBrainsMono Nerd Font archive."
+    if ! (cd "$repo_dir" && ./install.sh -q --install-to-user-path "$font_name" >/dev/null 2>&1); then
+        log_message ERROR "Nerd Fonts install script failed to install $font_name."
         rm -rf "$temp_dir"
         printf '\n'
         return 1
@@ -569,13 +569,7 @@ install_nerd_font() {
 
     rm -rf "$temp_dir"
 
-    if command -v fc-cache >/dev/null 2>&1; then
-        if ! fc-cache -f "$font_destination" >/dev/null 2>&1; then
-            log_message WARN "Failed to refresh font cache. You may need to run 'fc-cache -f'."
-        fi
-    fi
-
-    log_message INFO "Installed JetBrainsMono Nerd Font."
+    log_message INFO "Installed JetBrainsMono Nerd Font using the Nerd Fonts install script."
     printf '\n'
 }
 

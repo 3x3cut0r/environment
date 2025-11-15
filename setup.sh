@@ -539,7 +539,7 @@ install_nerd_font() {
     done
 
     if ! command -v git >/dev/null 2>&1; then
-        log_message ERROR "git is required to install JetBrainsMono Nerd Font via the Nerd Fonts install script."
+        log_message ERROR "git is required to install JetBrainsMono Nerd Font"
         printf '\n'
         return 1
     fi
@@ -569,7 +569,7 @@ install_nerd_font() {
 
     rm -rf "$temp_dir"
 
-    log_message INFO "Installed JetBrainsMono Nerd Font using the Nerd Fonts install script."
+    log_message INFO "Installed JetBrainsMono Nerd Font"
     printf '\n'
 }
 

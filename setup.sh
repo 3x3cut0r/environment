@@ -180,6 +180,10 @@ cleanup_temp_resources() {
     if [ -n "${TEMP_DIR:-}" ] && [ -d "$TEMP_DIR" ]; then
         rm -rf "$TEMP_DIR"
     fi
+
+    printf '\n'
+
+    log_message INFO "You need to restart your current terminal for changes to take effect!"
 }
 
 create_temp_directory() {
@@ -1177,7 +1181,6 @@ main() {
     install_catppuccin_neovim
     configure_environment
     configure_terminals
-    log_message INFO "You need to restart your current terminal for changes to take effect!"
 }
 
 main "$@"

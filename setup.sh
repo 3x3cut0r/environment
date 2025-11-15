@@ -172,6 +172,8 @@ REPOSITORY_DIR=""
 
 cleanup_temp_resources() {
     log_message INFO "Removing temporary directory at $TEMP_DIR"
+    printf '\n'
+    log_message INFO "You need to restart your current terminal for changes to take effect!"
 
     if [ -n "${TEMP_ARCHIVE:-}" ] && [ -f "$TEMP_ARCHIVE" ]; then
         rm -f "$TEMP_ARCHIVE"
@@ -180,10 +182,6 @@ cleanup_temp_resources() {
     if [ -n "${TEMP_DIR:-}" ] && [ -d "$TEMP_DIR" ]; then
         rm -rf "$TEMP_DIR"
     fi
-
-    printf '\n'
-
-    log_message INFO "You need to restart your current terminal for changes to take effect!"
 }
 
 create_temp_directory() {

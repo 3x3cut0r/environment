@@ -578,6 +578,37 @@ install_nerd_font() {
 configure_terminals() {
     local desired_font="JetBrainsMono Nerd Font 12"
     local font_found=0
+    local response=""
+
+    if [ "$AUTO_CONFIRM" = "yes" ]; then
+        log_message WARN "Auto confirmation enabled. Configuring terminals without prompt."
+    else
+        local prompt="Configure terminals to use JetBrainsMono Nerd Font? [y/N] "
+        printf '[Environment][\033[35mINPUT\033[0m] %s' "$prompt"
+
+        if [ -t 0 ]; then
+            if ! read -r response; then
+                response=""
+            fi
+        else
+            if ! read -r response </dev/tty; then
+                response=""
+            fi
+        fi
+
+        printf '\n'
+
+        case "$response" in
+            j|J|ja|JA|y|Y|yes|YES)
+                :
+                ;;
+            *)
+                log_message WARN "Terminal font configuration skipped. Please set JetBrainsMono Nerd Font in each terminal manually to avoid broken output."
+                printf '\n'
+                return 0
+                ;;
+        esac
+    fi
 
     if command -v fc-list >/dev/null 2>&1; then
         if fc-list 2>/dev/null | grep -Fq "JetBrainsMono Nerd Font"; then
@@ -1138,13 +1169,13 @@ main() {
     fi
     install_packages
     install_nerd_font
-    configure_terminals
     install_starship
     install_tmux_plugin_manager
     install_vim_plugin_manager
     install_catppuccin_vim
     install_catppuccin_neovim
     configure_environment
+    configure_terminals
     # exec kill -TERM $PPID 2>/dev/null || true
 }
 

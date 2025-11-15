@@ -467,6 +467,12 @@ install_packages() {
 
         local line_installed=0
         for package in "${packages_in_line[@]}"; do
+            if command -v "$package" >/dev/null 2>&1; then
+                log_message WARN "Package $package already installed."
+                line_installed=1
+                break
+            fi
+
             local installed_with_manager=0
             for mapping in "${AVAILABLE_PACKAGE_MANAGERS[@]}"; do
                 manager=${mapping%%:*}

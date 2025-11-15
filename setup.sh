@@ -677,7 +677,6 @@ configure_terminals() {
         if [ $updated_any -eq 1 ]; then
             log_message INFO "Configured GNOME Terminal to use $desired_font."
             log_message INFO "GNOME Terminal may look broken now."
-            log_message INFO "You need to restart GNOME Terminal for changes to take effect!"
         fi
     }
 
@@ -1178,6 +1177,7 @@ main() {
     install_catppuccin_neovim
     configure_environment
     configure_terminals
+    log_message INFO "You need to restart your current terminal for changes to take effect!"
 }
 
 main "$@"

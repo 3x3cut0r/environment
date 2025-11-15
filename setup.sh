@@ -626,23 +626,14 @@ configure_terminals() {
             return
         fi
 
-        local profiles_raw
-        profiles_raw=$(gsettings get org.gnome.Terminal.ProfilesList list 2>/dev/null || true)
-        if [ -z "$profiles_raw" ]; then
+        local profile profile_list
+        profile_list=$(gsettings get org.gnome.Terminal.ProfilesList list | tr -d "[],'" 2>/dev/null || true)
+        if [ -z "$profile_list" ]; then
             log_message WARN "No GNOME Terminal profiles found. Skipping GNOME Terminal configuration."
             return
         fi
 
-        profiles_raw=$(printf '%s' "$profiles_raw" | sed -e "s/^@as //" -e "s/[\[\]]//g" -e "s/'//g" -e 's/ //g')
-        if [ -z "$profiles_raw" ]; then
-            log_message WARN "Unable to parse GNOME Terminal profiles."
-            return
-        fi
-
-        IFS=',' read -r -a profiles <<<"$profiles_raw"
-
-        local profile updated_any=0
-        for profile in "${profiles[@]}"; do
+        for profile in "$profile_list"; do
             local profile_path="/org/gnome/terminal/legacy/profiles:/:$profile/"
             if gsettings set "org.gnome.Terminal.Legacy.Profile:$profile_path" use-system-font false >/dev/null 2>&1 \
                 && gsettings set "org.gnome.Terminal.Legacy.Profile:$profile_path" font "$desired_font" >/dev/null 2>&1; then

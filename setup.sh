@@ -242,8 +242,8 @@ detect_package_managers() {
     AVAILABLE_PACKAGE_MANAGERS=()
 
     local manager_mappings=(
-        "apt-get:apt-get install -y"
-        "apt:apt install -y"
+        "apt-get:env DEBIAN_FRONTEND=noninteractive apt-get install -y"
+        "apt:env DEBIAN_FRONTEND=noninteractive apt install -y"
         "dnf:dnf install -y"
         "yum:yum install -y"
         "zypper:zypper install -y"

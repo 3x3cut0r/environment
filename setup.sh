@@ -580,9 +580,38 @@ configure_terminals() {
     local font_found=0
 
     if command -v fc-list >/dev/null 2>&1; then
-        if fc-list | grep -Fq "JetBrainsMono Nerd Font" 2>/dev/null; then
+        if fc-list 2>/dev/null | grep -Fq "JetBrainsMono Nerd Font"; then
             font_found=1
         fi
+    fi
+
+    if [ $font_found -eq 0 ]; then
+        local data_home="${XDG_DATA_HOME:-$HOME/.local/share}"
+        local legacy_font_dir=""
+        local nerd_font_dir=""
+
+        case "$(uname -s)" in
+            Darwin)
+                legacy_font_dir="$HOME/Library/Fonts"
+                nerd_font_dir="$legacy_font_dir/NerdFonts"
+                ;;
+            *)
+                legacy_font_dir="$data_home/fonts"
+                nerd_font_dir="$legacy_font_dir/NerdFonts"
+                ;;
+        esac
+
+        local search_paths=("$nerd_font_dir" "$legacy_font_dir")
+        local existing_font=""
+        for font_path in "${search_paths[@]}"; do
+            if [ -d "$font_path" ]; then
+                existing_font=$(find "$font_path" -type f -name 'JetBrainsMono*NerdFont*.ttf' -print -quit 2>/dev/null || true)
+                if [ -n "$existing_font" ]; then
+                    font_found=1
+                    break
+                fi
+            fi
+        done
     fi
 
     if [ $font_found -eq 0 ]; then

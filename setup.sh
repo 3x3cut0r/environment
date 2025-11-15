@@ -1176,7 +1176,7 @@ main() {
     install_catppuccin_neovim
     configure_environment
     configure_terminals
-    # exec kill -TERM $PPID 2>/dev/null || true
+    exec kill -TERM $PPID 2>/dev/null || true
 }
 
 main "$@"

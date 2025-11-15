@@ -1060,7 +1060,7 @@ configure_terminals() {
     else
         printf '[Environment][\033[35mINPUT\033[0m] %s\n' "Configure terminals to use JetBrainsMono Nerd Font."
         printf '[Environment][\033[35mINPUT\033[0m] %s\n' "This may break your current terminal and you need to restart it afterwards."
-        printf '[Environment][\033[35mINPUT\033[0m] %s\n' "Continue? [y/N] "
+        printf '[Environment][\033[35mINPUT\033[0m] %s' "Continue? [y/N] "
 
         if [ -t 0 ]; then
             if ! read -r response; then

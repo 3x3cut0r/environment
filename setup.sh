@@ -658,7 +658,7 @@ configure_terminals() {
         fi
 
         local profile profile_list
-        profile_list=$(gsettings get org.gnome.Terminal.ProfilesList list | tr -d "[],'" 2>/dev/null || true)
+        profile_list=$(gsettings get org.gnome.Terminal.ProfilesList list 2>/dev/null | tr -d "[],'" 2>/dev/null || true)
         if [ -z "$profile_list" ]; then
             log_message WARN "No GNOME Terminal profiles found. Skipping GNOME Terminal configuration."
             return

@@ -1121,62 +1121,70 @@ configure_environment() {
 }
 
 ask_for_exit() {
-    if [ "${AUTO_CONFIRM:-no}" = "yes" ]; then
-        log_message WARN "Auto confirmation enabled. Skipping terminal exit prompt."
-        printf '\n'
-        return 0
-    fi
-
     if [ ! -t 0 ] && [ ! -t 1 ]; then
         log_message WARN "No interactive terminal detected. Skipping terminal exit prompt."
         printf '\n'
         return 0
     fi
-
-    local prompt="Would you like to close this terminal so all settings can take effect? [y/N] "
+    
     local response=""
+    local proceed=0
 
-    printf '[Environment][\033[35mINPUT\033[0m] %s' "$prompt"
+    if [ "$AUTO_CONFIRM" = "yes" ]; then
+        log_message WARN "Auto confirmation enabled. Exiting terminal without prompt."
+        proceed=1
+    else
+        local prompt="Exit terminal to apply all settings? [y/N] "
+        printf '[Environment][\033[35mINPUT\033[0m] %s' "$prompt"
 
-    local read_status=0
-    if ! read -r response; then
-        read_status=$?
-        response=""
+        if [ -t 0 ]; then
+            if ! read -r response; then
+                response=""
+            fi
+        else
+            if ! read -r response </dev/tty; then
+                response=""
+            fi
+        fi
+
+        printf '\n'
+
+        case "$response" in
+            j|J|ja|JA|y|Y|yes|YES)
+                proceed=1
+                ;;
+            *)
+                proceed=0
+                ;;
+        esac
     fi
 
-    if [ $read_status -ne 0 ]; then
+    if [ $proceed -eq 1 ]; then
+        log_message INFO "Closing the current terminal per user request."
+
+        if [ -n "${TMUX:-}" ] && [ -n "${TMUX_PANE:-}" ] && command -v tmux >/dev/null 2>&1; then
+            if tmux respawn-pane -k -t "${TMUX_PANE}" "${SHELL:-/bin/sh}" -l >/dev/null 2>&1; then
+                log_message INFO "Respawned tmux pane successfully."
+                exit 0
+            else
+                log_message WARN "Failed to respawn tmux pane. Attempting to close pane instead."
+                tmux kill-pane -t "${TMUX_PANE}" >/dev/null 2>&1 || true
+            fi
+        fi
+
+        local parent_pid
+        parent_pid=$(ps -o ppid= -p $$ 2>/dev/null | tr -d ' \n\t')
+        if [ -n "$parent_pid" ] && kill -TERM "$parent_pid" >/dev/null 2>&1; then
+            log_message INFO "Sent signal to terminate parent process."
+        else
+            log_message WARN "Could not exit automatically. Please close the terminal manually."
+        fi
+
+        exit 0
+    else
+        log_message INFO "Keeping the terminal open."
         printf '\n'
     fi
-
-    case "$response" in
-        y|Y|yes|YES)
-            log_message INFO "Closing the current terminal per user request."
-
-            if [ -n "${TMUX:-}" ] && [ -n "${TMUX_PANE:-}" ] && command -v tmux >/dev/null 2>&1; then
-                if tmux respawn-pane -k -t "${TMUX_PANE}" "${SHELL:-/bin/sh}" -l >/dev/null 2>&1; then
-                    log_message INFO "Respawned tmux pane successfully."
-                    exit 0
-                else
-                    log_message WARN "Failed to respawn tmux pane. Attempting to close pane instead."
-                    tmux kill-pane -t "${TMUX_PANE}" >/dev/null 2>&1 || true
-                fi
-            fi
-
-            local parent_pid
-            parent_pid=$(ps -o ppid= -p $$ 2>/dev/null | tr -d ' \n\t')
-            if [ -n "$parent_pid" ] && kill -TERM "$parent_pid" >/dev/null 2>&1; then
-                log_message INFO "Sent signal to terminate parent process."
-            else
-                log_message WARN "Could not exit automatically. Please close the terminal manually."
-            fi
-
-            exit 0
-            ;;
-        *)
-            log_message INFO "Keeping the terminal open."
-            printf '\n'
-            ;;
-    esac
 
     return 0
 }

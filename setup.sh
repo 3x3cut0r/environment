@@ -468,7 +468,7 @@ install_packages() {
         local line_installed=0
         for package in "${packages_in_line[@]}"; do
             if command -v "$package" >/dev/null 2>&1; then
-                log_message WARN "Package $package already installed."
+                log_message INFO "Package $package already installed."
                 line_installed=1
                 break
             fi
@@ -580,116 +580,6 @@ install_nerd_font() {
     rm -rf "$temp_dir"
 
     log_message INFO "Installed JetBrainsMono Nerd Font"
-    printf '\n'
-}
-
-configure_terminals() {
-    local desired_font="JetBrainsMono Nerd Font 12"
-    local font_found=0
-    local response=""
-
-    if [ "$AUTO_CONFIRM" = "yes" ]; then
-        log_message WARN "Auto confirmation enabled. Configuring terminals without prompt."
-    else
-        local prompt="Configure terminals to use JetBrainsMono Nerd Font? [y/N] "
-        printf '[Environment][\033[35mINPUT\033[0m] %s' "$prompt"
-
-        if [ -t 0 ]; then
-            if ! read -r response; then
-                response=""
-            fi
-        else
-            if ! read -r response </dev/tty; then
-                response=""
-            fi
-        fi
-
-        printf '\n'
-
-        case "$response" in
-            j|J|ja|JA|y|Y|yes|YES)
-                :
-                ;;
-            *)
-                log_message WARN "Terminal font configuration skipped. Please set JetBrainsMono Nerd Font in each terminal manually to avoid broken output."
-                printf '\n'
-                return 0
-                ;;
-        esac
-    fi
-
-    if command -v fc-list >/dev/null 2>&1; then
-        if fc-list 2>/dev/null | grep -Fq "JetBrainsMono Nerd Font"; then
-            font_found=1
-        fi
-    fi
-
-    if [ $font_found -eq 0 ]; then
-        local data_home="${XDG_DATA_HOME:-$HOME/.local/share}"
-        local legacy_font_dir=""
-        local nerd_font_dir=""
-
-        case "$(uname -s)" in
-            Darwin)
-                legacy_font_dir="$HOME/Library/Fonts"
-                nerd_font_dir="$legacy_font_dir/NerdFonts"
-                ;;
-            *)
-                legacy_font_dir="$data_home/fonts"
-                nerd_font_dir="$legacy_font_dir/NerdFonts"
-                ;;
-        esac
-
-        local search_paths=("$nerd_font_dir" "$legacy_font_dir")
-        local existing_font=""
-        for font_path in "${search_paths[@]}"; do
-            if [ -d "$font_path" ]; then
-                existing_font=$(find "$font_path" -type f -name 'JetBrainsMono*NerdFont*.ttf' -print -quit 2>/dev/null || true)
-                if [ -n "$existing_font" ]; then
-                    font_found=1
-                    break
-                fi
-            fi
-        done
-    fi
-
-    if [ $font_found -eq 0 ]; then
-        log_message WARN "JetBrainsMono Nerd Font not detected. Skipping terminal configuration."
-        printf '\n'
-        return 0
-    fi
-
-    configure_gnome_terminal_font() {
-        if ! command -v gsettings >/dev/null 2>&1; then
-            log_message WARN "gsettings not found. Cannot configure GNOME Terminal font."
-            return
-        fi
-
-        local profile profile_list
-        profile_list=$(gsettings get org.gnome.Terminal.ProfilesList list 2>/dev/null | tr -d "[],'" 2>/dev/null || true)
-        if [ -z "$profile_list" ]; then
-            log_message WARN "No GNOME Terminal profiles found. Skipping GNOME Terminal configuration."
-            return
-        fi
-
-        for profile in "$profile_list"; do
-            local profile_path="/org/gnome/terminal/legacy/profiles:/:$profile/"
-            if gsettings set "org.gnome.Terminal.Legacy.Profile:$profile_path" use-system-font false >/dev/null 2>&1 \
-                && gsettings set "org.gnome.Terminal.Legacy.Profile:$profile_path" font "$desired_font" >/dev/null 2>&1; then
-                updated_any=1
-            else
-                log_message WARN "Failed to configure GNOME Terminal profile $profile."
-            fi
-        done
-
-        if [ $updated_any -eq 1 ]; then
-            log_message INFO "Configured GNOME Terminal to use $desired_font."
-            log_message INFO "GNOME Terminal may look broken now."
-        fi
-    }
-
-    configure_gnome_terminal_font
-
     printf '\n'
 }
 
@@ -1156,6 +1046,116 @@ configure_environment() {
         rm -f "$processed_file"
         log_message INFO "Configured $target_relative"
     done < <(find "$source_home" -type f -print0)
+
+    printf '\n'
+}
+
+configure_terminals() {
+    local desired_font="JetBrainsMono Nerd Font 12"
+    local font_found=0
+    local response=""
+
+    if [ "$AUTO_CONFIRM" = "yes" ]; then
+        log_message WARN "Auto confirmation enabled. Configuring terminals without prompt."
+    else
+        local prompt="Configure terminals to use JetBrainsMono Nerd Font?\nThis may break your current terminal. [y/N] "
+        printf '[Environment][\033[35mINPUT\033[0m] %s' "$prompt"
+
+        if [ -t 0 ]; then
+            if ! read -r response; then
+                response=""
+            fi
+        else
+            if ! read -r response </dev/tty; then
+                response=""
+            fi
+        fi
+
+        printf '\n'
+
+        case "$response" in
+            j|J|ja|JA|y|Y|yes|YES)
+                :
+                ;;
+            *)
+                log_message WARN "Terminal font configuration skipped. Please set JetBrainsMono Nerd Font in each terminal manually to avoid broken output."
+                printf '\n'
+                return 0
+                ;;
+        esac
+    fi
+
+    if command -v fc-list >/dev/null 2>&1; then
+        if fc-list 2>/dev/null | grep -Fq "JetBrainsMono Nerd Font"; then
+            font_found=1
+        fi
+    fi
+
+    if [ $font_found -eq 0 ]; then
+        local data_home="${XDG_DATA_HOME:-$HOME/.local/share}"
+        local legacy_font_dir=""
+        local nerd_font_dir=""
+
+        case "$(uname -s)" in
+            Darwin)
+                legacy_font_dir="$HOME/Library/Fonts"
+                nerd_font_dir="$legacy_font_dir/NerdFonts"
+                ;;
+            *)
+                legacy_font_dir="$data_home/fonts"
+                nerd_font_dir="$legacy_font_dir/NerdFonts"
+                ;;
+        esac
+
+        local search_paths=("$nerd_font_dir" "$legacy_font_dir")
+        local existing_font=""
+        for font_path in "${search_paths[@]}"; do
+            if [ -d "$font_path" ]; then
+                existing_font=$(find "$font_path" -type f -name 'JetBrainsMono*NerdFont*.ttf' -print -quit 2>/dev/null || true)
+                if [ -n "$existing_font" ]; then
+                    font_found=1
+                    break
+                fi
+            fi
+        done
+    fi
+
+    if [ $font_found -eq 0 ]; then
+        log_message WARN "JetBrainsMono Nerd Font not detected. Skipping terminal configuration."
+        printf '\n'
+        return 0
+    fi
+
+    configure_gnome_terminal_font() {
+        if ! command -v gsettings >/dev/null 2>&1; then
+            log_message WARN "gsettings not found. Cannot configure GNOME Terminal font."
+            return
+        fi
+
+        local profile profile_list
+        profile_list=$(gsettings get org.gnome.Terminal.ProfilesList list 2>/dev/null | tr -d "[],'" 2>/dev/null || true)
+        if [ -z "$profile_list" ]; then
+            log_message WARN "No GNOME Terminal profiles found. Skipping GNOME Terminal configuration."
+            return
+        fi
+
+        for profile in "$profile_list"; do
+            local profile_path="/org/gnome/terminal/legacy/profiles:/:$profile/"
+            if gsettings set "org.gnome.Terminal.Legacy.Profile:$profile_path" use-system-font false >/dev/null 2>&1 \
+                && gsettings set "org.gnome.Terminal.Legacy.Profile:$profile_path" font "$desired_font" >/dev/null 2>&1; then
+                updated_any=1
+            else
+                log_message WARN "Failed to configure GNOME Terminal profile $profile."
+            fi
+        done
+
+        if [ $updated_any -eq 1 ]; then
+            log_message INFO "Configured GNOME Terminal to use $desired_font."
+            log_message INFO "GNOME Terminal may look broken now."
+        fi
+    }
+
+    configure_gnome_terminal_font
 
     printf '\n'
 }

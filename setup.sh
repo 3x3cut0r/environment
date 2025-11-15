@@ -482,7 +482,9 @@ install_packages() {
                 fi
 
                 if "${install_parts[@]}" "$package" >/dev/null 2>&1; then
-                    log_message INFO "Installed $package using $manager."
+                    local highlight_start=$'\033[33m'
+                    local highlight_end=$'\033[0m'
+                    log_message INFO "Installed ${highlight_start}${package}${highlight_end} using $manager."
                     installed_with_manager=1
                     line_installed=1
                     break

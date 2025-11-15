@@ -573,6 +573,64 @@ install_nerd_font() {
     printf '\n'
 }
 
+configure_terminals() {
+    local desired_font="JetBrainsMono Nerd Font 12"
+    local font_found=0
+
+    if command -v fc-list >/dev/null 2>&1; then
+        if fc-list | grep -Fq "JetBrainsMono Nerd Font" 2>/dev/null; then
+            font_found=1
+        fi
+    fi
+
+    if [ $font_found -eq 0 ]; then
+        log_message WARN "JetBrainsMono Nerd Font not detected. Skipping terminal configuration."
+        printf '\n'
+        return 0
+    fi
+
+    configure_gnome_terminal_font() {
+        if ! command -v gsettings >/dev/null 2>&1; then
+            log_message WARN "gsettings not found. Cannot configure GNOME Terminal font."
+            return
+        fi
+
+        local profiles_raw
+        profiles_raw=$(gsettings get org.gnome.Terminal.ProfilesList list 2>/dev/null || true)
+        if [ -z "$profiles_raw" ]; then
+            log_message WARN "No GNOME Terminal profiles found. Skipping GNOME Terminal configuration."
+            return
+        fi
+
+        profiles_raw=$(printf '%s' "$profiles_raw" | sed -e "s/^@as //" -e "s/[\[\]]//g" -e "s/'//g" -e 's/ //g')
+        if [ -z "$profiles_raw" ]; then
+            log_message WARN "Unable to parse GNOME Terminal profiles."
+            return
+        fi
+
+        IFS=',' read -r -a profiles <<<"$profiles_raw"
+
+        local profile updated_any=0
+        for profile in "${profiles[@]}"; do
+            local profile_path="/org/gnome/terminal/legacy/profiles:/:$profile/"
+            if gsettings set "org.gnome.Terminal.Legacy.Profile:$profile_path" use-system-font false >/dev/null 2>&1 \
+                && gsettings set "org.gnome.Terminal.Legacy.Profile:$profile_path" font "$desired_font" >/dev/null 2>&1; then
+                updated_any=1
+            else
+                log_message WARN "Failed to configure GNOME Terminal profile $profile."
+            fi
+        done
+
+        if [ $updated_any -eq 1 ]; then
+            log_message INFO "Configured GNOME Terminal to use $desired_font."
+        fi
+    }
+
+    configure_gnome_terminal_font
+
+    printf '\n'
+}
+
 file_has_trailing_newline() {
     local file_path="$1"
     if [ ! -s "$file_path" ]; then
@@ -1058,6 +1116,7 @@ main() {
     fi
     install_packages
     install_nerd_font
+    configure_terminals
     install_starship
     install_tmux_plugin_manager
     install_vim_plugin_manager

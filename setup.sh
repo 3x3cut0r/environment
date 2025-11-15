@@ -1059,7 +1059,8 @@ configure_terminals() {
         log_message WARN "Auto confirmation enabled. Configuring terminals without prompt."
     else
         local prompt="Configure terminals to use JetBrainsMono Nerd Font?"
-        printf '[Environment][\033[35mINPUT\033[0m] %s\n' "$prompt"
+        printf '[Environment][\033[35mINPUT\033[0m] %s' "$prompt"
+        printf '\n'
 
         prompt="This may break your current terminal. [y/N] "
         printf '[Environment][\033[35mINPUT\033[0m] %s' "$prompt"

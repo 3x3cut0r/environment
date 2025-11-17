@@ -570,6 +570,7 @@ install_nerd_font() {
         return 1
     fi
 
+    log_message INFO "Run Nerd Fonts ./install.sh silently."
     if ! (cd "$repo_dir" && ./install.sh -q --install-to-user-path "$font_name" >/dev/null 2>&1); then
         log_message ERROR "Nerd Fonts install script failed to install $font_name."
         rm -rf "$temp_dir"

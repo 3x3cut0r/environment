@@ -898,19 +898,19 @@ install_catppuccin_vim() {
     if ! command -v vim >/dev/null 2>&1; then
         log_message WARN "Vim is required to install plugins. Skipping Catppuccin installation for Vim."
         printf '\n'
-        return 1
+        return 0
     fi
 
     if [ ! -f "$HOME/.vim/autoload/plug.vim" ]; then
         log_message WARN "vim-plug is not installed for Vim. Skipping Catppuccin installation for Vim."
         printf '\n'
-        return 1
+        return 0
     fi
 
     if [ ! -f "$source_vimrc" ]; then
         log_message WARN "Vim configuration with Catppuccin plugin definition not found. Skipping installation."
         printf '\n'
-        return 1
+        return 0
     fi
 
     log_message INFO "Installing Catppuccin theme for Vim using vim-plug."
@@ -930,19 +930,19 @@ install_catppuccin_neovim() {
     if ! command -v nvim >/dev/null 2>&1; then
         log_message WARN "Neovim is required to install plugins. Skipping Catppuccin installation for Neovim."
         printf '\n'
-        return 1
+        return 0
     fi
 
     if [ ! -f "$HOME/.local/share/nvim/site/autoload/plug.vim" ]; then
         log_message WARN "vim-plug is not installed for Neovim. Skipping Catppuccin installation for Neovim."
         printf '\n'
-        return 1
+        return 0
     fi
 
     if [ ! -f "$source_init" ]; then
         log_message WARN "Neovim configuration with Catppuccin plugin definition not found. Skipping installation."
         printf '\n'
-        return 1
+        return 0
     fi
 
     log_message INFO "Installing Catppuccin theme for Neovim using vim-plug."

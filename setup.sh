@@ -548,12 +548,6 @@ install_nerd_font() {
         fi
     done
 
-    if ! command -v git >/dev/null 2>&1; then
-        log_message ERROR "git is required to install JetBrainsMono Nerd Font"
-        printf '\n'
-        return 1
-    fi
-
     local temp_dir
     temp_dir=$(mktemp -d) || {
         log_message ERROR "Unable to create temporary directory for JetBrainsMono Nerd Font installation."
@@ -561,21 +555,37 @@ install_nerd_font() {
         return 1
     }
 
-    local repo_dir="$temp_dir/nerd-fonts"
-    log_message INFO "Cloning Nerd Fonts repository to run install script."
-    if ! git clone --depth 1 https://github.com/ryanoasis/nerd-fonts.git "$repo_dir" >/dev/null 2>&1; then
-        log_message ERROR "Failed to clone the Nerd Fonts repository."
+    local font_zip_url="https://github.com/ryanoasis/nerd-fonts/releases/latest/download/${font_name}.zip"
+    local font_zip="$temp_dir/${font_name}.zip"
+    local extracted_dir="$temp_dir/${font_name}"
+
+    log_message INFO "Downloading JetBrainsMono Nerd Font archive."
+    if ! curl -fLo "$font_zip" "$font_zip_url" >/dev/null 2>&1; then
+        log_message ERROR "Failed to download JetBrainsMono Nerd Font archive."
         rm -rf "$temp_dir"
         printf '\n'
         return 1
     fi
 
-    log_message INFO "Run Nerd Fonts ./install.sh silently."
-    if ! (cd "$repo_dir" && ./install.sh -q --install-to-user-path "$font_name" >/dev/null 2>&1); then
-        log_message ERROR "Nerd Fonts install script failed to install $font_name."
+    log_message INFO "Extracting JetBrainsMono Nerd Font archive."
+    mkdir -p "$extracted_dir"
+    if ! unzip -q "$font_zip" -d "$extracted_dir"; then
+        log_message ERROR "Failed to extract JetBrainsMono Nerd Font archive."
         rm -rf "$temp_dir"
         printf '\n'
         return 1
+    fi
+
+    mkdir -p "$nerd_font_dir"
+    if ! find "$extracted_dir" -type f -name '*.ttf' -exec cp {} "$nerd_font_dir" \;; then
+        log_message ERROR "Failed to copy JetBrainsMono Nerd Font files to $nerd_font_dir."
+        rm -rf "$temp_dir"
+        printf '\n'
+        return 1
+    fi
+
+    if command -v fc-cache >/dev/null 2>&1; then
+        fc-cache -f "$nerd_font_dir" >/dev/null 2>&1 || true
     fi
 
     rm -rf "$temp_dir"

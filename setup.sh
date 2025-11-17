@@ -750,7 +750,7 @@ install_starship() {
 
     if [ $proceed -eq 1 ]; then
         log_message INFO "Installing Starship prompt using official installer."
-        if curl -fsSL https://starship.rs/install.sh | sh -s -- --yes; then
+        if curl -fsSL https://starship.rs/install.sh | sh -s -- --yes >/dev/null; then
             log_message INFO "Starship installation completed successfully."
         else
             log_message ERROR "Starship installation failed."

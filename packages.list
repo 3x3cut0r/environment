@@ -11,10 +11,10 @@ make gmake
 mtr mtr-tiny
 nano
 ncdu
-neovim
+nvim neovim
 net-tools
 ranger
-ripgrep
+rg ripgrep
 rsync
 sshpass
 sudo

@@ -356,8 +356,11 @@ symbol = ' '
 symbol = ' '
 
 [python]
-format = '[─](fg:current_line)[](fg:green)[$symbol](fg:primary bg:green)[](fg:green bg:box)[ $version](fg:foreground bg:box)[](fg:box)'
-symbol = ' python'
+format = '\($symbol $version $virtualenv\)'
+symbol = ' '
+detect_extensions = []
+detect_files = []
+detect_folders = []
 
 [rlang]
 symbol = '󰟔 '

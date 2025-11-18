@@ -166,7 +166,7 @@ symbol = '  '
 symbol = ' '
 
 [c]
-format = '[─](fg:current_line)[](fg:blue)[$symbol](fg:primary bg:blue)[](fg:blue bg:box)[ $version](fg:foreground bg:box)[](fg:box)'
+format = '\($symbol\)'
 symbol = ' C'
 
 [cmake]
@@ -209,7 +209,7 @@ format = '[─](fg:base)[](fg:cyan)[$symbol](fg:primary bg:cyan)[](fg:cyan
 symbol = ' docker'
 
 [dotnet]
-format = '[─](fg:current_line)[](fg:purple)[$symbol](fg:primary bg:purple)[](fg:purple bg:box)[ $tfm](fg:foreground bg:box)[](fg:box)'
+format = '\($symbol\)'
 symbol = ' .NET'
 
 [elixir]
@@ -259,7 +259,7 @@ symbol = ' '
 symbol = ' '
 
 [java]
-format = '[─](fg:current_line)[](fg:red)[$symbol](fg:primary bg:red)[](fg:red bg:box)[ $version](fg:foreground bg:box)[](fg:box)'
+format = '\($symbol\)'
 symbol = ' Java'
 
 [julia]
@@ -284,7 +284,7 @@ symbol = '󰆥 '
 symbol = ' '
 
 [nodejs]
-format = '[─](fg:current_line)[](fg:green)[$symbol](fg:primary bg:green)[](fg:green bg:box)[ $version](fg:foreground bg:box)[](fg:box)'
+format = '\($symbol\)'
 symbol = '󰎙 Node.js'
 
 [ocaml]

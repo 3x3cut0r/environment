@@ -1,6 +1,6 @@
 bash-completion
 curl
-bind-utils dnsutils bind
+bind bind-utils dnsutils
 dog
 eza exa
 git

@@ -27,6 +27,6 @@ vi nvi
 vim vim-enhanced
 watch procps-ng procps
 wget
-magic-wormhole wormhole
+wormhole magic-wormhole
 zip info-zip
 zoxide

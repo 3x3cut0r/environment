@@ -205,11 +205,11 @@ symbol = ' '
 [docker_context]
 disabled = false
 only_with_files = true
-format = '[─](fg:base)[](fg:cyan)[$symbol](fg:primary bg:cyan)[](fg:cyan bg:box)'
+format = '\($symbol\) '
 symbol = ' docker'
 
 [dotnet]
-format = '\($symbol\)'
+format = '\($symbol\) '
 symbol = ' .NET'
 
 [elixir]
@@ -259,7 +259,7 @@ symbol = ' '
 symbol = ' '
 
 [java]
-format = '\($symbol\)'
+format = '\($symbol\) '
 symbol = ' Java'
 
 [julia]
@@ -284,7 +284,7 @@ symbol = '󰆥 '
 symbol = ' '
 
 [nodejs]
-format = '\($symbol\)'
+format = '\($symbol\) '
 symbol = '󰎙 Node.js'
 
 [ocaml]
@@ -356,7 +356,7 @@ symbol = ' '
 symbol = ' '
 
 [python]
-format = '\($symbol $version $virtualenv\)'
+format = '\($symbol $version $virtualenv\) '
 symbol = ' '
 detect_extensions = []
 detect_files = []

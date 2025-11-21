@@ -784,8 +784,27 @@ install_starship() {
     fi
 
     if [ $proceed -eq 1 ]; then
+        local install_success=0
         log_message INFO "Installing Starship prompt using official installer."
         if curl -fsSL https://starship.rs/install.sh | sh -s -- --yes >/dev/null; then
+            install_success=1
+        else
+            log_message WARN "Primary Starship installation failed. Attempting git-based fallback."
+            local temp_dir=""
+            temp_dir=$(mktemp -d 2>/dev/null || true)
+
+            if [ -n "$temp_dir" ] \
+                && git clone --depth 1 https://github.com/starship/starship.git "$temp_dir" >/dev/null 2>&1 \
+                && (cd "$temp_dir" && sh ./install/install.sh --yes >/dev/null 2>&1); then
+                install_success=1
+            fi
+
+            if [ -n "$temp_dir" ]; then
+                rm -rf "$temp_dir"
+            fi
+        fi
+
+        if [ $install_success -eq 1 ]; then
             log_message INFO "Starship installation completed successfully."
         else
             log_message ERROR "Starship installation failed."

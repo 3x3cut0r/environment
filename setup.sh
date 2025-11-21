@@ -700,6 +700,31 @@ remove_existing_marker_block() {
     ' "$target_file"
 }
 
+trim_trailing_blank_lines() {
+    local file_path="$1"
+
+    if [ ! -s "$file_path" ]; then
+        return
+    fi
+
+    local trimmed_file
+    trimmed_file=$(mktemp)
+
+    awk '
+        NF {last_nonblank=NR}
+        {lines[NR]=$0}
+        END {
+            if (last_nonblank > 0) {
+                for (i = 1; i <= last_nonblank; i++) {
+                    print lines[i]
+                }
+            }
+        }
+    ' "$file_path" >"$trimmed_file"
+
+    mv "$trimmed_file" "$file_path"
+}
+
 ensure_trailing_newline() {
     local file_path="$1"
     if [ ! -s "$file_path" ]; then
@@ -1028,8 +1053,12 @@ configure_environment() {
             fi
 
             if [ -s "$cleaned_target" ]; then
-                ensure_trailing_newline "$cleaned_target"
-                printf '\n' >>"$cleaned_target"
+                trim_trailing_blank_lines "$cleaned_target"
+
+                if [ -s "$cleaned_target" ]; then
+                    ensure_trailing_newline "$cleaned_target"
+                    printf '\n' >>"$cleaned_target"
+                fi
             fi
 
             printf '%s\n' "$start_marker" >>"$cleaned_target"

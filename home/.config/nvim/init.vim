@@ -1,6 +1,8 @@
-call plug#begin(stdpath('data') . '/plugged')
-Plug 'catppuccin/nvim', { 'as': 'catppuccin' }
-call plug#end()
+if exists('*plug#begin')
+  call plug#begin(stdpath('data') . '/plugged')
+  Plug 'catppuccin/nvim', { 'as': 'catppuccin' }
+  call plug#end()
+endif
 
 set encoding=utf-8      "Use UTF-8 encoding that supports unicode.
 set number              "Show line numbers on the sidebar.

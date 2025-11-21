@@ -1,6 +1,8 @@
-call plug#begin('~/.vim/plugged')
-Plug 'catppuccin/vim', { 'as': 'catppuccin' }
-call plug#end()
+if exists('*plug#begin')
+    call plug#begin('~/.vim/plugged')
+    Plug 'catppuccin/vim', { 'as': 'catppuccin' }
+    call plug#end()
+endif
 
 set encoding=utf-8      "Use UTF-8 encoding that supports unicode.
 set number              "Show line numbers on the sidebar.

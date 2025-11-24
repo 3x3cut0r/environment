@@ -23,12 +23,12 @@ format = "$user"
 show_always = true
 style_user = 'white bold'
 style_root = 'red bold'
-disabled = true
+disabled = false
 
 [hostname]
 ssh_only = false
 ssh_symbol = ' ssh://'
-format = "$ssh_symbol$hostname"
+format = "$hostname"
 trim_at = "."
 style = "plain"
 disabled = false

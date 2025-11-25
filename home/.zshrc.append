@@ -18,3 +18,5 @@ if [ -f "${HOME}/.config/aliases.list" ]; then
   # shellcheck disable=SC1090
   . "${HOME}/.config/aliases.list"
 fi
+
+# <<< vars/PATH

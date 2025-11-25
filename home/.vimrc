@@ -28,8 +28,14 @@ if has('termguicolors')
     set termguicolors   "Enable true color support when available.
 endif
 
-" Restore last cursor position when reopening a file.
 if has('autocmd')
+    " Enable comment formatting options for all files.
+    augroup comment_formatting
+        autocmd!
+        autocmd BufNewFile,BufRead * setlocal formatoptions+=cqn
+    augroup END
+
+    " Restore last cursor position when reopening a file.
     augroup restore_cursor_position
         autocmd!
         autocmd BufReadPost *

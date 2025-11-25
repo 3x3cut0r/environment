@@ -2,8 +2,8 @@
 palette = "catppuccin_mocha"
 add_newline = false
 
-format = """$os$python$directory${custom.prompt_symbol}"""
-# format = """$os$python$username@$hostname:$directory${custom.prompt_symbol}"""
+# format = """$os$python$directory${custom.prompt_symbol}"""
+format = """$os$python$username@$hostname:$directory${custom.prompt_symbol}"""
 
 [fill]
 symbol = " "

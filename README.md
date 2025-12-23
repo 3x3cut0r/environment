@@ -49,11 +49,17 @@ Run the bootstrap script directly from GitHub (recommended):
 curl -fsSL https://raw.githubusercontent.com/3x3cut0r/environment/main/setup.sh | bash
 ```
 
-Append flags after `--` to tailor the bootstrap.  
-For example add `--reconfigure --yes` to update the configuration files only:
+Append flags after `--` to tailor the bootstrap.
 
 ```bash
+# Do not ask user (install everything)
+curl -fsSL https://raw.githubusercontent.com/3x3cut0r/environment/main/setup.sh | bash -s -- --yes
+
+# Just reconfigure (update configs only)
 curl -fsSL https://raw.githubusercontent.com/3x3cut0r/environment/main/setup.sh | bash -s -- --reconfigure --yes
+
+# On Proxmox hosts (skip starship)
+curl -fsSL https://raw.githubusercontent.com/3x3cut0r/environment/main/setup.sh | bash -s -- --skip-starship --yes
 ```
 
 Prefer a local clone? Fetch the repository and run `./setup.sh` from its root directory.

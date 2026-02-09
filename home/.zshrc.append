@@ -1,6 +1,18 @@
 export EDITOR="nvim"
 export VISUAL="nvim"
 
+# history
+HISTFILE="$HOME/.zsh_history"
+HISTSIZE=100000
+SAVEHIST=100000
+
+setopt APPEND_HISTORY        # append to history file, don't overwrite
+setopt INC_APPEND_HISTORY    # write to file immediately
+setopt SHARE_HISTORY         # share history across sessions
+setopt HIST_IGNORE_DUPS      # ignore consecutive duplicates
+setopt HIST_REDUCE_BLANKS    # remove superfluous blanks
+setopt EXTENDED_HISTORY      # save timestamps
+
 # <<< vars/PS1.zsh
 
 if command -v starship >/dev/null 2>&1; then

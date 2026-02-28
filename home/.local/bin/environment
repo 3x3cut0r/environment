@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# run setup.sh from github.com/3x3cut0r/environment/setup.sh
+exec bash -c 'curl -fsSL https://raw.githubusercontent.com/3x3cut0r/environment/main/setup.sh | bash -s -- "$@"' _ "$@"

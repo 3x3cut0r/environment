@@ -70,6 +70,13 @@ cd environment
 ./setup.sh --help
 ```
 
+After a successful run, the script also tries to install the user-local wrapper command `environment` at `~/.local/bin/environment`.
+The wrapper always downloads and runs the latest `setup.sh` from GitHub.
+
+```bash
+environment --reconfigure --yes
+```
+
 ```bash
 Environment bootstrap script
 

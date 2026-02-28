@@ -10,6 +10,8 @@ SKIP_VIM_PLUGIN_MANAGER="no"
 SKIP_CATPPUCCIN_VIM="no"
 SKIP_CATPPUCCIN_NEOVIM="no"
 RECONFIGURE_MODE="no"
+WRAPPER_NAME="environment"
+WRAPPER_INSTALL_PATH="${HOME}/.local/bin/${WRAPPER_NAME}"
 
 parse_args() {
     SHOW_HELP=0
@@ -994,6 +996,40 @@ install_catppuccin_neovim() {
     printf '\n'
 }
 
+install_environment_wrapper() {
+    local wrapper_path="${ENVIRONMENT_WRAPPER_PATH:-$WRAPPER_INSTALL_PATH}"
+    local wrapper_source="${REPOSITORY_DIR:-}/home/.local/bin/${WRAPPER_NAME}"
+    local wrapper_dir=""
+
+    wrapper_dir=$(dirname "$wrapper_path")
+
+    if [ ! -f "$wrapper_source" ]; then
+        log_message WARN "Wrapper source '$wrapper_source' not found. Skipping wrapper installation."
+        printf '\n'
+        return 0
+    fi
+
+    if ! mkdir -p "$wrapper_dir"; then
+        log_message WARN "Wrapper directory '$wrapper_dir' could not be created. Skipping wrapper installation."
+        printf '\n'
+        return 0
+    fi
+
+    if [ ! -w "$wrapper_dir" ]; then
+        log_message WARN "Wrapper directory '$wrapper_dir' is not writable. Skipping wrapper installation."
+        printf '\n'
+        return 0
+    fi
+
+    if install -m 755 "$wrapper_source" "$wrapper_path"; then
+        log_message INFO "Installed wrapper command at $wrapper_path"
+    else
+        log_message WARN "Failed to install wrapper command at $wrapper_path. Continuing without wrapper."
+    fi
+
+    printf '\n'
+}
+
 configure_environment() {
     local source_home="${REPOSITORY_DIR:-.}/home"
     if [ ! -d "$source_home" ]; then
@@ -1062,6 +1098,16 @@ configure_environment() {
 
         local start_marker="$comment_prefix >>> environment ~/$marker_identifier >>>"
         local end_marker="$comment_prefix <<< environment ~/$marker_identifier <<<"
+
+        if [ "$target_relative" = ".local/bin/$WRAPPER_NAME" ]; then
+            if install -m 755 "$processed_file" "$target_path"; then
+                log_message INFO "Configured $target_relative"
+            else
+                log_message WARN "Failed to configure $target_relative"
+            fi
+            rm -f "$processed_file"
+            continue
+        fi
 
         if [ "$append_mode" -eq 1 ]; then
             local cleaned_target
@@ -1232,6 +1278,7 @@ main() {
     gather_environment_info
     display_environment_info
     confirm_execution
+    install_environment_wrapper
     if [ "$RECONFIGURE_MODE" = "yes" ]; then
         log_message INFO "Reconfigure mode enabled. Skipping all installation steps."
         printf '\n'

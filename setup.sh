@@ -1135,17 +1135,7 @@ configure_environment() {
 
             mv "$cleaned_target" "$target_path"
         else
-            local new_file
-            new_file=$(mktemp)
-            : >"$new_file"
-            printf '%s\n' "$start_marker" >>"$new_file"
-            if [ -s "$processed_file" ]; then
-                cat "$processed_file" >>"$new_file"
-                ensure_trailing_newline "$new_file"
-            fi
-            printf '%s\n' "$end_marker" >>"$new_file"
-
-            mv "$new_file" "$target_path"
+            mv "$processed_file" "$target_path"
         fi
 
         rm -f "$processed_file"

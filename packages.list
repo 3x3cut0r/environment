@@ -3,6 +3,7 @@ curl
 bind bind-utils dnsutils
 dog
 eza exa
+gh
 git
 jq
 lazydocker

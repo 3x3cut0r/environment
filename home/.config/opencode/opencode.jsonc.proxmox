@@ -1,0 +1,101 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "permission": {
+    "*": "ask",
+
+    "bash": {
+      "*": "ask",
+
+      // Destructive and high-risk commands
+      "rm -rf / *": "deny",
+      "rm -rf /*": "deny",
+      "shred *": "deny",
+      "mkfs*": "deny",
+      "fdisk *": "deny",
+      "parted *": "deny",
+      "sfdisk *": "deny",
+      "dd * of=/dev/*": "deny",
+
+      // LVM/ZFS storage destruction
+      "pvremove *": "deny",
+      "vgremove *": "deny",
+      "lvremove *": "deny",
+      "zfs destroy *": "deny",
+      "zpool destroy *": "deny",
+
+      // Proxmox VM/LXC destruction
+      "qm destroy *": "deny",
+      "pct destroy *": "deny",
+      "pvesm remove *": "deny",
+      "docker inspect *": "deny",
+      "docker compose config*": "deny",
+
+      // Firewall and privileged system mutation
+      "iptables *": "deny",
+      "nft *": "deny",
+      "ufw *": "deny",
+      "chmod 777 /etc/*": "deny",
+      "chown * /etc/*": "deny"
+    },
+
+    "external_directory": {
+      "*": "ask",
+
+      // Proxmox host and cluster state
+      "/etc/pve/*": "deny",
+      "/var/lib/pve-cluster/*": "deny",
+      "/etc/ceph/*": "deny",
+
+      // SSH, privilege, and system secrets
+      "/etc/ssh/*": "deny",
+      "/etc/shadow": "deny",
+      "/etc/gshadow": "deny",
+      "/etc/sudoers": "deny",
+      "/etc/sudoers.d/*": "deny",
+      "/etc/ssl/private/*": "deny",
+      "/etc/letsencrypt/*": "deny",
+
+      // LXC sensitive locations
+      "/etc/lxc/*": "deny",
+      "/var/lib/lxc/*/config": "deny",
+      "/var/lib/lxc/*/rootfs/etc/shadow": "deny",
+      "/var/lib/lxc/*/rootfs/root/.ssh/*": "deny",
+
+      // User and root key material
+      "~/.ssh/*": "deny",
+      "/root/.ssh/*": "deny",
+      "/home/*/.ssh/*": "deny",
+      "~/.gnupg/*": "deny",
+      "/root/.gnupg/*": "deny",
+      "/home/*/.gnupg/*": "deny",
+
+      // Cloud and orchestration credentials
+      "~/.aws/credentials": "deny",
+      "/root/.aws/credentials": "deny",
+      "/home/*/.aws/credentials": "deny",
+      "~/.kube/config": "deny",
+      "/root/.kube/config": "deny",
+      "/home/*/.kube/config": "deny",
+      "~/.docker/config.json": "deny",
+      "/root/.docker/config.json": "deny",
+      "/home/*/.docker/config.json": "deny",
+      "~/.netrc": "deny",
+      "/root/.netrc": "deny",
+      "/home/*/.netrc": "deny",
+
+      // Generic secret-like files
+      "*.pem": "deny",
+      "*.key": "deny",
+      "*.p12": "deny",
+      "*.pfx": "deny",
+      "*.kdbx": "deny",
+      "*.agekey": "deny",
+      "*.credentials*": "deny",
+      "*.secret*": "deny",
+      "*.env": "deny",
+      "*.env.*": "deny",
+      "*/id_rsa": "deny",
+      "*/id_ed25519": "deny"
+    }
+  }
+}

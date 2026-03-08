@@ -1,6 +1,7 @@
 bash-completion
-curl
+bat
 bind bind-utils dnsutils
+curl
 dog
 eza exa
 fd fd-find fdfind

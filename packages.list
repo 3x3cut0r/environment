@@ -3,6 +3,7 @@ curl
 bind bind-utils dnsutils
 dog
 eza exa
+fd fd-find fdfind
 gh
 git
 jq

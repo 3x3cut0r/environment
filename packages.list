@@ -1,6 +1,7 @@
 bash-completion
 bat
 bind bind-utils dnsutils
+btop
 curl
 dog
 eza exa

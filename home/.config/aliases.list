@@ -38,6 +38,7 @@ alias cls='clear'
 alias df='df -h'
 alias du='du -h -c'
 alias free='free -h'
+alias most-used-commands="history | awk '{print \$2}' | sort | uniq -c | sort -nr | head -10"
 
 # Flexible wrappers around find for different file types.
 _find_by_type() {

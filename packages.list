@@ -6,6 +6,7 @@ curl
 dog
 eza exa
 fd fd-find fdfind
+fzf
 gh
 git
 jq

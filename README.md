@@ -24,11 +24,12 @@ This repository provides a setup script that performs fundamental shell customiz
 │   │   ├── aliases.list             # Common shell aliases to append
 │   │   ├── nvim/                    # Neovim configuration directory for themed setup
 │   │   │   └── init.vim             # Neovim configuration with Catppuccin theme support
-│   │   └── starship.toml            # Starship prompt theme configuration
-│   ├── tmux.example.sh              # Example tmux session bootstrap script
+│   │   ├── starship.toml            # Starship prompt theme configuration
+│   │   └── tmux/                    # tmux configuration and helper scripts
+│   │       ├── tmux.conf            # tmux configuration with TPM setup
+│   │       └── tmux.example.sh      # Example tmux session bootstrap script
 │   ├── .exrc                        # Ex/Vi editor configuration
 │   ├── .profile.append              # POSIX shell profile additions
-│   ├── .tmux.conf                   # tmux configuration with TPM setup
 │   ├── .vimrc                       # Vim configuration with Catppuccin theme support
 │   ├── .zprofile.append             # Zsh login shell profile additions
 │   └── .zshrc.append                # Zsh interactive shell configuration

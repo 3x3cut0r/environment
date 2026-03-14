@@ -1062,10 +1062,14 @@ configure_environment() {
         marker_identifier="$relative_path"
 
         append_mode=0
+        touch_mode=0
         target_relative="$relative_path"
         if [[ "$target_relative" == *.append ]]; then
             append_mode=1
             target_relative="${target_relative%.append}"
+        elif [[ "$target_relative" == *.touch ]]; then
+            touch_mode=1
+            target_relative="${target_relative%.touch}"
         fi
 
         local path_segment
@@ -1104,6 +1108,17 @@ configure_environment() {
                 log_message INFO "Configured $target_relative"
             else
                 log_message WARN "Failed to configure $target_relative"
+            fi
+            rm -f "$processed_file"
+            continue
+        fi
+
+        if [ "$touch_mode" -eq 1 ]; then
+            if [ ! -f "$target_path" ]; then
+                mv "$processed_file" "$target_path"
+                log_message INFO "Configured $target_relative"
+            else
+                log_message INFO "Skipped $target_relative (already exists)"
             fi
             rm -f "$processed_file"
             continue

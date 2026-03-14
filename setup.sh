@@ -842,7 +842,7 @@ install_tmux_plugin_manager() {
         return 0
     fi
 
-    local plugins_dir="$target_home/.tmux/plugins"
+    local plugins_dir="$target_home/.config/tmux/plugins"
     local tpm_dir="$plugins_dir/tpm"
 
     mkdir -p "$plugins_dir"
@@ -865,11 +865,12 @@ install_tmux_plugin_manager() {
         fi
     fi
 
-    local tmux_conf="$target_home/.tmux.conf"
+    local tmux_conf="$target_home/.config/tmux/tmux.conf"
     local temporary_conf=0
     if [ ! -f "$tmux_conf" ]; then
-        if [ -n "${REPOSITORY_DIR:-}" ] && [ -f "$REPOSITORY_DIR/home/.tmux.conf" ]; then
-            cp "$REPOSITORY_DIR/home/.tmux.conf" "$tmux_conf"
+        if [ -n "${REPOSITORY_DIR:-}" ] && [ -f "$REPOSITORY_DIR/home/.config/tmux/tmux.conf" ]; then
+            mkdir -p "$(dirname "$tmux_conf")"
+            cp "$REPOSITORY_DIR/home/.config/tmux/tmux.conf" "$tmux_conf"
             temporary_conf=1
         else
             log_message WARN "No tmux configuration file found. Skipping plugin installation."

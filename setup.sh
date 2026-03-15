@@ -445,71 +445,123 @@ install_packages() {
         return
     fi
 
-    local packages=()
+    local python_marker="# <<< Add python packages below"
+    local in_python_section=0
+    local system_packages=()
+    local python_packages=()
     local line trimmed
     while IFS= read -r line || [ -n "$line" ]; do
-        trimmed=$(printf '%s\n' "$line" | sed -e 's/#.*//' -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+        trimmed=$(printf '%s\n' "$line" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+
+        if [ "$trimmed" = "$python_marker" ]; then
+            in_python_section=1
+            continue
+        fi
+
+        case "$trimmed" in
+            ''|\#*)
+                continue
+                ;;
+        esac
+
+        trimmed=$(printf '%s\n' "$trimmed" | sed -e 's/[[:space:]]#.*//' -e 's/[[:space:]]*$//')
         if [ -n "$trimmed" ]; then
-            packages+=("$trimmed")
+            if [ $in_python_section -eq 1 ]; then
+                python_packages+=("$trimmed")
+            else
+                system_packages+=("$trimmed")
+            fi
         fi
     done < "$packages_file"
 
-    if [ ${#packages[@]} -eq 0 ]; then
+    if [ ${#system_packages[@]} -eq 0 ] && [ ${#python_packages[@]} -eq 0 ]; then
         log_message WARN "No packages specified in packages.list."
         return
     fi
 
     local mapping manager install_cmd
     local package_line packages_in_line package
-    for package_line in "${packages[@]}"; do
-        IFS=' ' read -r -a packages_in_line <<< "$package_line"
-        if [ ${#packages_in_line[@]} -eq 0 ]; then
-            continue
-        fi
-
-        local line_installed=0
-        for package in "${packages_in_line[@]}"; do
-            if command -v "$package" >/dev/null 2>&1; then
-                log_message INFO "Package $package already installed."
-                line_installed=1
-                break
+    if [ ${#system_packages[@]} -gt 0 ]; then
+        for package_line in "${system_packages[@]}"; do
+            IFS=' ' read -r -a packages_in_line <<< "$package_line"
+            if [ ${#packages_in_line[@]} -eq 0 ]; then
+                continue
             fi
 
-            local installed_with_manager=0
-            for mapping in "${AVAILABLE_PACKAGE_MANAGERS[@]}"; do
-                manager=${mapping%%:*}
-                install_cmd=${mapping#*:}
-
-                IFS=' ' read -r -a install_parts <<< "$install_cmd"
-
-                if manager_requires_privilege "$manager" && [ "${EUID:-$(id -u)}" -ne 0 ]; then
-                    if command -v sudo >/dev/null 2>&1; then
-                        install_parts=("sudo" "${install_parts[@]}")
-                    else
-                        log_message WARN "Cannot install $package using $manager: elevated privileges required but sudo not available."
-                        continue
-                    fi
+            local line_installed=0
+            for package in "${packages_in_line[@]}"; do
+                if command -v "$package" >/dev/null 2>&1; then
+                    log_message INFO "Package $package already installed."
+                    line_installed=1
+                    break
                 fi
 
-                if "${install_parts[@]}" "$package" >/dev/null 2>&1; then
-                    local highlight_start=$'\033[33m'
-                    local highlight_end=$'\033[0m'
-                    log_message INFO "Installed ${highlight_start}${package}${highlight_end} using $manager."
-                    installed_with_manager=1
-                    line_installed=1
+                local installed_with_manager=0
+                for mapping in "${AVAILABLE_PACKAGE_MANAGERS[@]}"; do
+                    manager=${mapping%%:*}
+                    install_cmd=${mapping#*:}
+
+                    IFS=' ' read -r -a install_parts <<< "$install_cmd"
+
+                    if manager_requires_privilege "$manager" && [ "${EUID:-$(id -u)}" -ne 0 ]; then
+                        if command -v sudo >/dev/null 2>&1; then
+                            install_parts=("sudo" "${install_parts[@]}")
+                        else
+                            log_message WARN "Cannot install $package using $manager: elevated privileges required but sudo not available."
+                            continue
+                        fi
+                    fi
+
+                    if "${install_parts[@]}" "$package" >/dev/null 2>&1; then
+                        local highlight_start=$'\033[33m'
+                        local highlight_end=$'\033[0m'
+                        log_message INFO "Installed ${highlight_start}${package}${highlight_end} using $manager."
+                        installed_with_manager=1
+                        line_installed=1
+                        break
+                    fi
+                done
+
+                if [ $installed_with_manager -eq 1 ]; then
                     break
                 fi
             done
 
-            if [ $installed_with_manager -eq 1 ]; then
-                break
+            if [ $line_installed -eq 0 ]; then
+                log_message WARN "Unable to install any package from line: ${packages_in_line[*]}"
             fi
         done
+    fi
 
-        if [ $line_installed -eq 0 ]; then
-            log_message WARN "Unable to install any package from line: ${packages_in_line[*]}"
+    if [ ${#python_packages[@]} -gt 0 ]; then
+        if ! command -v python3 >/dev/null 2>&1; then
+            log_message WARN "python3 not found. Skipping Python package installation."
+        elif ! python3 -m pip --version >/dev/null 2>&1; then
+            log_message WARN "python3 pip module not available. Skipping Python package installation."
+        else
+            for package_line in "${python_packages[@]}"; do
+                IFS=' ' read -r -a packages_in_line <<< "$package_line"
+                if [ ${#packages_in_line[@]} -eq 0 ]; then
+                    continue
+                fi
+
+                for package in "${packages_in_line[@]}"; do
+                    if python3 -m pip show "$package" >/dev/null 2>&1; then
+                        log_message INFO "Python package $package already installed."
+                        continue
+                    fi
+
+                    if python3 -m pip install "$package" >/dev/null 2>&1; then
+                        local highlight_start=$'\033[33m'
+                        local highlight_end=$'\033[0m'
+                        log_message INFO "Installed ${highlight_start}${package}${highlight_end} using python3 -m pip."
+                    else
+                        log_message WARN "Unable to install Python package: $package"
+                    fi
+                done
+            done
         fi
-    done
+    fi
 
     printf '\n'
 }

@@ -33,7 +33,7 @@ This repository provides a setup script that performs fundamental shell customiz
 │   ├── .vimrc                       # Vim configuration with Catppuccin theme support
 │   ├── .zprofile.append             # Zsh login shell profile additions
 │   └── .zshrc.append                # Zsh interactive shell configuration
-├── packages.list                    # Packages to install with the detected package manager
+├── packages.list                    # System packages (before marker) and pip packages (after marker)
 ├── setup.sh                         # Bootstrap script orchestrating the environment setup
 └── vars/                            # Prompt and helper data consumed by the setup script
     ├── PS1                          # Bash prompt template snippet
@@ -70,6 +70,10 @@ git clone https://github.com/3x3cut0r/environment.git
 cd environment
 ./setup.sh --help
 ```
+
+`packages.list` is split by the marker `# <<< Add Python packages below`:
+- Entries before the marker are installed as system packages via the detected package manager.
+- Entries after the marker are installed via `python3 -m pip install`.
 
 After a successful run, the script also tries to install the user-local wrapper command `environment` at `~/.local/bin/environment`.
 The wrapper always downloads and runs the latest `setup.sh` from GitHub.

@@ -35,3 +35,5 @@ wget
 wormhole magic-wormhole
 zip info-zip
 zoxide
+# <<< Add python packages below
+llm

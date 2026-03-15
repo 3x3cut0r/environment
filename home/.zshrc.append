@@ -15,6 +15,10 @@ setopt EXTENDED_HISTORY      # save timestamps
 
 # <<< vars/PS1.zsh
 
+if command -v mise >/dev/null 2>&1; then
+  eval "$(mise activate zsh)"
+fi
+
 if command -v starship >/dev/null 2>&1; then
   sleep 0.1
   eval "$(starship init zsh)"

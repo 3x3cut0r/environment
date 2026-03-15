@@ -3,6 +3,10 @@ export VISUAL="nvim"
 
 # <<< vars/PS1
 
+if command -v mise >/dev/null 2>&1; then
+  eval "$(mise activate bash)"
+fi
+
 if command -v starship >/dev/null 2>&1; then
   sleep 0.1
   eval "$(starship init bash)"

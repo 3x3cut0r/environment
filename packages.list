@@ -40,5 +40,7 @@ zip info-zip
 zoxide
 # <<< Add python packages below
 llm
+pip
 setuptools
 wheel
+uv

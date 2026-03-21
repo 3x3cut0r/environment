@@ -12,6 +12,7 @@ git
 jq
 lazydocker
 lshw
+lua
 make gmake
 mtr mtr-tiny
 nano

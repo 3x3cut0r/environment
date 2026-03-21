@@ -14,6 +14,9 @@ return {
           follow_current_file = {
             enabled = true,
           },
+          filtered_items = {
+            hide_dotfiles = false,
+          },
         },
         window = {
           position = "left",

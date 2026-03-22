@@ -11,6 +11,7 @@ gh
 git
 jq
 lazydocker
+lazygit
 lshw
 lua
 make gmake

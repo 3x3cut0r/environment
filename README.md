@@ -74,6 +74,9 @@ cd environment
 `packages.list` is split by the marker `# <<< Add Python packages below`:
 
 - Entries before the marker are installed as system packages via the detected package manager.
+- Entries before the marker can also contain a quoted installer command, for example:
+  `lazygit "curl -fsSL https://lazysvn.sawirstudio.com/install.sh | bash -s -- --yes"`.
+  In that case, package names are still attempted first and the quoted `curl ... | sh|bash ...` command runs afterwards.
 - Entries after the marker are installed via `python3 -m pip install`.
 
 After a successful run, the script also tries to install the user-local wrapper command `environment` at `~/.local/bin/environment`.

@@ -441,9 +441,6 @@ install_packages() {
 
     ensure_homebrew_for_macos
     detect_package_managers
-    if [ ${#AVAILABLE_PACKAGE_MANAGERS[@]} -eq 0 ]; then
-        return
-    fi
 
     local python_marker="# <<< Add python packages below"
     local in_python_section=0
@@ -481,54 +478,85 @@ install_packages() {
 
     local mapping manager install_cmd
     local package_line packages_in_line package
+    local package_managers_available=1
+    if [ ${#AVAILABLE_PACKAGE_MANAGERS[@]} -eq 0 ]; then
+        package_managers_available=0
+    fi
+
     if [ ${#system_packages[@]} -gt 0 ]; then
         for package_line in "${system_packages[@]}"; do
-            IFS=' ' read -r -a packages_in_line <<< "$package_line"
-            if [ ${#packages_in_line[@]} -eq 0 ]; then
-                continue
+            local installer_command=""
+            local package_segment="$package_line"
+            local quoted_segment=""
+
+            if [[ "$package_line" =~ \"([^\"]+)\" ]]; then
+                quoted_segment="${BASH_REMATCH[1]}"
+                if [[ "$quoted_segment" =~ ^curl[[:space:]]+.+\|[[:space:]]*(sh|bash)([[:space:]]+.+)?$ ]]; then
+                    installer_command="$quoted_segment"
+                    package_segment=$(printf '%s\n' "$package_line" | sed -E 's/"[^"]+"//')
+                    package_segment=$(printf '%s\n' "$package_segment" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+                fi
             fi
 
             local line_installed=0
-            for package in "${packages_in_line[@]}"; do
-                if command -v "$package" >/dev/null 2>&1; then
-                    log_message INFO "Package $package already installed."
-                    line_installed=1
-                    break
+            if [ -n "$package_segment" ]; then
+                IFS=' ' read -r -a packages_in_line <<< "$package_segment"
+
+                if [ $package_managers_available -eq 0 ]; then
+                    log_message WARN "No supported package managers available. Skipping package line: ${packages_in_line[*]}"
                 fi
 
-                local installed_with_manager=0
-                for mapping in "${AVAILABLE_PACKAGE_MANAGERS[@]}"; do
-                    manager=${mapping%%:*}
-                    install_cmd=${mapping#*:}
-
-                    IFS=' ' read -r -a install_parts <<< "$install_cmd"
-
-                    if manager_requires_privilege "$manager" && [ "${EUID:-$(id -u)}" -ne 0 ]; then
-                        if command -v sudo >/dev/null 2>&1; then
-                            install_parts=("sudo" "${install_parts[@]}")
-                        else
-                            log_message WARN "Cannot install $package using $manager: elevated privileges required but sudo not available."
-                            continue
-                        fi
+                for package in "${packages_in_line[@]}"; do
+                    if command -v "$package" >/dev/null 2>&1; then
+                        log_message INFO "Package $package already installed."
+                        line_installed=1
+                        break
                     fi
 
-                    if "${install_parts[@]}" "$package" >/dev/null 2>&1; then
-                        local highlight_start=$'\033[33m'
-                        local highlight_end=$'\033[0m'
-                        log_message INFO "Installed ${highlight_start}${package}${highlight_end} using $manager."
-                        installed_with_manager=1
-                        line_installed=1
+                    local installed_with_manager=0
+                    for mapping in "${AVAILABLE_PACKAGE_MANAGERS[@]}"; do
+                        manager=${mapping%%:*}
+                        install_cmd=${mapping#*:}
+
+                        IFS=' ' read -r -a install_parts <<< "$install_cmd"
+
+                        if manager_requires_privilege "$manager" && [ "${EUID:-$(id -u)}" -ne 0 ]; then
+                            if command -v sudo >/dev/null 2>&1; then
+                                install_parts=("sudo" "${install_parts[@]}")
+                            else
+                                log_message WARN "Cannot install $package using $manager: elevated privileges required but sudo not available."
+                                continue
+                            fi
+                        fi
+
+                        if "${install_parts[@]}" "$package" >/dev/null 2>&1; then
+                            local highlight_start=$'\033[33m'
+                            local highlight_end=$'\033[0m'
+                            log_message INFO "Installed ${highlight_start}${package}${highlight_end} using $manager."
+                            installed_with_manager=1
+                            line_installed=1
+                            break
+                        fi
+                    done
+
+                    if [ $installed_with_manager -eq 1 ]; then
                         break
                     fi
                 done
 
-                if [ $installed_with_manager -eq 1 ]; then
-                    break
+                if [ $line_installed -eq 0 ] && [ $package_managers_available -eq 1 ]; then
+                    log_message WARN "Unable to install any package from line: ${packages_in_line[*]}"
                 fi
-            done
+            fi
 
-            if [ $line_installed -eq 0 ]; then
-                log_message WARN "Unable to install any package from line: ${packages_in_line[*]}"
+            if [ -n "$installer_command" ]; then
+                if bash -o pipefail -c "$installer_command" >/dev/null 2>&1; then
+                    local highlight_start=$'\033[33m'
+                    local highlight_end=$'\033[0m'
+                    log_message INFO "Executed installer command: ${highlight_start}${installer_command}${highlight_end}"
+                else
+                    log_message WARN "Failed installer command: $installer_command"
+                fi
             fi
         done
     fi

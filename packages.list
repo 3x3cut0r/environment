@@ -9,9 +9,11 @@ fd fd-find fdfind
 fzf
 gh
 git
+git-lfs
 jq
 lazydocker
 lazygit
+lazysvn "curl -fsSL https://lazysvn.sawirstudio.com/install.sh | sh"
 lshw
 lua
 make gmake
@@ -33,7 +35,7 @@ termshark
 tmux
 unp
 unzip info-zip
-vi nvi
+vi
 vim vim-enhanced
 watch procps-ng procps
 wget

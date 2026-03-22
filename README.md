@@ -11,6 +11,7 @@ This repository provides a setup script that performs fundamental shell customiz
 - `install_vim_plugin_manager`: Installs the Vim/Neovim plugin manager to bootstrap editor plugins.
 - `install_catppuccin_vim`: Applies the Catppuccin color scheme to the Vim configuration.
 - `install_catppuccin_neovim`: Mirrors the Catppuccin theme setup for Neovim.
+- `install_catppuccin_bat`: Downloads the latest Catppuccin Mocha bat theme, sets it as default, and rebuilds bat cache.
 - `configure_environment`: Applies the curated dotfile snippets, Starship theme settings, and environment variables.
 
 ## Repository overview
@@ -22,6 +23,9 @@ This repository provides a setup script that performs fundamental shell customiz
 │   ├── .bashrc.append               # Additional Bash runtime configuration
 │   ├── .config/                     # Configuration directory for assorted tools
 │   │   ├── aliases.list             # Common shell aliases to append
+│   │   ├── bat/                     # bat configuration and themes
+│   │   │   ├── config               # bat defaults (Catppuccin Mocha)
+│   │   │   └── themes/              # Theme directory (updated from upstream during setup)
 │   │   ├── nvim/                    # Neovim configuration directory for themed setup
 │   │   │   └── init.vim             # Neovim configuration with Catppuccin theme support
 │   │   ├── starship.toml            # Starship prompt theme configuration

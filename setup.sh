@@ -1077,6 +1077,81 @@ install_catppuccin_neovim() {
     printf '\n'
 }
 
+install_catppuccin_bat() {
+    local target_home="$HOME"
+    if [ -z "$target_home" ] && command -v getent >/dev/null 2>&1 && [ -n "$CURRENT_USER" ]; then
+        target_home=$(getent passwd "$CURRENT_USER" | cut -d: -f6)
+    fi
+
+    if [ -z "$target_home" ] || [ ! -d "$target_home" ]; then
+        log_message WARN "Unable to determine a valid home directory for bat theme installation."
+        printf '\n'
+        return 0
+    fi
+
+    local bat_config_dir="${BAT_CONFIG_DIR:-$target_home/.config/bat}"
+    local themes_dir="$bat_config_dir/themes"
+    local config_file="$bat_config_dir/config"
+    local theme_file="$themes_dir/Catppuccin Mocha.tmTheme"
+    local theme_url="https://raw.githubusercontent.com/catppuccin/bat/main/themes/Catppuccin%20Mocha.tmTheme"
+    local desired_theme_line='--theme="Catppuccin Mocha"'
+
+    mkdir -p "$themes_dir"
+
+    if command -v curl >/dev/null 2>&1; then
+        if curl -fsSL "$theme_url" -o "$theme_file"; then
+            log_message INFO "Downloaded latest Catppuccin bat theme."
+        else
+            log_message WARN "Failed to download Catppuccin bat theme from upstream."
+        fi
+    elif command -v wget >/dev/null 2>&1; then
+        if wget -q -O "$theme_file" "$theme_url"; then
+            log_message INFO "Downloaded latest Catppuccin bat theme."
+        else
+            log_message WARN "Failed to download Catppuccin bat theme from upstream."
+        fi
+    else
+        log_message WARN "Neither curl nor wget is available. Cannot download bat theme."
+    fi
+
+    local temp_config
+    temp_config=$(mktemp)
+    if [ -f "$config_file" ]; then
+        awk -v desired="$desired_theme_line" '
+            BEGIN { theme_set = 0 }
+            /^[[:space:]]*--theme([[:space:]]|=|$)/ {
+                if (!theme_set) {
+                    print desired
+                    theme_set = 1
+                }
+                next
+            }
+            { print }
+            END {
+                if (!theme_set) {
+                    print desired
+                }
+            }
+        ' "$config_file" >"$temp_config"
+    else
+        printf '%s\n' "$desired_theme_line" >"$temp_config"
+    fi
+    mv "$temp_config" "$config_file"
+    log_message INFO "Configured default bat theme to Catppuccin Mocha."
+
+    if command -v bat >/dev/null 2>&1; then
+        if bat cache --build >/dev/null 2>&1; then
+            log_message INFO "Rebuilt bat theme cache."
+        else
+            log_message WARN "Failed to rebuild bat theme cache automatically."
+        fi
+    else
+        log_message WARN "bat not found in PATH. Skipping bat cache rebuild."
+    fi
+
+    printf '\n'
+}
+
 install_environment_wrapper() {
     local wrapper_path="${ENVIRONMENT_WRAPPER_PATH:-$WRAPPER_INSTALL_PATH}"
     local wrapper_source="${REPOSITORY_DIR:-}/home/.local/bin/${WRAPPER_NAME}"
@@ -1377,6 +1452,7 @@ main() {
     install_catppuccin_vim
     install_catppuccin_neovim
     configure_environment
+    install_catppuccin_bat
     configure_terminals
 }
 

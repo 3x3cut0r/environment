@@ -70,6 +70,9 @@ findd() { _find_by_type d "$@"; }
 findl() { _find_by_type l "$@"; }
 findb() { _find_by_type b "$@"; }
 
+# Fuzzy Finder
+alias fzf='fzf --preview "bat --style=numbers --color=always --line-range :500 {} 2>/dev/null || cat {}"'
+
 # Shortcuts for Git workflows.
 alias g='git'
 alias ga='git add'

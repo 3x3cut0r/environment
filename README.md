@@ -72,6 +72,7 @@ cd environment
 ```
 
 `packages.list` is split by the marker `# <<< Add Python packages below`:
+
 - Entries before the marker are installed as system packages via the detected package manager.
 - Entries after the marker are installed via `python3 -m pip install`.
 

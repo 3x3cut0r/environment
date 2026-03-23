@@ -19,6 +19,7 @@ This repository provides a setup script that performs fundamental shell customiz
 ```
 .
 ├── home/                            # Dotfile snippets applied to the target system
+│   ├── .bash_history.touch          # Create ~/.bash_history if missing
 │   ├── .bash_profile.append         # Additional Bash profile configuration
 │   ├── .bashrc.append               # Additional Bash runtime configuration
 │   ├── .config/                     # Configuration directory for assorted tools
@@ -26,20 +27,31 @@ This repository provides a setup script that performs fundamental shell customiz
 │   │   ├── bat/                     # bat configuration and themes
 │   │   │   ├── config               # bat defaults (Catppuccin Mocha)
 │   │   │   └── themes/              # Theme directory (updated from upstream during setup)
+│   │   ├── hypr/                    # Hyprland configuration snippets
+│   │   │   └── autostart.conf       # Hyprland autostart entries
 │   │   ├── nvim/                    # Neovim configuration directory for themed setup
-│   │   │   └── init.vim             # Neovim configuration with Catppuccin theme support
+│   │   │   ├── init.lua             # Neovim entrypoint
+│   │   │   └── lua/                 # Neovim Lua configuration modules
+│   │   ├── opencode/                # OpenCode profile snippets
+│   │   │   ├── opencode.jsonc.ask   # Ask profile configuration
+│   │   │   └── opencode.jsonc.proxmox # Proxmox profile configuration
 │   │   ├── starship.toml            # Starship prompt theme configuration
 │   │   └── tmux/                    # tmux configuration and helper scripts
 │   │       ├── tmux.conf            # tmux configuration with TPM setup
 │   │       └── tmux.example.sh      # Example tmux session bootstrap script
 │   ├── .exrc                        # Ex/Vi editor configuration
+│   ├── .local/                      # User-local binaries managed by setup
+│   │   └── bin/
+│   │       └── environment          # Wrapper command to run latest setup from GitHub
 │   ├── .profile.append              # POSIX shell profile additions
 │   ├── .vimrc                       # Vim configuration with Catppuccin theme support
+│   ├── .zsh_history.touch           # Create ~/.zsh_history if missing
 │   ├── .zprofile.append             # Zsh login shell profile additions
 │   └── .zshrc.append                # Zsh interactive shell configuration
 ├── packages.list                    # System packages (before marker) and pip packages (after marker)
 ├── setup.sh                         # Bootstrap script orchestrating the environment setup
 └── vars/                            # Prompt and helper data consumed by the setup script
+    ├── PATH                         # PATH snippet merged into shell profiles
     ├── PS1                          # Bash prompt template snippet
     ├── PS1.zsh                      # Zsh prompt template snippet
     └── comment_prefix.list          # Prefix tokens used when merging config files

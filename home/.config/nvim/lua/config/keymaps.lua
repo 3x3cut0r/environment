@@ -11,3 +11,8 @@ vim.keymap.set("n", "<leader>gg", function()
 end, { desc = "Lazygit" })
 vim.keymap.set("n", "<leader>e", "<cmd>Neotree toggle<cr>", { desc = "Explorer (Neo-tree)" })
 vim.keymap.set("n", "<leader>o", "<cmd>Neotree reveal<cr>", { desc = "Reveal file (Neo-tree)" })
+
+-- which-key keymaps
+vim.keymap.set("n", "<leader>?", function()
+  require("which-key").show({ global = false })
+end, { desc = "Buffer Local Keymaps (which-key)" })

@@ -40,6 +40,8 @@ vim vim-enhanced
 watch procps-ng procps
 wget
 wormhole magic-wormhole
+xclip
+xsel
 zip info-zip
 zoxide
 # <<< Add python packages below

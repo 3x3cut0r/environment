@@ -13,4 +13,18 @@ case ":$PATH:" in
   *) PATH="$HOME/.local/bin:$PATH" ;;
 esac
 
+if [ -x "/usr/local/go/bin/go" ]; then
+  case ":$PATH:" in
+    *":/usr/local/go/bin:"*) ;;
+    *) PATH="/usr/local/go/bin:$PATH" ;;
+  esac
+
+  if [ -d "$HOME/go/bin" ]; then
+    case ":$PATH:" in
+      *":$HOME/go/bin:"*) ;;
+      *) PATH="$HOME/go/bin:$PATH" ;;
+    esac
+  fi
+fi
+
 export PATH

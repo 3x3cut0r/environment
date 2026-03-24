@@ -594,6 +594,144 @@ install_packages() {
     printf '\n'
 }
 
+install_go_official() {
+    if [ "${SKIP_PACKAGES:-no}" = "yes" ]; then
+        log_message WARN "Skipping Go installation."
+        printf '\n'
+        return 0
+    fi
+
+    if ! command -v curl >/dev/null 2>&1; then
+        log_message WARN "curl not found. Skipping Go installation from go.dev."
+        printf '\n'
+        return 0
+    fi
+
+    if ! command -v tar >/dev/null 2>&1; then
+        log_message WARN "tar not found. Skipping Go installation from go.dev."
+        printf '\n'
+        return 0
+    fi
+
+    local go_os=""
+    case "$OS_KERNEL" in
+        Linux)
+            go_os="linux"
+            ;;
+        Darwin)
+            go_os="darwin"
+            ;;
+        *)
+            log_message WARN "Unsupported OS for official Go archive installation: $OS_KERNEL"
+            printf '\n'
+            return 0
+            ;;
+    esac
+
+    local go_arch=""
+    case "$OS_ARCH" in
+        x86_64|amd64)
+            go_arch="amd64"
+            ;;
+        aarch64|arm64)
+            go_arch="arm64"
+            ;;
+        *)
+            log_message WARN "Unsupported architecture for official Go archive installation: $OS_ARCH"
+            printf '\n'
+            return 0
+            ;;
+    esac
+
+    local version_payload=""
+    if ! version_payload=$(curl -fsSL "https://go.dev/VERSION?m=text" 2>/dev/null); then
+        log_message WARN "Unable to fetch latest stable Go version. Skipping Go installation."
+        printf '\n'
+        return 0
+    fi
+
+    local go_version=""
+    go_version=$(printf '%s\n' "$version_payload" | awk 'NR==1 {print $1}')
+    if [[ ! "$go_version" =~ ^go[0-9] ]]; then
+        log_message WARN "Received invalid Go version string: $go_version"
+        printf '\n'
+        return 0
+    fi
+
+    local current_go_version=""
+    if command -v go >/dev/null 2>&1; then
+        current_go_version=$(go version 2>/dev/null | awk '{print $3}')
+        if [ "$current_go_version" = "$go_version" ]; then
+            log_message INFO "Go $go_version already installed."
+            printf '\n'
+            return 0
+        fi
+    fi
+
+    local archive_name="${go_version}.${go_os}-${go_arch}.tar.gz"
+    local download_url="https://go.dev/dl/${archive_name}"
+    local temp_archive=""
+    temp_archive=$(mktemp "${TMPDIR:-/tmp}/go-archive-XXXXXX.tar.gz") || {
+        log_message WARN "Unable to create temporary file for Go archive."
+        printf '\n'
+        return 0
+    }
+
+    log_message INFO "Downloading Go archive: $archive_name"
+    if ! curl -fsSL -o "$temp_archive" "$download_url" >/dev/null 2>&1; then
+        log_message WARN "Failed to download Go archive from $download_url"
+        rm -f "$temp_archive"
+        printf '\n'
+        return 0
+    fi
+
+    local install_dir="/usr/local/go"
+    local install_failed=0
+
+    if [ "${EUID:-$(id -u)}" -ne 0 ]; then
+        if ! command -v sudo >/dev/null 2>&1; then
+            log_message WARN "Cannot install Go to $install_dir: elevated privileges required but sudo not available."
+            rm -f "$temp_archive"
+            printf '\n'
+            return 0
+        fi
+
+        if ! sudo rm -rf "$install_dir" >/dev/null 2>&1; then
+            install_failed=1
+        elif ! sudo tar -C /usr/local -xzf "$temp_archive" >/dev/null 2>&1; then
+            install_failed=1
+        fi
+    else
+        if ! rm -rf "$install_dir" >/dev/null 2>&1; then
+            install_failed=1
+        elif ! tar -C /usr/local -xzf "$temp_archive" >/dev/null 2>&1; then
+            install_failed=1
+        fi
+    fi
+
+    rm -f "$temp_archive"
+
+    if [ $install_failed -eq 1 ]; then
+        log_message WARN "Failed to install Go archive into /usr/local/go"
+        printf '\n'
+        return 0
+    fi
+
+    if [ -x "/usr/local/go/bin/go" ]; then
+        local installed_version=""
+        installed_version=$(/usr/local/go/bin/go version 2>/dev/null | awk '{print $3}')
+        if [ "$installed_version" = "$go_version" ]; then
+            log_message INFO "Installed Go $go_version from go.dev"
+        else
+            log_message WARN "Go installed, but detected version is '$installed_version' (expected '$go_version')."
+        fi
+    else
+        log_message WARN "Go installation finished, but /usr/local/go/bin/go was not found."
+    fi
+
+    printf '\n'
+}
+
 install_nerd_font() {
     if [ "${SKIP_NERD_FONT:-no}" = "yes" ]; then
         log_message WARN "Skipping Nerd Font installation."
@@ -1445,6 +1583,7 @@ main() {
         printf '\n'
     fi
     install_packages
+    install_go_official
     install_nerd_font
     install_starship
     install_tmux_plugin_manager

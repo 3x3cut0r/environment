@@ -94,6 +94,8 @@ cd environment
   `lazygit "curl -fsSL https://lazysvn.sawirstudio.com/install.sh | bash -s -- --yes"`.
   In that case, package names are still attempted first and the quoted `curl ... | sh|bash ...` command runs afterwards.
 - Entries after the marker are installed via `python3 -m pip install`.
+- Go is installed separately from the official `go.dev` release archive (latest stable, dynamic version lookup), not from the system package manager.
+- When Go is installed in `/usr/local/go`, the setup also adds `/usr/local/go/bin` and (if present) `$HOME/go/bin` to `PATH`.
 
 After a successful run, the script also tries to install the user-local wrapper command `environment` at `~/.local/bin/environment`.
 The wrapper always downloads and runs the latest `setup.sh` from GitHub.

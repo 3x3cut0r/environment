@@ -11,6 +11,7 @@ vim.keymap.set("n", "<leader>bp", "<cmd>BufferLineCyclePrev<cr>", { desc = "Prev
 vim.keymap.set("n", "<leader>bd", "<cmd>bdelete<cr>", { desc = "Close tab" })
 vim.keymap.set("n", "<S-l>", "<cmd>BufferLineCycleNext<cr>", { desc = "Next tab" })
 vim.keymap.set("n", "<S-h>", "<cmd>BufferLineCyclePrev<cr>", { desc = "Previous tab" })
+vim.keymap.set("n", "<leader>w", "<cmd>bdelete<cr>", { desc = "Close tab" })
 vim.keymap.set("n", "<leader>q", "<cmd>q<cr>", { desc = "Quit window/tab" })
 vim.keymap.set("n", "<leader>gg", function()
   Snacks.lazygit()

@@ -1590,8 +1590,8 @@ main() {
     install_vim_plugin_manager
     install_catppuccin_vim
     install_catppuccin_neovim
-    configure_environment
     install_catppuccin_bat
+    configure_environment
     configure_terminals
 }
 

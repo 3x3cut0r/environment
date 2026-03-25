@@ -24,6 +24,8 @@ set mouse=a             "Enable Mouse support in all modes.
 
 syntax enable           "Enable syntax highlighting
 
+inoremap jj <Esc>       "Leave insert mode by pressing jj.
+
 if has('termguicolors')
     set termguicolors   "Enable true color support when available.
 endif

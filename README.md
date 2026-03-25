@@ -30,6 +30,8 @@ This repository provides a setup script that performs fundamental shell customiz
 │   │   ├── bat/                     # bat configuration and themes
 │   │   │   ├── config               # bat defaults (Catppuccin Mocha)
 │   │   │   └── themes/              # Theme directory (updated from upstream during setup)
+│   │   ├── eza/                     # eza color theme configuration
+│   │   │   └── theme.yml            # Catppuccin Mocha theme (mauve accent)
 │   │   ├── hypr/                    # Hyprland configuration snippets
 │   │   │   └── autostart.conf       # Hyprland autostart entries
 │   │   ├── nvim/                    # Neovim configuration directory for themed setup

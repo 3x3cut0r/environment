@@ -5,6 +5,7 @@
 This repository provides a setup script that performs fundamental shell customizations and merges curated configuration snippets into an existing workstation.
 
 - `install_packages`: Installs the baseline package set required for the configured tooling.
+- `install_go_official`: Installs or updates Go from the latest official `go.dev` archive.
 - `install_nerd_font`: Downloads and installs the Nerd Font variant used across prompts and editors.
 - `install_starship`: Sets up the Starship prompt with the repository's theme defaults.
 - `install_tmux_plugin_manager`: Fetches and configures the tmux plugin manager (TPM) for plugin handling.
@@ -12,7 +13,9 @@ This repository provides a setup script that performs fundamental shell customiz
 - `install_catppuccin_vim`: Applies the Catppuccin color scheme to the Vim configuration.
 - `install_catppuccin_neovim`: Mirrors the Catppuccin theme setup for Neovim.
 - `install_catppuccin_bat`: Downloads the latest Catppuccin Mocha bat theme, sets it as default, and rebuilds bat cache.
+- `install_environment_wrapper`: Installs the `environment` wrapper command at `~/.local/bin/environment`.
 - `configure_environment`: Applies the curated dotfile snippets, Starship theme settings, and environment variables.
+- `configure_terminals`: Optionally configures GNOME Terminal to use JetBrainsMono Nerd Font.
 
 ## Repository overview
 
@@ -36,13 +39,16 @@ This repository provides a setup script that performs fundamental shell customiz
 │   │   │   ├── opencode.jsonc.ask   # Ask profile configuration
 │   │   │   └── opencode.jsonc.proxmox # Proxmox profile configuration
 │   │   ├── starship.toml            # Starship prompt theme configuration
-│   │   └── tmux/                    # tmux configuration and helper scripts
+│   │   ├── tmux/                    # tmux configuration and helper scripts
 │   │       ├── tmux.conf            # tmux configuration with TPM setup
 │   │       └── tmux.example.sh      # Example tmux session bootstrap script
+│   │   └── vscode/                  # VS Code helper assets
+│   │       └── extensions.list      # Extension IDs for bulk installation
 │   ├── .exrc                        # Ex/Vi editor configuration
 │   ├── .local/                      # User-local binaries managed by setup
 │   │   └── bin/
-│   │       └── environment          # Wrapper command to run latest setup from GitHub
+│   │       ├── environment          # Wrapper command to run latest setup from GitHub
+│   │       └── install-vscode-extensions # Installs VS Code extensions from list
 │   ├── .profile.append              # POSIX shell profile additions
 │   ├── .vimrc                       # Vim configuration with Catppuccin theme support
 │   ├── .zsh_history.touch           # Create ~/.zsh_history if missing
@@ -87,7 +93,7 @@ cd environment
 ./setup.sh --help
 ```
 
-`packages.list` is split by the marker `# <<< Add Python packages below`:
+`packages.list` is split by the marker `# <<< Add python packages below`:
 
 - Entries before the marker are installed as system packages via the detected package manager.
 - Entries before the marker can also contain a quoted installer command, for example:
@@ -103,6 +109,18 @@ The wrapper always downloads and runs the latest `setup.sh` from GitHub.
 ```bash
 environment --reconfigure --yes
 ```
+
+## Configuration
+
+The setup supports these environment variables:
+
+- `ENVIRONMENT_AUTO_CONFIRM=yes`: Enables non-interactive mode (same behavior as `--yes`).
+- `ENVIRONMENT_WRAPPER_PATH=/custom/path/environment`: Overrides wrapper install location.
+- `BAT_CONFIG_DIR=/custom/path/bat`: Overrides where bat config/themes are written.
+
+## Notes
+
+- Current script behavior: `install_catppuccin_neovim` checks for `home/.config/nvim/init.vim`, while this repository currently provides `home/.config/nvim/init.lua`. This can cause the Neovim Catppuccin install step to be skipped.
 
 ```bash
 Environment bootstrap script
@@ -124,6 +142,18 @@ Options:
   -scv, --skip-catppuccin-vim
                             Skip Catppuccin installation for Vim
   -scn, --skip-catppuccin-nvim,
-        --skip-catppuccin-neovim
-                            Skip Catppuccin installation for Neovim
+         --skip-catppuccin-neovim
+                             Skip Catppuccin installation for Neovim
 ```
+
+## Tests
+
+There are currently no automated tests in this repository.
+
+## Contributing
+
+Issues and pull requests are welcome.
+
+## License
+
+This project is licensed under the MIT License. See `LICENSE` for details.

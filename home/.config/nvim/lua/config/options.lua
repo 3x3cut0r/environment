@@ -3,7 +3,7 @@
 -- Add any additional options here
 vim.opt.encoding = "utf-8"
 vim.opt.number = true
-vim.opt.relativenumber = false
+vim.opt.relativenumber = true
 vim.opt.expandtab = true
 vim.opt.smarttab = true
 vim.opt.tabstop = 4

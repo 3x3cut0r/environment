@@ -6,7 +6,7 @@ endif
 
 set encoding=utf-8      "Use UTF-8 encoding that supports unicode.
 set number              "Show line numbers on the sidebar.
-set norelativenumber    "Show line number on the current line and disable (no) relative numbers on all other lines.
+set relativenumber      "Show relative line numbers on all non-current lines.
 set expandtab           "Convert tabs to spaces.
 set smarttab            "Insert 'tabstop' number of spaces when the 'tab' key is pressed.
 set tabstop=4           "Indent using four spaces.

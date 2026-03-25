@@ -13,6 +13,7 @@ SKIP_CATPPUCCIN_GEDIT="no"
 SKIP_CATPPUCCIN_GNOME_TEXT_EDITOR="no"
 SKIP_CATPPUCCIN_TERMINAL_APP="no"
 SKIP_CATPPUCCIN_XFCE4_TERMINAL="no"
+SKIP_CATPPUCCIN_HYPRLAND="no"
 RECONFIGURE_MODE="no"
 WRAPPER_NAME="environment"
 WRAPPER_INSTALL_PATH="${HOME}/.local/bin/${WRAPPER_NAME}"
@@ -44,6 +45,7 @@ parse_args() {
                 SKIP_CATPPUCCIN_GNOME_TEXT_EDITOR="yes"
                 SKIP_CATPPUCCIN_TERMINAL_APP="yes"
                 SKIP_CATPPUCCIN_XFCE4_TERMINAL="yes"
+                SKIP_CATPPUCCIN_HYPRLAND="yes"
                 shift
                 ;;
             --skip-packages|-sp)
@@ -73,6 +75,7 @@ parse_args() {
                 SKIP_CATPPUCCIN_GNOME_TEXT_EDITOR="yes"
                 SKIP_CATPPUCCIN_TERMINAL_APP="yes"
                 SKIP_CATPPUCCIN_XFCE4_TERMINAL="yes"
+                SKIP_CATPPUCCIN_HYPRLAND="yes"
                 shift
                 ;;
             --skip-catppuccin-vim|-scv)
@@ -97,6 +100,10 @@ parse_args() {
                 ;;
             --skip-catppuccin-xfce4-terminal|-scx)
                 SKIP_CATPPUCCIN_XFCE4_TERMINAL="yes"
+                shift
+                ;;
+            --skip-catppuccin-hyprland|-sch)
+                SKIP_CATPPUCCIN_HYPRLAND="yes"
                 shift
                 ;;
             --)
@@ -131,7 +138,7 @@ Options:
   -ss,  --skip-starship     Skip Starship installation
   -st,  --skip-tpm          Skip tmux plugin manager installation
   -sv,  --skip-vim-plug     Skip vim plugin manager installation
-  -sc,  --skip-catppuccin   Skip Catppuccin installations for Vim, Neovim, Gedit, GNOME Text Editor, Terminal.app, and Xfce4 Terminal
+  -sc,  --skip-catppuccin   Skip Catppuccin installations for Vim, Neovim, Gedit, GNOME Text Editor, Terminal.app, Xfce4 Terminal, and Hyprland
   -scv, --skip-catppuccin-vim
                              Skip Catppuccin installation for Vim
   -scn, --skip-catppuccin-nvim,
@@ -145,6 +152,8 @@ Options:
                              Skip Catppuccin installation for Terminal.app (macOS)
   -scx, --skip-catppuccin-xfce4-terminal
                              Skip Catppuccin installation for Xfce4 Terminal
+  -sch, --skip-catppuccin-hyprland
+                             Skip Catppuccin installation for Hyprland
 USAGE
         exit 0
     fi
@@ -1611,6 +1620,76 @@ install_catppuccin_xfce4_terminal() {
     printf '\n'
 }
 
+install_catppuccin_hyprland() {
+    if [ "${SKIP_CATPPUCCIN_HYPRLAND:-no}" = "yes" ]; then
+        log_message WARN "Skipping Catppuccin installation for Hyprland."
+        printf '\n'
+        return 0
+    fi
+
+    local target_home="$HOME"
+    if [ -z "$target_home" ] && command -v getent >/dev/null 2>&1 && [ -n "$CURRENT_USER" ]; then
+        target_home=$(getent passwd "$CURRENT_USER" | cut -d: -f6)
+    fi
+
+    if [ -z "$target_home" ] || [ ! -d "$target_home" ]; then
+        log_message WARN "Unable to determine a valid home directory for Hyprland theme installation."
+        printf '\n'
+        return 0
+    fi
+
+    local hypr_config_dir="$target_home/.config/hypr"
+    local hypr_main_config="$hypr_config_dir/hyprland.conf"
+
+    if ! command -v hyprland >/dev/null 2>&1 && [ ! -f "$hypr_main_config" ]; then
+        log_message INFO "Hyprland not detected (binary and config missing). Skipping Catppuccin Hyprland theme installation."
+        printf '\n'
+        return 0
+    fi
+
+    local theme_name="mocha.conf"
+    local theme_url="https://raw.githubusercontent.com/catppuccin/hyprland/main/themes/${theme_name}"
+    local theme_file="$hypr_config_dir/$theme_name"
+    local source_line="source = ~/.config/hypr/mocha.conf"
+
+    mkdir -p "$hypr_config_dir"
+
+    if command -v curl >/dev/null 2>&1; then
+        if curl -fsSL "$theme_url" -o "$theme_file"; then
+            log_message INFO "Installed latest Catppuccin Hyprland Mocha theme to $theme_file."
+        else
+            log_message WARN "Failed to download Catppuccin Hyprland theme from upstream."
+            printf '\n'
+            return 0
+        fi
+    elif command -v wget >/dev/null 2>&1; then
+        if wget -q -O "$theme_file" "$theme_url"; then
+            log_message INFO "Installed latest Catppuccin Hyprland Mocha theme to $theme_file."
+        else
+            log_message WARN "Failed to download Catppuccin Hyprland theme from upstream."
+            printf '\n'
+            return 0
+        fi
+    else
+        log_message WARN "Neither curl nor wget is available. Cannot download Hyprland theme."
+        printf '\n'
+        return 0
+    fi
+
+    if [ -f "$hypr_main_config" ]; then
+        if grep -Eq '^[[:space:]]*source[[:space:]]*=[[:space:]]*~/.config/hypr/mocha\.conf([[:space:]]*#.*)?$' "$hypr_main_config"; then
+            log_message INFO "Hyprland config already sources Catppuccin mocha.conf."
+        else
+            printf '\n%s\n' "$source_line" >>"$hypr_main_config"
+            log_message INFO "Added Catppuccin source line to $hypr_main_config."
+        fi
+    else
+        log_message WARN "Hyprland config file not found at $hypr_main_config. Add '$source_line' manually once you create it."
+    fi
+
+    printf '\n'
+}
+
 install_environment_wrapper() {
     local wrapper_path="${ENVIRONMENT_WRAPPER_PATH:-$WRAPPER_INSTALL_PATH}"
     local wrapper_source="${REPOSITORY_DIR:-}/home/.local/bin/${WRAPPER_NAME}"
@@ -1916,6 +1995,7 @@ main() {
     install_catppuccin_gnome_text_editor
     install_catppuccin_terminal_app
     install_catppuccin_xfce4_terminal
+    install_catppuccin_hyprland
     configure_environment
     configure_terminals
 }

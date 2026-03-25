@@ -1397,7 +1397,7 @@ configure_environment() {
         local start_marker="$comment_prefix >>> environment ~/$marker_identifier >>>"
         local end_marker="$comment_prefix <<< environment ~/$marker_identifier <<<"
 
-        if [ "$target_relative" = ".local/bin/$WRAPPER_NAME" ]; then
+        if [[ "$target_relative" == .local/bin/* ]]; then
             if install -m 755 "$processed_file" "$target_path"; then
                 log_message INFO "Configured $target_relative"
             else

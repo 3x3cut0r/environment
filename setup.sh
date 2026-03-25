@@ -12,6 +12,7 @@ SKIP_CATPPUCCIN_NEOVIM="no"
 SKIP_CATPPUCCIN_GEDIT="no"
 SKIP_CATPPUCCIN_GNOME_TEXT_EDITOR="no"
 SKIP_CATPPUCCIN_TERMINAL_APP="no"
+SKIP_CATPPUCCIN_XFCE4_TERMINAL="no"
 RECONFIGURE_MODE="no"
 WRAPPER_NAME="environment"
 WRAPPER_INSTALL_PATH="${HOME}/.local/bin/${WRAPPER_NAME}"
@@ -42,6 +43,7 @@ parse_args() {
                 SKIP_CATPPUCCIN_GEDIT="yes"
                 SKIP_CATPPUCCIN_GNOME_TEXT_EDITOR="yes"
                 SKIP_CATPPUCCIN_TERMINAL_APP="yes"
+                SKIP_CATPPUCCIN_XFCE4_TERMINAL="yes"
                 shift
                 ;;
             --skip-packages|-sp)
@@ -70,6 +72,7 @@ parse_args() {
                 SKIP_CATPPUCCIN_GEDIT="yes"
                 SKIP_CATPPUCCIN_GNOME_TEXT_EDITOR="yes"
                 SKIP_CATPPUCCIN_TERMINAL_APP="yes"
+                SKIP_CATPPUCCIN_XFCE4_TERMINAL="yes"
                 shift
                 ;;
             --skip-catppuccin-vim|-scv)
@@ -90,6 +93,10 @@ parse_args() {
                 ;;
             --skip-catppuccin-terminal-app|-scta)
                 SKIP_CATPPUCCIN_TERMINAL_APP="yes"
+                shift
+                ;;
+            --skip-catppuccin-xfce4-terminal|-scx)
+                SKIP_CATPPUCCIN_XFCE4_TERMINAL="yes"
                 shift
                 ;;
             --)
@@ -124,7 +131,7 @@ Options:
   -ss,  --skip-starship     Skip Starship installation
   -st,  --skip-tpm          Skip tmux plugin manager installation
   -sv,  --skip-vim-plug     Skip vim plugin manager installation
-  -sc,  --skip-catppuccin   Skip Catppuccin installations for Vim, Neovim, Gedit, GNOME Text Editor, and Terminal.app
+  -sc,  --skip-catppuccin   Skip Catppuccin installations for Vim, Neovim, Gedit, GNOME Text Editor, Terminal.app, and Xfce4 Terminal
   -scv, --skip-catppuccin-vim
                              Skip Catppuccin installation for Vim
   -scn, --skip-catppuccin-nvim,
@@ -136,6 +143,8 @@ Options:
                              Skip Catppuccin installation for GNOME Text Editor
   -scta, --skip-catppuccin-terminal-app
                              Skip Catppuccin installation for Terminal.app (macOS)
+  -scx, --skip-catppuccin-xfce4-terminal
+                             Skip Catppuccin installation for Xfce4 Terminal
 USAGE
         exit 0
     fi
@@ -1552,6 +1561,56 @@ OSA
     printf '\n'
 }
 
+install_catppuccin_xfce4_terminal() {
+    if [ "${SKIP_CATPPUCCIN_XFCE4_TERMINAL:-no}" = "yes" ]; then
+        log_message WARN "Skipping Catppuccin installation for Xfce4 Terminal."
+        printf '\n'
+        return 0
+    fi
+
+    if ! command -v xfce4-terminal >/dev/null 2>&1; then
+        log_message INFO "xfce4-terminal not found. Skipping Catppuccin Xfce4 Terminal theme installation."
+        printf '\n'
+        return 0
+    fi
+
+    local target_home="$HOME"
+    if [ -z "$target_home" ] && command -v getent >/dev/null 2>&1 && [ -n "$CURRENT_USER" ]; then
+        target_home=$(getent passwd "$CURRENT_USER" | cut -d: -f6)
+    fi
+
+    if [ -z "$target_home" ] || [ ! -d "$target_home" ]; then
+        log_message WARN "Unable to determine a valid home directory for Xfce4 Terminal theme installation."
+        printf '\n'
+        return 0
+    fi
+
+    local theme_name="catppuccin-mocha.theme"
+    local theme_url="https://raw.githubusercontent.com/catppuccin/xfce4-terminal/main/themes/${theme_name}"
+    local theme_dir="$target_home/.local/share/xfce4/terminal/colorschemes"
+    local theme_file="$theme_dir/$theme_name"
+
+    mkdir -p "$theme_dir"
+
+    if command -v curl >/dev/null 2>&1; then
+        if curl -fsSL "$theme_url" -o "$theme_file"; then
+            log_message INFO "Installed latest Catppuccin Xfce4 Terminal Mocha theme to $theme_file."
+        else
+            log_message WARN "Failed to download Catppuccin Xfce4 Terminal theme from upstream."
+        fi
+    elif command -v wget >/dev/null 2>&1; then
+        if wget -q -O "$theme_file" "$theme_url"; then
+            log_message INFO "Installed latest Catppuccin Xfce4 Terminal Mocha theme to $theme_file."
+        else
+            log_message WARN "Failed to download Catppuccin Xfce4 Terminal theme from upstream."
+        fi
+    else
+        log_message WARN "Neither curl nor wget is available. Cannot download Xfce4 Terminal theme."
+    fi
+
+    printf '\n'
+}
+
 install_environment_wrapper() {
     local wrapper_path="${ENVIRONMENT_WRAPPER_PATH:-$WRAPPER_INSTALL_PATH}"
     local wrapper_source="${REPOSITORY_DIR:-}/home/.local/bin/${WRAPPER_NAME}"
@@ -1856,6 +1915,7 @@ main() {
     install_catppuccin_gedit
     install_catppuccin_gnome_text_editor
     install_catppuccin_terminal_app
+    install_catppuccin_xfce4_terminal
     configure_environment
     configure_terminals
 }

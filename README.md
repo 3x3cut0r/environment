@@ -16,6 +16,7 @@ This repository provides a setup script that performs fundamental shell customiz
 - `install_catppuccin_gedit`: Updates Catppuccin Mocha for Gedit from upstream and installs it with a bundled fallback.
 - `install_catppuccin_gnome_text_editor`: Updates Catppuccin Mocha for GNOME Text Editor from upstream and installs it with a bundled fallback.
 - `install_catppuccin_terminal_app`: Updates Catppuccin Mocha for Terminal.app on macOS and applies it as the default profile.
+- `install_catppuccin_xfce4_terminal`: Checks for `xfce4-terminal` and installs the latest Catppuccin Mocha colorscheme from upstream.
 - `install_environment_wrapper`: Installs the `environment` wrapper command at `~/.local/bin/environment`.
 - `configure_environment`: Applies the curated dotfile snippets, Starship theme settings, and environment variables.
 - `configure_terminals`: Optionally configures GNOME Terminal to use JetBrainsMono Nerd Font.
@@ -150,7 +151,7 @@ Options:
   -ss,  --skip-starship     Skip Starship installation
   -st,  --skip-tpm          Skip tmux plugin manager installation
   -sv,  --skip-vim-plug     Skip vim plugin manager installation
-  -sc,  --skip-catppuccin   Skip Catppuccin installations for Vim, Neovim, Gedit, GNOME Text Editor, and Terminal.app
+  -sc,  --skip-catppuccin   Skip Catppuccin installations for Vim, Neovim, Gedit, GNOME Text Editor, Terminal.app, and Xfce4 Terminal
   -scv, --skip-catppuccin-vim
                              Skip Catppuccin installation for Vim
   -scn, --skip-catppuccin-nvim,
@@ -162,6 +163,8 @@ Options:
                              Skip Catppuccin installation for GNOME Text Editor
   -scta, --skip-catppuccin-terminal-app
                              Skip Catppuccin installation for Terminal.app (macOS)
+  -scx, --skip-catppuccin-xfce4-terminal
+                             Skip Catppuccin installation for Xfce4 Terminal
 ```
 
 ## Tests

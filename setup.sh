@@ -9,6 +9,7 @@ SKIP_TMUX_PLUGIN_MANAGER="no"
 SKIP_VIM_PLUGIN_MANAGER="no"
 SKIP_CATPPUCCIN_VIM="no"
 SKIP_CATPPUCCIN_NEOVIM="no"
+SKIP_CATPPUCCIN_GEDIT="no"
 RECONFIGURE_MODE="no"
 WRAPPER_NAME="environment"
 WRAPPER_INSTALL_PATH="${HOME}/.local/bin/${WRAPPER_NAME}"
@@ -36,6 +37,7 @@ parse_args() {
                 SKIP_VIM_PLUGIN_MANAGER="yes"
                 SKIP_CATPPUCCIN_VIM="yes"
                 SKIP_CATPPUCCIN_NEOVIM="yes"
+                SKIP_CATPPUCCIN_GEDIT="yes"
                 shift
                 ;;
             --skip-packages|-sp)
@@ -61,6 +63,7 @@ parse_args() {
             --skip-catppuccin|-sc)
                 SKIP_CATPPUCCIN_VIM="yes"
                 SKIP_CATPPUCCIN_NEOVIM="yes"
+                SKIP_CATPPUCCIN_GEDIT="yes"
                 shift
                 ;;
             --skip-catppuccin-vim|-scv)
@@ -69,6 +72,10 @@ parse_args() {
                 ;;
             --skip-catppuccin-nvim|--skip-catppuccin-neovim|-scn)
                 SKIP_CATPPUCCIN_NEOVIM="yes"
+                shift
+                ;;
+            --skip-catppuccin-gedit|-scg)
+                SKIP_CATPPUCCIN_GEDIT="yes"
                 shift
                 ;;
             --)
@@ -103,12 +110,14 @@ Options:
   -ss,  --skip-starship     Skip Starship installation
   -st,  --skip-tpm          Skip tmux plugin manager installation
   -sv,  --skip-vim-plug     Skip vim plugin manager installation
-  -sc,  --skip-catppuccin   Skip Catppuccin installations for Vim and Neovim
+  -sc,  --skip-catppuccin   Skip Catppuccin installations for Vim, Neovim, and Gedit
   -scv, --skip-catppuccin-vim
-                            Skip Catppuccin installation for Vim
+                             Skip Catppuccin installation for Vim
   -scn, --skip-catppuccin-nvim,
-        --skip-catppuccin-neovim 
-                            Skip Catppuccin installation for Neovim
+         --skip-catppuccin-neovim 
+                             Skip Catppuccin installation for Neovim
+  -scg, --skip-catppuccin-gedit
+                             Skip Catppuccin installation for Gedit
 USAGE
         exit 0
     fi
@@ -1290,6 +1299,86 @@ install_catppuccin_bat() {
     printf '\n'
 }
 
+install_catppuccin_gedit() {
+    if [ "${SKIP_CATPPUCCIN_GEDIT:-no}" = "yes" ]; then
+        log_message WARN "Skipping Catppuccin installation for Gedit."
+        printf '\n'
+        return 0
+    fi
+
+    local target_home="$HOME"
+    if [ -z "$target_home" ] && command -v getent >/dev/null 2>&1 && [ -n "$CURRENT_USER" ]; then
+        target_home=$(getent passwd "$CURRENT_USER" | cut -d: -f6)
+    fi
+
+    if [ -z "$target_home" ] || [ ! -d "$target_home" ]; then
+        log_message WARN "Unable to determine a valid home directory for Gedit theme installation."
+        printf '\n'
+        return 0
+    fi
+
+    local theme_name="catppuccin-mocha.xml"
+    local theme_id="catppuccin-mocha"
+    local theme_url="https://raw.githubusercontent.com/catppuccin/gedit/main/themes/${theme_name}"
+    local repo_theme_file="${REPOSITORY_DIR:-.}/home/.local/share/libgedit-gtksourceview-300/styles/${theme_name}"
+    local modern_styles_dir="$target_home/.local/share/libgedit-gtksourceview-300/styles"
+    local legacy_styles_dir="$target_home/.local/share/gedit/styles"
+    local temp_theme_file=""
+    local fetched_from_upstream=0
+
+    temp_theme_file=$(mktemp)
+
+    if command -v curl >/dev/null 2>&1; then
+        if curl -fsSL "$theme_url" -o "$temp_theme_file"; then
+            fetched_from_upstream=1
+            log_message INFO "Downloaded latest Catppuccin Gedit Mocha theme from upstream."
+        fi
+    elif command -v wget >/dev/null 2>&1; then
+        if wget -q -O "$temp_theme_file" "$theme_url"; then
+            fetched_from_upstream=1
+            log_message INFO "Downloaded latest Catppuccin Gedit Mocha theme from upstream."
+        fi
+    fi
+
+    if [ $fetched_from_upstream -eq 0 ]; then
+        if [ -f "$repo_theme_file" ]; then
+            cp "$repo_theme_file" "$temp_theme_file"
+            log_message WARN "Failed to update Gedit theme from upstream. Using bundled repository copy."
+        else
+            log_message WARN "Unable to update Gedit theme from upstream and bundled repository copy is missing."
+            rm -f "$temp_theme_file"
+            printf '\n'
+            return 0
+        fi
+    fi
+
+    mkdir -p "$modern_styles_dir" "$legacy_styles_dir"
+
+    if install -m 644 "$temp_theme_file" "$modern_styles_dir/$theme_name"; then
+        log_message INFO "Installed Catppuccin Gedit theme to $modern_styles_dir."
+    else
+        log_message WARN "Failed to install Catppuccin Gedit theme to $modern_styles_dir."
+    fi
+
+    if install -m 644 "$temp_theme_file" "$legacy_styles_dir/$theme_name"; then
+        log_message INFO "Installed Catppuccin Gedit theme to $legacy_styles_dir."
+    else
+        log_message WARN "Failed to install Catppuccin Gedit theme to $legacy_styles_dir."
+    fi
+
+    rm -f "$temp_theme_file"
+
+    if command -v gsettings >/dev/null 2>&1; then
+        if gsettings set org.gnome.gedit.preferences.editor scheme "$theme_id" >/dev/null 2>&1; then
+            log_message INFO "Set active Gedit color scheme to Catppuccin Mocha."
+        else
+            log_message WARN "Could not set active Gedit color scheme automatically."
+        fi
+    fi
+
+    printf '\n'
+}
+
 install_environment_wrapper() {
     local wrapper_path="${ENVIRONMENT_WRAPPER_PATH:-$WRAPPER_INSTALL_PATH}"
     local wrapper_source="${REPOSITORY_DIR:-}/home/.local/bin/${WRAPPER_NAME}"
@@ -1591,6 +1680,7 @@ main() {
     install_catppuccin_vim
     install_catppuccin_neovim
     install_catppuccin_bat
+    install_catppuccin_gedit
     configure_environment
     configure_terminals
 }

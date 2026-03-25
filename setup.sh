@@ -11,6 +11,7 @@ SKIP_CATPPUCCIN_VIM="no"
 SKIP_CATPPUCCIN_NEOVIM="no"
 SKIP_CATPPUCCIN_GEDIT="no"
 SKIP_CATPPUCCIN_GNOME_TEXT_EDITOR="no"
+SKIP_CATPPUCCIN_TERMINAL_APP="no"
 RECONFIGURE_MODE="no"
 WRAPPER_NAME="environment"
 WRAPPER_INSTALL_PATH="${HOME}/.local/bin/${WRAPPER_NAME}"
@@ -40,6 +41,7 @@ parse_args() {
                 SKIP_CATPPUCCIN_NEOVIM="yes"
                 SKIP_CATPPUCCIN_GEDIT="yes"
                 SKIP_CATPPUCCIN_GNOME_TEXT_EDITOR="yes"
+                SKIP_CATPPUCCIN_TERMINAL_APP="yes"
                 shift
                 ;;
             --skip-packages|-sp)
@@ -67,6 +69,7 @@ parse_args() {
                 SKIP_CATPPUCCIN_NEOVIM="yes"
                 SKIP_CATPPUCCIN_GEDIT="yes"
                 SKIP_CATPPUCCIN_GNOME_TEXT_EDITOR="yes"
+                SKIP_CATPPUCCIN_TERMINAL_APP="yes"
                 shift
                 ;;
             --skip-catppuccin-vim|-scv)
@@ -83,6 +86,10 @@ parse_args() {
                 ;;
             --skip-catppuccin-gnome-text-editor|-scgte)
                 SKIP_CATPPUCCIN_GNOME_TEXT_EDITOR="yes"
+                shift
+                ;;
+            --skip-catppuccin-terminal-app|-scta)
+                SKIP_CATPPUCCIN_TERMINAL_APP="yes"
                 shift
                 ;;
             --)
@@ -117,7 +124,7 @@ Options:
   -ss,  --skip-starship     Skip Starship installation
   -st,  --skip-tpm          Skip tmux plugin manager installation
   -sv,  --skip-vim-plug     Skip vim plugin manager installation
-  -sc,  --skip-catppuccin   Skip Catppuccin installations for Vim, Neovim, Gedit, and GNOME Text Editor
+  -sc,  --skip-catppuccin   Skip Catppuccin installations for Vim, Neovim, Gedit, GNOME Text Editor, and Terminal.app
   -scv, --skip-catppuccin-vim
                              Skip Catppuccin installation for Vim
   -scn, --skip-catppuccin-nvim,
@@ -127,6 +134,8 @@ Options:
                              Skip Catppuccin installation for Gedit
   -scgte, --skip-catppuccin-gnome-text-editor
                              Skip Catppuccin installation for GNOME Text Editor
+  -scta, --skip-catppuccin-terminal-app
+                             Skip Catppuccin installation for Terminal.app (macOS)
 USAGE
         exit 0
     fi
@@ -1461,6 +1470,88 @@ install_catppuccin_gnome_text_editor() {
     printf '\n'
 }
 
+install_catppuccin_terminal_app() {
+    if [ "${SKIP_CATPPUCCIN_TERMINAL_APP:-no}" = "yes" ]; then
+        log_message WARN "Skipping Catppuccin installation for Terminal.app."
+        printf '\n'
+        return 0
+    fi
+
+    if [ "${OS_KERNEL:-}" != "Darwin" ]; then
+        log_message INFO "Terminal.app theme installation is macOS-only. Skipping on ${OS_KERNEL:-unknown}."
+        printf '\n'
+        return 0
+    fi
+
+    local target_home="$HOME"
+    if [ -z "$target_home" ] || [ ! -d "$target_home" ]; then
+        log_message WARN "Unable to determine a valid home directory for Terminal.app theme installation."
+        printf '\n'
+        return 0
+    fi
+
+    local theme_name="catppuccin-mocha.terminal"
+    local theme_profile_name="catppuccin-mocha"
+    local theme_url="https://raw.githubusercontent.com/catppuccin/Terminal.app/main/themes/${theme_name}"
+    local terminal_theme_dir="$target_home/Library/Application Support/Terminal"
+    local target_theme_file="$terminal_theme_dir/$theme_name"
+    local temp_theme_file=""
+    local downloaded=0
+
+    temp_theme_file=$(mktemp)
+
+    if command -v curl >/dev/null 2>&1; then
+        if curl -fsSL "$theme_url" -o "$temp_theme_file"; then
+            downloaded=1
+            log_message INFO "Downloaded latest Catppuccin Terminal.app Mocha theme from upstream."
+        fi
+    elif command -v wget >/dev/null 2>&1; then
+        if wget -q -O "$temp_theme_file" "$theme_url"; then
+            downloaded=1
+            log_message INFO "Downloaded latest Catppuccin Terminal.app Mocha theme from upstream."
+        fi
+    fi
+
+    if [ $downloaded -eq 0 ]; then
+        log_message WARN "Failed to download Catppuccin Terminal.app theme from upstream."
+        rm -f "$temp_theme_file"
+        printf '\n'
+        return 0
+    fi
+
+    mkdir -p "$terminal_theme_dir"
+    if install -m 644 "$temp_theme_file" "$target_theme_file"; then
+        log_message INFO "Installed Terminal.app theme file at $target_theme_file."
+    else
+        log_message WARN "Failed to install Terminal.app theme file at $target_theme_file."
+        rm -f "$temp_theme_file"
+        printf '\n'
+        return 0
+    fi
+
+    if command -v osascript >/dev/null 2>&1; then
+        if osascript <<OSA >/dev/null 2>&1
+set themeFile to POSIX file "$target_theme_file"
+tell application "Terminal"
+    do shell script "open " & quoted form of POSIX path of themeFile
+    delay 0.8
+    set default settings to settings set "$theme_profile_name"
+    set startup settings to settings set "$theme_profile_name"
+end tell
+OSA
+        then
+            log_message INFO "Set Terminal.app default and startup profile to Catppuccin Mocha."
+        else
+            log_message WARN "Could not auto-apply Terminal.app profile. Import '$target_theme_file' manually in Terminal settings."
+        fi
+    else
+        log_message WARN "osascript not found. Import '$target_theme_file' manually in Terminal settings."
+    fi
+
+    rm -f "$temp_theme_file"
+    printf '\n'
+}
+
 install_environment_wrapper() {
     local wrapper_path="${ENVIRONMENT_WRAPPER_PATH:-$WRAPPER_INSTALL_PATH}"
     local wrapper_source="${REPOSITORY_DIR:-}/home/.local/bin/${WRAPPER_NAME}"
@@ -1764,6 +1855,7 @@ main() {
     install_catppuccin_bat
     install_catppuccin_gedit
     install_catppuccin_gnome_text_editor
+    install_catppuccin_terminal_app
     configure_environment
     configure_terminals
 }

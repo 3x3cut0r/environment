@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# Script to install VScode extensions from a list file
+
+EXTENSIONS_FILE="$HOME/.config/vscode/extensions.list"
+
+if ! command -v code &> /dev/null; then
+    echo "[ERROR] VScode not installed or code command not found"
+    exit 1
+fi
+
+if [[ ! -f "$EXTENSIONS_FILE" ]]; then
+    echo "[ERROR] Extensions list not found: $EXTENSIONS_FILE"
+    exit 1
+fi
+
+echo "Installing VS Code extensions from $EXTENSIONS_FILE..."
+while IFS= read -r ext || [[ -n "$ext" ]]; do
+    # Remove leading/trailing whitespace
+    ext=$(echo "$ext" | xargs)
+    # Skip empty lines and comments
+    if [[ -z "$ext" || "$ext" =~ ^# ]]; then
+        continue
+    fi
+    echo "Installing extension: $ext"
+    code --install-extension "$ext" --force
+done < "$EXTENSIONS_FILE"
+
+echo "[INFO] Installing VScode extensions done"

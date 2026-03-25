@@ -14,6 +14,7 @@ This repository provides a setup script that performs fundamental shell customiz
 - `install_catppuccin_neovim`: Mirrors the Catppuccin theme setup for Neovim.
 - `install_catppuccin_bat`: Downloads the latest Catppuccin Mocha bat theme, sets it as default, and rebuilds bat cache.
 - `install_catppuccin_gedit`: Updates Catppuccin Mocha for Gedit from upstream and installs it with a bundled fallback.
+- `install_catppuccin_gnome_text_editor`: Updates Catppuccin Mocha for GNOME Text Editor from upstream and installs it with a bundled fallback.
 - `install_environment_wrapper`: Installs the `environment` wrapper command at `~/.local/bin/environment`.
 - `configure_environment`: Applies the curated dotfile snippets, Starship theme settings, and environment variables.
 - `configure_terminals`: Optionally configures GNOME Terminal to use JetBrainsMono Nerd Font.
@@ -53,6 +54,9 @@ This repository provides a setup script that performs fundamental shell customiz
 │   │   │   ├── environment          # Wrapper command to run latest setup from GitHub
 │   │   │   └── install-vscode-extensions # Installs VS Code extensions from list
 │   │   └── share/
+│   │       ├── gtksourceview-5/
+│   │       │   └── styles/
+│   │       │       └── catppuccin-mocha.xml # Bundled GNOME Text Editor Catppuccin Mocha fallback theme
 │   │       └── libgedit-gtksourceview-300/
 │   │           └── styles/
 │   │               └── catppuccin-mocha.xml # Bundled Gedit Catppuccin Mocha fallback theme
@@ -145,7 +149,7 @@ Options:
   -ss,  --skip-starship     Skip Starship installation
   -st,  --skip-tpm          Skip tmux plugin manager installation
   -sv,  --skip-vim-plug     Skip vim plugin manager installation
-  -sc,  --skip-catppuccin   Skip Catppuccin installations for Vim, Neovim, and Gedit
+  -sc,  --skip-catppuccin   Skip Catppuccin installations for Vim, Neovim, Gedit, and GNOME Text Editor
   -scv, --skip-catppuccin-vim
                              Skip Catppuccin installation for Vim
   -scn, --skip-catppuccin-nvim,
@@ -153,6 +157,8 @@ Options:
                              Skip Catppuccin installation for Neovim
   -scg, --skip-catppuccin-gedit
                              Skip Catppuccin installation for Gedit
+  -scgte, --skip-catppuccin-gnome-text-editor
+                             Skip Catppuccin installation for GNOME Text Editor
 ```
 
 ## Tests

@@ -1,1 +1,8 @@
 esbenp.prettier-vscode  # Prettier
+Gruntfuggly.todo-tree  # TODO/FIXME im Projektbaum anzeigen
+alefragnani.project-manager  # Projekte/Workspaces schnell wechseln
+mhutchie.git-graph  # Git-Branch/Commit-Graph visualisieren
+GitHub.vscode-pull-request-github  # Pull Requests und Issues in VS Code
+opencode-ai.opencode  # OpenCode Assistant in VS Code
+Catppuccin.catppuccin-vsc  # Catppuccin Theme fuer VS Code
+ms-python.python  # Python Support (Linting, Debugging, IntelliSense)

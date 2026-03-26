@@ -110,11 +110,14 @@ cd environment
 `packages.list` is split by the marker `# <<< Add python packages below`:
 
 - Entries before the marker are installed as system packages via the detected package manager.
-- Entries before the marker can also contain a quoted installer command, for example:
-  `lazygit "curl -fsSL https://lazysvn.sawirstudio.com/install.sh | bash -s -- --yes"`.
-  In that case, package names are still attempted first and the quoted `curl ... | sh|bash ...` command runs afterwards.
+- Entries before the marker can also contain one or more quoted commands. Everything inside `"..."` is treated as a shell command.
+  Example lines:
+  `lazydocker "curl -fsSL https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | bash"`
+  `"go install github.com/jesseduffield/lazygit@latest" lazygit`
+  If a line starts with a quoted command, the command runs first and package-manager fallback runs afterwards.
+  Otherwise, package-manager install runs first and quoted commands run afterwards.
 - Entries after the marker are installed via `python3 -m pip install`.
-- Go is installed separately from the official `go.dev` release archive (latest stable, dynamic version lookup), not from the system package manager.
+- Go is installed separately from the official `go.dev` release archive (latest stable, dynamic version lookup), not from the system package manager, before package processing starts.
 - When Go is installed in `/usr/local/go`, the setup also adds `/usr/local/go/bin` and (if present) `$HOME/go/bin` to `PATH`.
 
 After a successful run, the script also tries to install the user-local wrapper command `environment` at `~/.local/bin/environment`.

@@ -528,80 +528,129 @@ install_packages() {
         package_managers_available=0
     fi
 
-    if [ ${#system_packages[@]} -gt 0 ]; then
-        for package_line in "${system_packages[@]}"; do
-            local installer_command=""
-            local package_segment="$package_line"
-            local quoted_segment=""
+    install_package_segment() {
+        local package_segment="$1"
+        local line_installed=0
 
-            if [[ "$package_line" =~ \"([^\"]+)\" ]]; then
-                quoted_segment="${BASH_REMATCH[1]}"
-                if [[ "$quoted_segment" =~ ^curl[[:space:]]+.+\|[[:space:]]*(sh|bash)([[:space:]]+.+)?$ ]]; then
-                    installer_command="$quoted_segment"
-                    package_segment=$(printf '%s\n' "$package_line" | sed -E 's/"[^"]+"//')
-                    package_segment=$(printf '%s\n' "$package_segment" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
-                fi
+        if [ -z "$package_segment" ]; then
+            return 0
+        fi
+
+        IFS=' ' read -r -a packages_in_line <<< "$package_segment"
+
+        if [ ${#packages_in_line[@]} -eq 0 ]; then
+            return 0
+        fi
+
+        if [ $package_managers_available -eq 0 ]; then
+            log_message WARN "No supported package managers available. Skipping package line: ${packages_in_line[*]}"
+            return 0
+        fi
+
+        for package in "${packages_in_line[@]}"; do
+            if command -v "$package" >/dev/null 2>&1; then
+                log_message INFO "Package $package already installed."
+                line_installed=1
+                break
             fi
 
-            local line_installed=0
-            if [ -n "$package_segment" ]; then
-                IFS=' ' read -r -a packages_in_line <<< "$package_segment"
+            local installed_with_manager=0
+            for mapping in "${AVAILABLE_PACKAGE_MANAGERS[@]}"; do
+                manager=${mapping%%:*}
+                install_cmd=${mapping#*:}
 
-                if [ $package_managers_available -eq 0 ]; then
-                    log_message WARN "No supported package managers available. Skipping package line: ${packages_in_line[*]}"
+                IFS=' ' read -r -a install_parts <<< "$install_cmd"
+
+                if manager_requires_privilege "$manager" && [ "${EUID:-$(id -u)}" -ne 0 ]; then
+                    if command -v sudo >/dev/null 2>&1; then
+                        install_parts=("sudo" "${install_parts[@]}")
+                    else
+                        log_message WARN "Cannot install $package using $manager: elevated privileges required but sudo not available."
+                        continue
+                    fi
                 fi
 
-                for package in "${packages_in_line[@]}"; do
-                    if command -v "$package" >/dev/null 2>&1; then
-                        log_message INFO "Package $package already installed."
-                        line_installed=1
-                        break
-                    fi
-
-                    local installed_with_manager=0
-                    for mapping in "${AVAILABLE_PACKAGE_MANAGERS[@]}"; do
-                        manager=${mapping%%:*}
-                        install_cmd=${mapping#*:}
-
-                        IFS=' ' read -r -a install_parts <<< "$install_cmd"
-
-                        if manager_requires_privilege "$manager" && [ "${EUID:-$(id -u)}" -ne 0 ]; then
-                            if command -v sudo >/dev/null 2>&1; then
-                                install_parts=("sudo" "${install_parts[@]}")
-                            else
-                                log_message WARN "Cannot install $package using $manager: elevated privileges required but sudo not available."
-                                continue
-                            fi
-                        fi
-
-                        if "${install_parts[@]}" "$package" >/dev/null 2>&1; then
-                            local highlight_start=$'\033[33m'
-                            local highlight_end=$'\033[0m'
-                            log_message INFO "Installed ${highlight_start}${package}${highlight_end} using $manager."
-                            installed_with_manager=1
-                            line_installed=1
-                            break
-                        fi
-                    done
-
-                    if [ $installed_with_manager -eq 1 ]; then
-                        break
-                    fi
-                done
-
-                if [ $line_installed -eq 0 ] && [ $package_managers_available -eq 1 ]; then
-                    log_message WARN "Unable to install any package from line: ${packages_in_line[*]}"
-                fi
-            fi
-
-            if [ -n "$installer_command" ]; then
-                if bash -o pipefail -c "$installer_command" >/dev/null 2>&1; then
+                if "${install_parts[@]}" "$package" >/dev/null 2>&1; then
                     local highlight_start=$'\033[33m'
                     local highlight_end=$'\033[0m'
-                    log_message INFO "Executed installer command: ${highlight_start}${installer_command}${highlight_end}"
-                else
-                    log_message WARN "Failed installer command: $installer_command"
+                    log_message INFO "Installed ${highlight_start}${package}${highlight_end} using $manager."
+                    installed_with_manager=1
+                    line_installed=1
+                    break
                 fi
+            done
+
+            if [ $installed_with_manager -eq 1 ]; then
+                break
+            fi
+        done
+
+        if [ $line_installed -eq 0 ]; then
+            log_message WARN "Unable to install any package from line: ${packages_in_line[*]}"
+        fi
+    }
+
+    run_installer_commands() {
+        local command
+        local command_list=("$@")
+
+        if [ ${#command_list[@]} -eq 0 ]; then
+            return 0
+        fi
+
+        for command in "${command_list[@]}"; do
+            if [ -z "$command" ]; then
+                continue
+            fi
+
+            if bash -o pipefail -c "$command" >/dev/null 2>&1; then
+                local highlight_start=$'\033[33m'
+                local highlight_end=$'\033[0m'
+                log_message INFO "Executed installer command: ${highlight_start}${command}${highlight_end}"
+            else
+                log_message WARN "Failed installer command: $command"
+            fi
+        done
+    }
+
+    if [ ${#system_packages[@]} -gt 0 ]; then
+        for package_line in "${system_packages[@]}"; do
+            local package_segment=""
+            local quoted_commands=()
+            local remaining="$package_line"
+            local prefix=""
+            local rest=""
+            local quoted=""
+
+            while [[ "$remaining" == *\"* ]]; do
+                prefix=${remaining%%\"*}
+                rest=${remaining#*\"}
+
+                if [[ "$rest" == *\"* ]]; then
+                    quoted=${rest%%\"*}
+                    remaining=${rest#*\"}
+                    package_segment+=" $prefix"
+                    quoted_commands+=("$quoted")
+                else
+                    package_segment+=" $remaining"
+                    remaining=""
+                    break
+                fi
+            done
+            package_segment+=" $remaining"
+            package_segment=$(printf '%s\n' "$package_segment" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
+
+            local command_first=0
+            if [[ "$package_line" =~ ^[[:space:]]*\" ]]; then
+                command_first=1
+            fi
+
+            if [ $command_first -eq 1 ]; then
+                run_installer_commands "${quoted_commands[@]}"
+                install_package_segment "$package_segment"
+            else
+                install_package_segment "$package_segment"
+                run_installer_commands "${quoted_commands[@]}"
             fi
         done
     fi
@@ -773,6 +822,28 @@ install_go_official() {
     else
         log_message WARN "Go installation finished, but /usr/local/go/bin/go was not found."
     fi
+
+    if [ -d "/usr/local/go/bin" ]; then
+        case ":$PATH:" in
+            *":/usr/local/go/bin:"*)
+                ;;
+            *)
+                PATH="/usr/local/go/bin:$PATH"
+                ;;
+        esac
+    fi
+
+    if [ -d "$HOME/go/bin" ]; then
+        case ":$PATH:" in
+            *":$HOME/go/bin:"*)
+                ;;
+            *)
+                PATH="$HOME/go/bin:$PATH"
+                ;;
+        esac
+    fi
+
+    export PATH
 
     printf '\n'
 }
@@ -1982,8 +2053,8 @@ main() {
         log_message INFO "Reconfigure mode enabled. Skipping all installation steps."
         printf '\n'
     fi
-    install_packages
     install_go_official
+    install_packages
     install_nerd_font
     install_starship
     install_tmux_plugin_manager

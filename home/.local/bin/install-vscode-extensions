@@ -15,8 +15,8 @@ fi
 
 echo "Installing VS Code extensions from $EXTENSIONS_FILE..."
 while IFS= read -r ext || [[ -n "$ext" ]]; do
-    # Remove leading/trailing whitespace
-    ext=$(echo "$ext" | xargs)
+    # Remove inline comments and trim whitespace
+    ext=$(printf '%s\n' "$ext" | sed -e 's/[[:space:]]#.*$//' -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
     # Skip empty lines and comments
     if [[ -z "$ext" || "$ext" =~ ^# ]]; then
         continue

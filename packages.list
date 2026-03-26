@@ -11,9 +11,9 @@ gh
 git
 git-lfs
 jq
-lazydocker
-lazygit
-lazysvn "curl -fsSL https://lazysvn.sawirstudio.com/install.sh | sh"
+"go install github.com/jesseduffield/lazydocker@latest" "curl -fsSL https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | bash" lazydocker
+"go install github.com/jesseduffield/lazygit@latest" lazygit
+"go install github.com/YoshihideShirai/tuisvn@latest" "curl -fsSL https://lazysvn.sawirstudio.com/install.sh | sh" lazysvn
 lshw
 lua
 make gmake
@@ -50,3 +50,4 @@ pip
 setuptools
 wheel
 uv
+

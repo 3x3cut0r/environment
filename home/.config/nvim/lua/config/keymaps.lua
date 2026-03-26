@@ -25,3 +25,27 @@ vim.keymap.set("n", "<leader>o", "<cmd>Neotree reveal<cr>", { desc = "Reveal fil
 vim.keymap.set("n", "<leader>?", function()
   require("which-key").show({ global = false })
 end, { desc = "Buffer Local Keymaps (which-key)" })
+
+vim.api.nvim_create_autocmd("LspAttach", {
+  group = vim.api.nvim_create_augroup("lsp_keymaps", { clear = true }),
+  callback = function(event)
+    local map = function(keys, func, desc)
+      vim.keymap.set("n", keys, func, { buffer = event.buf, desc = desc })
+    end
+
+    map("gd", vim.lsp.buf.definition, "LSP: Go to definition")
+    map("gD", vim.lsp.buf.declaration, "LSP: Go to declaration")
+    map("gi", vim.lsp.buf.implementation, "LSP: Go to implementation")
+    map("gr", vim.lsp.buf.references, "LSP: References")
+    map("K", vim.lsp.buf.hover, "LSP: Hover")
+    map("<leader>rn", vim.lsp.buf.rename, "LSP: Rename")
+    map("<leader>ca", vim.lsp.buf.code_action, "LSP: Code action")
+    map("<leader>cf", function()
+      vim.lsp.buf.format({ async = true })
+    end, "LSP: Format buffer")
+  end,
+})
+
+vim.keymap.set("n", "<leader>xl", function()
+  require("lint").try_lint()
+end, { desc = "Lint current buffer" })

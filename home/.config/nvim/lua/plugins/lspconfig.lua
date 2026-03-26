@@ -6,12 +6,14 @@ return {
       "williamboman/mason-lspconfig.nvim",
     },
     config = function()
-      local lspconfig = require("lspconfig")
-      local util = require("lspconfig.util")
-
       local capabilities = vim.lsp.protocol.make_client_capabilities()
 
       local servers = {
+        bashls = {},
+        jsonls = {},
+        yamlls = {},
+        marksman = {},
+        pyright = {},
         lua_ls = {
           settings = {
             Lua = {
@@ -52,13 +54,14 @@ return {
         },
         groovyls = {
           filetypes = { "groovy", "Jenkinsfile" },
-          root_dir = util.root_pattern("Jenkinsfile", ".git"),
+          root_markers = { "Jenkinsfile", ".git" },
         },
       }
 
       for server_name, server_opts in pairs(servers) do
         server_opts.capabilities = vim.tbl_deep_extend("force", {}, capabilities, server_opts.capabilities or {})
-        lspconfig[server_name].setup(server_opts)
+        vim.lsp.config(server_name, server_opts)
+        vim.lsp.enable(server_name)
       end
     end,
   },

@@ -25,6 +25,7 @@ return {
         "ansiblels",
         "groovyls",
       },
+      automatic_enable = false,
     },
   },
   {

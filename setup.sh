@@ -219,7 +219,6 @@ REPOSITORY_DIR=""
 
 cleanup_temp_resources() {
     log_message INFO "Removing temporary directory at $TEMP_DIR"
-    printf '\n'
     log_message INFO "You need to restart your current terminal for changes to take effect!"
 
     if [ -n "${TEMP_ARCHIVE:-}" ] && [ -f "$TEMP_ARCHIVE" ]; then
@@ -322,8 +321,6 @@ detect_package_managers() {
     else
         log_message WARN "No supported package managers detected. Skipping package installation."
     fi
-
-    printf '\n'
 }
 
 manager_requires_privilege() {
@@ -450,13 +447,9 @@ confirm_execution() {
             fi
         fi
 
-        if [ $read_status -ne 0 ]; then
-            printf '\n'
-        fi
         case "$response" in
             j|J|ja|JA|y|Y|yes|YES)
                 log_message INFO "Confirmation received, proceeding with setup steps."
-                printf '\n'
                 return 0
                 ;;
             *)
@@ -466,14 +459,12 @@ confirm_execution() {
         esac
     else
         log_message WARN "Auto confirmation enabled. Proceeding without prompt."
-        printf '\n'
     fi
 }
 
 install_packages() {
     if [ "${SKIP_PACKAGES:-no}" = "yes" ]; then
         log_message WARN "Skipping package installation."
-        printf '\n'
         return 0
     fi
 
@@ -684,26 +675,21 @@ install_packages() {
             done
         fi
     fi
-
-    printf '\n'
 }
 
 install_go_official() {
     if [ "${SKIP_PACKAGES:-no}" = "yes" ]; then
         log_message WARN "Skipping Go installation."
-        printf '\n'
         return 0
     fi
 
     if ! command -v curl >/dev/null 2>&1; then
         log_message WARN "curl not found. Skipping Go installation from go.dev."
-        printf '\n'
         return 0
     fi
 
     if ! command -v tar >/dev/null 2>&1; then
         log_message WARN "tar not found. Skipping Go installation from go.dev."
-        printf '\n'
         return 0
     fi
 
@@ -717,7 +703,6 @@ install_go_official() {
             ;;
         *)
             log_message WARN "Unsupported OS for official Go archive installation: $OS_KERNEL"
-            printf '\n'
             return 0
             ;;
     esac
@@ -732,7 +717,6 @@ install_go_official() {
             ;;
         *)
             log_message WARN "Unsupported architecture for official Go archive installation: $OS_ARCH"
-            printf '\n'
             return 0
             ;;
     esac
@@ -740,7 +724,6 @@ install_go_official() {
     local version_payload=""
     if ! version_payload=$(curl -fsSL "https://go.dev/VERSION?m=text" 2>/dev/null); then
         log_message WARN "Unable to fetch latest stable Go version. Skipping Go installation."
-        printf '\n'
         return 0
     fi
 
@@ -748,7 +731,6 @@ install_go_official() {
     go_version=$(printf '%s\n' "$version_payload" | awk 'NR==1 {print $1}')
     if [[ ! "$go_version" =~ ^go[0-9] ]]; then
         log_message WARN "Received invalid Go version string: $go_version"
-        printf '\n'
         return 0
     fi
 
@@ -757,7 +739,6 @@ install_go_official() {
         current_go_version=$(go version 2>/dev/null | awk '{print $3}')
         if [ "$current_go_version" = "$go_version" ]; then
             log_message INFO "Go $go_version already installed."
-            printf '\n'
             return 0
         fi
     fi
@@ -767,7 +748,6 @@ install_go_official() {
     local temp_archive=""
     temp_archive=$(mktemp "${TMPDIR:-/tmp}/go-archive-XXXXXX.tar.gz") || {
         log_message WARN "Unable to create temporary file for Go archive."
-        printf '\n'
         return 0
     }
 
@@ -775,7 +755,6 @@ install_go_official() {
     if ! curl -fsSL -o "$temp_archive" "$download_url" >/dev/null 2>&1; then
         log_message WARN "Failed to download Go archive from $download_url"
         rm -f "$temp_archive"
-        printf '\n'
         return 0
     fi
 
@@ -786,7 +765,6 @@ install_go_official() {
         if ! command -v sudo >/dev/null 2>&1; then
             log_message WARN "Cannot install Go to $install_dir: elevated privileges required but sudo not available."
             rm -f "$temp_archive"
-            printf '\n'
             return 0
         fi
 
@@ -807,7 +785,6 @@ install_go_official() {
 
     if [ $install_failed -eq 1 ]; then
         log_message WARN "Failed to install Go archive into /usr/local/go"
-        printf '\n'
         return 0
     fi
 
@@ -844,14 +821,11 @@ install_go_official() {
     fi
 
     export PATH
-
-    printf '\n'
 }
 
 install_nerd_font() {
     if [ "${SKIP_NERD_FONT:-no}" = "yes" ]; then
         log_message WARN "Skipping Nerd Font installation."
-        printf '\n'
         return 0
     fi
 
@@ -878,7 +852,6 @@ install_nerd_font() {
             existing_font=$(find "$font_path" -type f -name 'JetBrainsMono*NerdFont*.ttf' -print -quit 2>/dev/null || true)
             if [ -n "$existing_font" ]; then
                 log_message INFO "JetBrainsMono Nerd Font already installed. Skipping installation step."
-                printf '\n'
                 return 0
             fi
         fi
@@ -887,7 +860,6 @@ install_nerd_font() {
     local temp_dir
     temp_dir=$(mktemp -d) || {
         log_message ERROR "Unable to create temporary directory for JetBrainsMono Nerd Font installation."
-        printf '\n'
         return 1
     }
 
@@ -899,7 +871,6 @@ install_nerd_font() {
     if ! curl -fLo "$font_zip" "$font_zip_url" >/dev/null 2>&1; then
         log_message ERROR "Failed to download JetBrainsMono Nerd Font archive."
         rm -rf "$temp_dir"
-        printf '\n'
         return 1
     fi
 
@@ -908,7 +879,6 @@ install_nerd_font() {
     if ! unzip -q "$font_zip" -d "$extracted_dir"; then
         log_message ERROR "Failed to extract JetBrainsMono Nerd Font archive."
         rm -rf "$temp_dir"
-        printf '\n'
         return 1
     fi
 
@@ -916,7 +886,6 @@ install_nerd_font() {
     if ! find "$extracted_dir" -type f -name '*.ttf' -exec cp {} "$nerd_font_dir" \;; then
         log_message ERROR "Failed to copy JetBrainsMono Nerd Font files to $nerd_font_dir."
         rm -rf "$temp_dir"
-        printf '\n'
         return 1
     fi
 
@@ -927,7 +896,6 @@ install_nerd_font() {
     rm -rf "$temp_dir"
 
     log_message INFO "Installed JetBrainsMono Nerd Font"
-    printf '\n'
 }
 
 file_has_trailing_newline() {
@@ -1077,13 +1045,11 @@ ensure_trailing_newline() {
 install_starship() {
     if [ "${SKIP_STARSHIP:-no}" = "yes" ]; then
         log_message WARN "Skipping Starship installation."
-        printf '\n'
         return 0
     fi
 
     if command -v starship >/dev/null 2>&1; then
         log_message INFO "Starship prompt is already installed. Skipping installation step."
-        printf '\n'
         return 0
     fi
 
@@ -1148,20 +1114,16 @@ install_starship() {
     else
         log_message INFO "Starship installation skipped by user."
     fi
-
-    printf '\n'
 }
 
 install_tmux_plugin_manager() {
     if [ "${SKIP_TMUX_PLUGIN_MANAGER:-no}" = "yes" ]; then
         log_message WARN "Skipping TPM (tmux plugin manager) installation."
-        printf '\n'
         return 0
     fi
 
     if ! command -v tmux >/dev/null 2>&1; then
         log_message INFO "tmux is not installed. Skipping TPM (tmux plugin manager) installation."
-        printf '\n'
         return 0
     fi
 
@@ -1172,7 +1134,6 @@ install_tmux_plugin_manager() {
 
     if [ -z "$target_home" ] || [ ! -d "$target_home" ]; then
         log_message WARN "Unable to determine a valid home directory for tmux plugin installation."
-        printf '\n'
         return 0
     fi
 
@@ -1187,7 +1148,6 @@ install_tmux_plugin_manager() {
             log_message INFO "TPM installed successfully."
         else
             log_message ERROR "Failed to install TPM."
-            printf '\n'
             return 1
         fi
     else
@@ -1208,7 +1168,6 @@ install_tmux_plugin_manager() {
             temporary_conf=1
         else
             log_message WARN "No tmux configuration file found. Skipping plugin installation."
-            printf '\n'
             return 0
         fi
     fi
@@ -1227,14 +1186,11 @@ install_tmux_plugin_manager() {
     if [ $temporary_conf -eq 1 ]; then
         rm -f "$tmux_conf"
     fi
-
-    printf '\n'
 }
 
 install_vim_plugin_manager() {
     if [ "${SKIP_VIM_PLUGIN_MANAGER:-no}" = "yes" ]; then
         log_message WARN "Skipping vim-plug (vim plugin manager) installation"
-        printf '\n'
         return 0
     fi
 
@@ -1244,7 +1200,6 @@ install_vim_plugin_manager() {
 
     if ! command -v curl >/dev/null 2>&1; then
         log_message WARN "curl is required to install vim-plug. Skipping installation."
-        printf '\n'
         return 1
     fi
 
@@ -1255,22 +1210,17 @@ install_vim_plugin_manager() {
         log_message WARN "Failed to install vim-plug for Vim."
     fi
 
-    printf '\n'
-
     mkdir -p "$(dirname "$nvim_plug_path")"
     if curl -fLo "$nvim_plug_path" --create-dirs "$plug_url" >/dev/null 2>&1; then
         log_message INFO "Installed vim-plug for Neovim at $nvim_plug_path."
     else
         log_message WARN "Failed to install vim-plug for Neovim."
     fi
-
-    printf '\n'
 }
 
 install_catppuccin_vim() {
     if [ "${SKIP_CATPPUCCIN_VIM:-no}" = "yes" ]; then
         log_message WARN "Skipping Catppuccin installation for Vim."
-        printf '\n'
         return 0
     fi
 
@@ -1278,31 +1228,26 @@ install_catppuccin_vim() {
 
     if ! command -v vim >/dev/null 2>&1; then
         log_message WARN "Vim is required to install plugins. Skipping Catppuccin installation for Vim."
-        printf '\n'
         return 0
     fi
 
     if [ ! -f "$HOME/.vim/autoload/plug.vim" ]; then
         log_message WARN "vim-plug is not installed for Vim. Skipping Catppuccin installation for Vim."
-        printf '\n'
         return 0
     fi
 
     if [ ! -f "$source_vimrc" ]; then
         log_message WARN "Vim configuration with Catppuccin plugin definition not found. Skipping installation."
-        printf '\n'
         return 0
     fi
 
     log_message INFO "Installing Catppuccin theme for Vim using vim-plug."
     vim -es -u "$source_vimrc" +'PlugInstall --sync' +qall </dev/null >/dev/null 2>&1 || true
-    printf '\n'
 }
 
 install_catppuccin_neovim() {
     if [ "${SKIP_CATPPUCCIN_NEOVIM:-no}" = "yes" ]; then
         log_message WARN "Skipping Catppuccin installation for Neovim."
-        printf '\n'
         return 0
     fi
 
@@ -1310,25 +1255,21 @@ install_catppuccin_neovim() {
 
     if ! command -v nvim >/dev/null 2>&1; then
         log_message WARN "Neovim is required to install plugins. Skipping Catppuccin installation for Neovim."
-        printf '\n'
         return 0
     fi
 
     if [ ! -f "$HOME/.local/share/nvim/site/autoload/plug.vim" ]; then
         log_message WARN "vim-plug is not installed for Neovim. Skipping Catppuccin installation for Neovim."
-        printf '\n'
         return 0
     fi
 
     if [ ! -f "$source_init" ]; then
         log_message WARN "Neovim configuration with Catppuccin plugin definition not found. Skipping installation."
-        printf '\n'
         return 0
     fi
 
     log_message INFO "Installing Catppuccin theme for Neovim using vim-plug."
     nvim --headless -u "$source_init" +'PlugInstall --sync' +qa </dev/null >/dev/null 2>&1 || true
-    printf '\n'
 }
 
 install_catppuccin_bat() {
@@ -1339,7 +1280,6 @@ install_catppuccin_bat() {
 
     if [ -z "$target_home" ] || [ ! -d "$target_home" ]; then
         log_message WARN "Unable to determine a valid home directory for bat theme installation."
-        printf '\n'
         return 0
     fi
 
@@ -1402,14 +1342,11 @@ install_catppuccin_bat() {
     else
         log_message WARN "bat not found in PATH. Skipping bat cache rebuild."
     fi
-
-    printf '\n'
 }
 
 install_catppuccin_gedit() {
     if [ "${SKIP_CATPPUCCIN_GEDIT:-no}" = "yes" ]; then
         log_message WARN "Skipping Catppuccin installation for Gedit."
-        printf '\n'
         return 0
     fi
 
@@ -1420,7 +1357,6 @@ install_catppuccin_gedit() {
 
     if [ -z "$target_home" ] || [ ! -d "$target_home" ]; then
         log_message WARN "Unable to determine a valid home directory for Gedit theme installation."
-        printf '\n'
         return 0
     fi
 
@@ -1454,7 +1390,6 @@ install_catppuccin_gedit() {
         else
             log_message WARN "Unable to update Gedit theme from upstream and bundled repository copy is missing."
             rm -f "$temp_theme_file"
-            printf '\n'
             return 0
         fi
     fi
@@ -1482,14 +1417,11 @@ install_catppuccin_gedit() {
             log_message WARN "Could not set active Gedit color scheme automatically."
         fi
     fi
-
-    printf '\n'
 }
 
 install_catppuccin_gnome_text_editor() {
     if [ "${SKIP_CATPPUCCIN_GNOME_TEXT_EDITOR:-no}" = "yes" ]; then
         log_message WARN "Skipping Catppuccin installation for GNOME Text Editor."
-        printf '\n'
         return 0
     fi
 
@@ -1500,7 +1432,6 @@ install_catppuccin_gnome_text_editor() {
 
     if [ -z "$target_home" ] || [ ! -d "$target_home" ]; then
         log_message WARN "Unable to determine a valid home directory for GNOME Text Editor theme installation."
-        printf '\n'
         return 0
     fi
 
@@ -1533,7 +1464,6 @@ install_catppuccin_gnome_text_editor() {
         else
             log_message WARN "Unable to update GNOME Text Editor theme from upstream and bundled repository copy is missing."
             rm -f "$temp_theme_file"
-            printf '\n'
             return 0
         fi
     fi
@@ -1555,27 +1485,22 @@ install_catppuccin_gnome_text_editor() {
             log_message WARN "Could not set active GNOME Text Editor color scheme automatically."
         fi
     fi
-
-    printf '\n'
 }
 
 install_catppuccin_terminal_app() {
     if [ "${SKIP_CATPPUCCIN_TERMINAL_APP:-no}" = "yes" ]; then
         log_message WARN "Skipping Catppuccin installation for Terminal.app."
-        printf '\n'
         return 0
     fi
 
     if [ "${OS_KERNEL:-}" != "Darwin" ]; then
         log_message INFO "Terminal.app theme installation is macOS-only. Skipping on ${OS_KERNEL:-unknown}."
-        printf '\n'
         return 0
     fi
 
     local target_home="$HOME"
     if [ -z "$target_home" ] || [ ! -d "$target_home" ]; then
         log_message WARN "Unable to determine a valid home directory for Terminal.app theme installation."
-        printf '\n'
         return 0
     fi
 
@@ -1604,7 +1529,6 @@ install_catppuccin_terminal_app() {
     if [ $downloaded -eq 0 ]; then
         log_message WARN "Failed to download Catppuccin Terminal.app theme from upstream."
         rm -f "$temp_theme_file"
-        printf '\n'
         return 0
     fi
 
@@ -1614,18 +1538,27 @@ install_catppuccin_terminal_app() {
     else
         log_message WARN "Failed to install Terminal.app theme file at $target_theme_file."
         rm -f "$temp_theme_file"
-        printf '\n'
         return 0
     fi
 
     if command -v osascript >/dev/null 2>&1; then
         if osascript <<OSA >/dev/null 2>&1
-set themeFile to POSIX file "$target_theme_file"
+set themeFilePath to "$target_theme_file"
+set wasRunning to application "Terminal" is running
+
+do shell script "open -g " & quoted form of themeFilePath
+delay 0.8
+
 tell application "Terminal"
-    do shell script "open " & quoted form of POSIX path of themeFile
-    delay 0.8
     set default settings to settings set "$theme_profile_name"
     set startup settings to settings set "$theme_profile_name"
+
+    if wasRunning is false then
+        if (count of windows) > 0 then
+            close every window saving no
+        end if
+        quit
+    end if
 end tell
 OSA
         then
@@ -1638,19 +1571,16 @@ OSA
     fi
 
     rm -f "$temp_theme_file"
-    printf '\n'
 }
 
 install_catppuccin_xfce4_terminal() {
     if [ "${SKIP_CATPPUCCIN_XFCE4_TERMINAL:-no}" = "yes" ]; then
         log_message WARN "Skipping Catppuccin installation for Xfce4 Terminal."
-        printf '\n'
         return 0
     fi
 
     if ! command -v xfce4-terminal >/dev/null 2>&1; then
         log_message INFO "xfce4-terminal not found. Skipping Catppuccin Xfce4 Terminal theme installation."
-        printf '\n'
         return 0
     fi
 
@@ -1661,7 +1591,6 @@ install_catppuccin_xfce4_terminal() {
 
     if [ -z "$target_home" ] || [ ! -d "$target_home" ]; then
         log_message WARN "Unable to determine a valid home directory for Xfce4 Terminal theme installation."
-        printf '\n'
         return 0
     fi
 
@@ -1687,14 +1616,11 @@ install_catppuccin_xfce4_terminal() {
     else
         log_message WARN "Neither curl nor wget is available. Cannot download Xfce4 Terminal theme."
     fi
-
-    printf '\n'
 }
 
 install_catppuccin_hyprland() {
     if [ "${SKIP_CATPPUCCIN_HYPRLAND:-no}" = "yes" ]; then
         log_message WARN "Skipping Catppuccin installation for Hyprland."
-        printf '\n'
         return 0
     fi
 
@@ -1705,7 +1631,6 @@ install_catppuccin_hyprland() {
 
     if [ -z "$target_home" ] || [ ! -d "$target_home" ]; then
         log_message WARN "Unable to determine a valid home directory for Hyprland theme installation."
-        printf '\n'
         return 0
     fi
 
@@ -1714,7 +1639,6 @@ install_catppuccin_hyprland() {
 
     if ! command -v hyprland >/dev/null 2>&1 && [ ! -f "$hypr_main_config" ]; then
         log_message INFO "Hyprland not detected (binary and config missing). Skipping Catppuccin Hyprland theme installation."
-        printf '\n'
         return 0
     fi
 
@@ -1730,7 +1654,6 @@ install_catppuccin_hyprland() {
             log_message INFO "Installed latest Catppuccin Hyprland Mocha theme to $theme_file."
         else
             log_message WARN "Failed to download Catppuccin Hyprland theme from upstream."
-            printf '\n'
             return 0
         fi
     elif command -v wget >/dev/null 2>&1; then
@@ -1738,12 +1661,10 @@ install_catppuccin_hyprland() {
             log_message INFO "Installed latest Catppuccin Hyprland Mocha theme to $theme_file."
         else
             log_message WARN "Failed to download Catppuccin Hyprland theme from upstream."
-            printf '\n'
             return 0
         fi
     else
         log_message WARN "Neither curl nor wget is available. Cannot download Hyprland theme."
-        printf '\n'
         return 0
     fi
 
@@ -1757,8 +1678,6 @@ install_catppuccin_hyprland() {
     else
         log_message WARN "Hyprland config file not found at $hypr_main_config. Add '$source_line' manually once you create it."
     fi
-
-    printf '\n'
 }
 
 install_environment_wrapper() {
@@ -1770,19 +1689,16 @@ install_environment_wrapper() {
 
     if [ ! -f "$wrapper_source" ]; then
         log_message WARN "Wrapper source '$wrapper_source' not found. Skipping wrapper installation."
-        printf '\n'
         return 0
     fi
 
     if ! mkdir -p "$wrapper_dir"; then
         log_message WARN "Wrapper directory '$wrapper_dir' could not be created. Skipping wrapper installation."
-        printf '\n'
         return 0
     fi
 
     if [ ! -w "$wrapper_dir" ]; then
         log_message WARN "Wrapper directory '$wrapper_dir' is not writable. Skipping wrapper installation."
-        printf '\n'
         return 0
     fi
 
@@ -1791,8 +1707,6 @@ install_environment_wrapper() {
     else
         log_message WARN "Failed to install wrapper command at $wrapper_path. Continuing without wrapper."
     fi
-
-    printf '\n'
 }
 
 configure_environment() {
@@ -1921,8 +1835,6 @@ configure_environment() {
         rm -f "$processed_file"
         log_message INFO "Configured $target_relative"
     done < <(find "$source_home" -type f -print0)
-
-    printf '\n'
 }
 
 configure_terminals() {
@@ -1947,15 +1859,12 @@ configure_terminals() {
             fi
         fi
 
-        printf '\n'
-
         case "$response" in
             j|J|ja|JA|y|Y|yes|YES)
                 :
                 ;;
             *)
                 log_message WARN "Terminal font configuration skipped. Please set JetBrainsMono Nerd Font in each terminal manually to avoid broken output."
-                printf '\n'
                 return 0
                 ;;
         esac
@@ -1998,7 +1907,6 @@ configure_terminals() {
 
     if [ $font_found -eq 0 ]; then
         log_message WARN "JetBrainsMono Nerd Font not detected. Skipping terminal configuration."
-        printf '\n'
         return 0
     fi
 
@@ -2032,8 +1940,6 @@ configure_terminals() {
     }
 
     configure_gnome_terminal_font
-
-    printf '\n'
 }
 
 main() {
@@ -2051,7 +1957,6 @@ main() {
     install_environment_wrapper
     if [ "$RECONFIGURE_MODE" = "yes" ]; then
         log_message INFO "Reconfigure mode enabled. Skipping all installation steps."
-        printf '\n'
     fi
     install_go_official
     install_packages

@@ -1543,22 +1543,12 @@ install_catppuccin_terminal_app() {
 
     if command -v osascript >/dev/null 2>&1; then
         if osascript <<OSA >/dev/null 2>&1
-set themeFilePath to "$target_theme_file"
-set wasRunning to application "Terminal" is running
-
-do shell script "open -g " & quoted form of themeFilePath
-delay 0.8
-
+set themeFile to POSIX file "$target_theme_file"
 tell application "Terminal"
+    do shell script "open " & quoted form of POSIX path of themeFile
+delay 0.8
     set default settings to settings set "$theme_profile_name"
     set startup settings to settings set "$theme_profile_name"
-
-    if wasRunning is false then
-        if (count of windows) > 0 then
-            close every window saving no
-        end if
-        quit
-    end if
 end tell
 OSA
         then

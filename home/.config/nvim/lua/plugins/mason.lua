@@ -25,7 +25,6 @@ return {
         "ansiblels",
         "groovyls",
       },
-      automatic_installation = true,
     },
   },
   {

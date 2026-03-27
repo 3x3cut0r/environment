@@ -16,7 +16,11 @@ vim.keymap.set("n", "<S-h>", "<cmd>BufferLineCyclePrev<cr>", { desc = "Previous 
 vim.keymap.set("n", "<leader>w", "<cmd>bdelete<cr>", { desc = "Close tab" })
 vim.keymap.set("n", "<leader>q", "<cmd>q<cr>", { desc = "Quit window/tab" })
 vim.keymap.set("n", "<leader>gg", function()
-  Snacks.lazygit()
+  if vim.fn.executable("lazygit") == 1 then
+    Snacks.lazygit()
+  else
+    vim.notify("lazygit not found in PATH", vim.log.levels.WARN)
+  end
 end, { desc = "Lazygit" })
 vim.keymap.set("n", "<leader>e", "<cmd>Neotree toggle<cr>", { desc = "Explorer (Neo-tree)" })
 vim.keymap.set("n", "<leader>o", "<cmd>Neotree reveal<cr>", { desc = "Reveal file (Neo-tree)" })

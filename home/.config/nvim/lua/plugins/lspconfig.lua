@@ -7,6 +7,7 @@ return {
     },
     config = function()
       local capabilities = vim.lsp.protocol.make_client_capabilities()
+      local has_ansible_lint = vim.fn.executable("ansible-lint") == 1
 
       local servers = {
         bashls = {},
@@ -45,7 +46,7 @@ return {
               validation = {
                 enabled = true,
                 lint = {
-                  enabled = true,
+                  enabled = has_ansible_lint,
                   path = "ansible-lint",
                 },
               },

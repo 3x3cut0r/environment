@@ -25,6 +25,7 @@ python3-venv
 ranger
 rg ripgrep
 rsync
+shellcheck
 sshpass
 sudo
 tcpdump

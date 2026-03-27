@@ -56,3 +56,13 @@ vim.api.nvim_create_autocmd("LspAttach", {
 vim.keymap.set("n", "<leader>xl", function()
   require("lint").try_lint()
 end, { desc = "Lint current buffer" })
+
+vim.keymap.set("n", "<leader>xd", vim.diagnostic.open_float, { desc = "Line diagnostics" })
+vim.keymap.set("n", "<leader>xx", function()
+  vim.diagnostic.setloclist()
+  vim.cmd("lopen")
+end, { desc = "Diagnostics list" })
+vim.keymap.set("n", "]d", vim.diagnostic.goto_next, { desc = "Next diagnostic" })
+vim.keymap.set("n", "[d", vim.diagnostic.goto_prev, { desc = "Previous diagnostic" })
+vim.keymap.set("n", "<leader>xn", vim.diagnostic.goto_next, { desc = "Next diagnostic" })
+vim.keymap.set("n", "<leader>xp", vim.diagnostic.goto_prev, { desc = "Previous diagnostic" })

@@ -156,29 +156,36 @@ Usage:
 Options:
   -h,   --help              Show this help message and exit
   -y,   --yes               Automatically answer prompts with yes
-  -r,   --reconfigure       Reconfigure environment (update config files only)
-  -sp,  --skip-packages     Skip package installation step
+  -r,   --reconfigure       Reconfigure dotfiles only (skip installs and terminal config)
+  -sp,  --skip-packages     Skip package-related installs (system packages, Go, lazy tools)
   -sn,  --skip-nerd-font,
-        --skip-nerdfont     Skip Nerd Font installation
+         --skip-nerdfont     Skip Nerd Font installation
   -ss,  --skip-starship     Skip Starship installation
   -st,  --skip-tpm          Skip tmux plugin manager installation
   -sv,  --skip-vim-plug     Skip vim plugin manager installation
-  -sc,  --skip-catppuccin   Skip Catppuccin installations for Vim, Neovim, Gedit, GNOME Text Editor, Terminal.app, Xfce4 Terminal, and Hyprland
+  -sc,  --skip-catppuccin   Skip Catppuccin installations for Vim, Neovim, bat, Gedit, GNOME Text Editor, Terminal.app, Xfce4 Terminal, and Hyprland
   -scv, --skip-catppuccin-vim
-                             Skip Catppuccin installation for Vim
+                              Skip Catppuccin installation for Vim
   -scn, --skip-catppuccin-nvim,
          --skip-catppuccin-neovim
-                             Skip Catppuccin installation for Neovim
+                              Skip Catppuccin installation for Neovim
+  -scb, --skip-catppuccin-bat
+                              Skip Catppuccin installation for bat
   -scg, --skip-catppuccin-gedit
-                             Skip Catppuccin installation for Gedit
+                              Skip Catppuccin installation for Gedit
   -scgte, --skip-catppuccin-gnome-text-editor
-                             Skip Catppuccin installation for GNOME Text Editor
+                              Skip Catppuccin installation for GNOME Text Editor
   -scta, --skip-catppuccin-terminal-app
-                             Skip Catppuccin installation for Terminal.app (macOS)
+                              Skip Catppuccin installation for Terminal.app (macOS)
   -scx, --skip-catppuccin-xfce4-terminal
-                             Skip Catppuccin installation for Xfce4 Terminal
+                              Skip Catppuccin installation for Xfce4 Terminal
   -sch, --skip-catppuccin-hyprland
-                             Skip Catppuccin installation for Hyprland
+                              Skip Catppuccin installation for Hyprland
+  -sw,  --skip-wrapper      Skip installation of the environment wrapper command
+  -sce, --skip-configure-environment
+                              Skip applying files from repository home/ to target home
+  -sct, --skip-configure-terminals
+                              Skip terminal font configuration prompts and changes
 ```
 
 ## Tests

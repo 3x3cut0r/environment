@@ -9,11 +9,15 @@ SKIP_TMUX_PLUGIN_MANAGER="no"
 SKIP_VIM_PLUGIN_MANAGER="no"
 SKIP_CATPPUCCIN_VIM="no"
 SKIP_CATPPUCCIN_NEOVIM="no"
+SKIP_CATPPUCCIN_BAT="no"
 SKIP_CATPPUCCIN_GEDIT="no"
 SKIP_CATPPUCCIN_GNOME_TEXT_EDITOR="no"
 SKIP_CATPPUCCIN_TERMINAL_APP="no"
 SKIP_CATPPUCCIN_XFCE4_TERMINAL="no"
 SKIP_CATPPUCCIN_HYPRLAND="no"
+SKIP_ENVIRONMENT_WRAPPER="no"
+SKIP_CONFIGURE_ENVIRONMENT="no"
+SKIP_CONFIGURE_TERMINALS="no"
 RECONFIGURE_MODE="no"
 WRAPPER_NAME="environment"
 WRAPPER_INSTALL_PATH="${HOME}/.local/bin/${WRAPPER_NAME}"
@@ -41,11 +45,14 @@ parse_args() {
                 SKIP_VIM_PLUGIN_MANAGER="yes"
                 SKIP_CATPPUCCIN_VIM="yes"
                 SKIP_CATPPUCCIN_NEOVIM="yes"
+                SKIP_CATPPUCCIN_BAT="yes"
                 SKIP_CATPPUCCIN_GEDIT="yes"
                 SKIP_CATPPUCCIN_GNOME_TEXT_EDITOR="yes"
                 SKIP_CATPPUCCIN_TERMINAL_APP="yes"
                 SKIP_CATPPUCCIN_XFCE4_TERMINAL="yes"
                 SKIP_CATPPUCCIN_HYPRLAND="yes"
+                SKIP_ENVIRONMENT_WRAPPER="yes"
+                SKIP_CONFIGURE_TERMINALS="yes"
                 shift
                 ;;
             --skip-packages|-sp)
@@ -71,6 +78,7 @@ parse_args() {
             --skip-catppuccin|-sc)
                 SKIP_CATPPUCCIN_VIM="yes"
                 SKIP_CATPPUCCIN_NEOVIM="yes"
+                SKIP_CATPPUCCIN_BAT="yes"
                 SKIP_CATPPUCCIN_GEDIT="yes"
                 SKIP_CATPPUCCIN_GNOME_TEXT_EDITOR="yes"
                 SKIP_CATPPUCCIN_TERMINAL_APP="yes"
@@ -84,6 +92,10 @@ parse_args() {
                 ;;
             --skip-catppuccin-nvim|--skip-catppuccin-neovim|-scn)
                 SKIP_CATPPUCCIN_NEOVIM="yes"
+                shift
+                ;;
+            --skip-catppuccin-bat|-scb)
+                SKIP_CATPPUCCIN_BAT="yes"
                 shift
                 ;;
             --skip-catppuccin-gedit|-scg)
@@ -104,6 +116,18 @@ parse_args() {
                 ;;
             --skip-catppuccin-hyprland|-sch)
                 SKIP_CATPPUCCIN_HYPRLAND="yes"
+                shift
+                ;;
+            --skip-wrapper|-sw)
+                SKIP_ENVIRONMENT_WRAPPER="yes"
+                shift
+                ;;
+            --skip-configure-environment|-sce)
+                SKIP_CONFIGURE_ENVIRONMENT="yes"
+                shift
+                ;;
+            --skip-configure-terminals|-sct)
+                SKIP_CONFIGURE_TERMINALS="yes"
                 shift
                 ;;
             --)
@@ -131,29 +155,36 @@ Usage:
 Options:
   -h,   --help              Show this help message and exit
   -y,   --yes               Automatically answer prompts with yes
-  -r,   --reconfigure       Reconfigure environment (update config files only)
-  -sp,  --skip-packages     Skip package installation step
+  -r,   --reconfigure       Reconfigure dotfiles only (skip installs and terminal config)
+  -sp,  --skip-packages     Skip package-related installs (system packages, Go, lazy tools)
   -sn,  --skip-nerd-font,
-        --skip-nerdfont     Skip Nerd Font installation
+         --skip-nerdfont     Skip Nerd Font installation
   -ss,  --skip-starship     Skip Starship installation
   -st,  --skip-tpm          Skip tmux plugin manager installation
   -sv,  --skip-vim-plug     Skip vim plugin manager installation
-  -sc,  --skip-catppuccin   Skip Catppuccin installations for Vim, Neovim, Gedit, GNOME Text Editor, Terminal.app, Xfce4 Terminal, and Hyprland
+  -sc,  --skip-catppuccin   Skip Catppuccin installations for Vim, Neovim, bat, Gedit, GNOME Text Editor, Terminal.app, Xfce4 Terminal, and Hyprland
   -scv, --skip-catppuccin-vim
-                             Skip Catppuccin installation for Vim
+                              Skip Catppuccin installation for Vim
   -scn, --skip-catppuccin-nvim,
-         --skip-catppuccin-neovim 
-                             Skip Catppuccin installation for Neovim
+          --skip-catppuccin-neovim 
+                              Skip Catppuccin installation for Neovim
+  -scb, --skip-catppuccin-bat
+                              Skip Catppuccin installation for bat
   -scg, --skip-catppuccin-gedit
-                             Skip Catppuccin installation for Gedit
+                              Skip Catppuccin installation for Gedit
   -scgte, --skip-catppuccin-gnome-text-editor
-                             Skip Catppuccin installation for GNOME Text Editor
+                              Skip Catppuccin installation for GNOME Text Editor
   -scta, --skip-catppuccin-terminal-app
-                             Skip Catppuccin installation for Terminal.app (macOS)
+                              Skip Catppuccin installation for Terminal.app (macOS)
   -scx, --skip-catppuccin-xfce4-terminal
-                             Skip Catppuccin installation for Xfce4 Terminal
+                              Skip Catppuccin installation for Xfce4 Terminal
   -sch, --skip-catppuccin-hyprland
-                             Skip Catppuccin installation for Hyprland
+                              Skip Catppuccin installation for Hyprland
+  -sw,  --skip-wrapper      Skip installation of the environment wrapper command
+  -sce, --skip-configure-environment
+                              Skip applying files from repository home/ to target home
+  -sct, --skip-configure-terminals
+                              Skip terminal font configuration prompts and changes
 USAGE
         exit 0
     fi
@@ -1509,6 +1540,11 @@ install_catppuccin_neovim() {
 }
 
 install_catppuccin_bat() {
+    if [ "${SKIP_CATPPUCCIN_BAT:-no}" = "yes" ]; then
+        log_message WARN "Skipping Catppuccin installation for bat."
+        return 0
+    fi
+
     local target_home="$HOME"
     if [ -z "$target_home" ] && command -v getent >/dev/null 2>&1 && [ -n "$CURRENT_USER" ]; then
         target_home=$(getent passwd "$CURRENT_USER" | cut -d: -f6)
@@ -1907,6 +1943,11 @@ install_catppuccin_hyprland() {
 }
 
 install_environment_wrapper() {
+    if [ "${SKIP_ENVIRONMENT_WRAPPER:-no}" = "yes" ]; then
+        log_message WARN "Skipping wrapper installation."
+        return 0
+    fi
+
     local wrapper_path="${ENVIRONMENT_WRAPPER_PATH:-$WRAPPER_INSTALL_PATH}"
     local wrapper_source="${REPOSITORY_DIR:-}/home/.local/bin/${WRAPPER_NAME}"
     local wrapper_dir=""
@@ -1936,6 +1977,11 @@ install_environment_wrapper() {
 }
 
 configure_environment() {
+    if [ "${SKIP_CONFIGURE_ENVIRONMENT:-no}" = "yes" ]; then
+        log_message WARN "Skipping environment configuration."
+        return 0
+    fi
+
     local source_home="${REPOSITORY_DIR:-.}/home"
     if [ ! -d "$source_home" ]; then
         log_message WARN "No home directory in repository. Skipping environment configuration."
@@ -2064,6 +2110,11 @@ configure_environment() {
 }
 
 configure_terminals() {
+    if [ "${SKIP_CONFIGURE_TERMINALS:-no}" = "yes" ]; then
+        log_message WARN "Skipping terminal configuration."
+        return 0
+    fi
+
     local desired_font="JetBrainsMono Nerd Font 12"
     local font_found=0
     local response=""
@@ -2183,7 +2234,7 @@ main() {
     confirm_execution
     install_environment_wrapper
     if [ "$RECONFIGURE_MODE" = "yes" ]; then
-        log_message INFO "Reconfigure mode enabled. Skipping all installation steps."
+        log_message INFO "Reconfigure mode enabled. Skipping installation and terminal configuration steps."
     fi
     install_go_official
     install_packages

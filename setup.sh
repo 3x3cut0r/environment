@@ -677,19 +677,111 @@ install_packages() {
     fi
 }
 
+install_lazy_tools() {
+    if [ "${SKIP_PACKAGES:-no}" = "yes" ]; then
+        log_message WARN "Skipping lazy tool installation."
+        return 0
+    fi
+
+    if ! command -v go >/dev/null 2>&1; then
+        log_message WARN "go not found. Skipping lazy tool installation."
+        return 0
+    fi
+
+    local go_bin_dir=""
+    go_bin_dir=$(go env GOBIN 2>/dev/null || true)
+    if [ -z "$go_bin_dir" ]; then
+        local go_path=""
+        go_path=$(go env GOPATH 2>/dev/null || true)
+        if [ -n "$go_path" ]; then
+            go_bin_dir="$go_path/bin"
+        fi
+    fi
+
+    ensure_go_bin_dir_in_path() {
+        local candidate_dir="$1"
+        if [ -z "$candidate_dir" ]; then
+            return 0
+        fi
+
+        case ":$PATH:" in
+            *":$candidate_dir:"*)
+                ;;
+            *)
+                PATH="$candidate_dir:$PATH"
+                export PATH
+                ;;
+        esac
+    }
+
+    ensure_go_bin_dir_in_path "$go_bin_dir"
+
+    install_single_lazy_tool() {
+        local binary_name="$1"
+        local go_module="$2"
+        local repo_url="$3"
+
+        if command -v "$binary_name" >/dev/null 2>&1; then
+            log_message INFO "$binary_name is already installed."
+            return 0
+        fi
+
+        log_message INFO "Installing $binary_name using go install."
+        if go install "${go_module}@latest" >/dev/null 2>&1; then
+            ensure_go_bin_dir_in_path "$go_bin_dir"
+        fi
+
+        if command -v "$binary_name" >/dev/null 2>&1; then
+            log_message INFO "Installed $binary_name using go install."
+            return 0
+        fi
+
+        log_message WARN "go install failed for $binary_name. Trying git clone fallback."
+        local temp_dir=""
+        temp_dir=$(mktemp -d 2>/dev/null || true)
+
+        if [ -z "$temp_dir" ]; then
+            log_message ERROR "Unable to create temporary directory for $binary_name fallback installation."
+            return 1
+        fi
+
+        if git clone --depth 1 "$repo_url" "$temp_dir" >/dev/null 2>&1 \
+            && (cd "$temp_dir" && go install . >/dev/null 2>&1); then
+            ensure_go_bin_dir_in_path "$go_bin_dir"
+        fi
+
+        if command -v "$binary_name" >/dev/null 2>&1; then
+            log_message INFO "Installed $binary_name using git clone fallback."
+            rm -rf "$temp_dir"
+            return 0
+        fi
+
+        rm -rf "$temp_dir"
+        log_message ERROR "Failed to install $binary_name."
+        return 1
+    }
+
+    local tool_failures=0
+    install_single_lazy_tool "lazygit" "github.com/jesseduffield/lazygit" "https://github.com/jesseduffield/lazygit.git" || tool_failures=$((tool_failures + 1))
+    install_single_lazy_tool "lazydocker" "github.com/jesseduffield/lazydocker" "https://github.com/jesseduffield/lazydocker.git" || tool_failures=$((tool_failures + 1))
+    install_single_lazy_tool "lazysvn" "github.com/sawirricardo/lazysvn" "https://github.com/sawirricardo/lazysvn.git" || tool_failures=$((tool_failures + 1))
+    install_single_lazy_tool "lazynpm" "github.com/jesseduffield/lazynpm" "https://github.com/jesseduffield/lazynpm.git" || tool_failures=$((tool_failures + 1))
+
+    if [ $tool_failures -gt 0 ]; then
+        log_message WARN "$tool_failures lazy tool installation(s) failed."
+    else
+        log_message INFO "All lazy tools installed successfully."
+    fi
+}
+
 install_go_official() {
     if [ "${SKIP_PACKAGES:-no}" = "yes" ]; then
         log_message WARN "Skipping Go installation."
         return 0
     fi
 
-    if ! command -v curl >/dev/null 2>&1; then
-        log_message WARN "curl not found. Skipping Go installation from go.dev."
-        return 0
-    fi
-
     if ! command -v tar >/dev/null 2>&1; then
-        log_message WARN "tar not found. Skipping Go installation from go.dev."
+        log_message WARN "tar not found. Skipping Go installation."
         return 0
     fi
 
@@ -721,106 +813,252 @@ install_go_official() {
             ;;
     esac
 
-    local version_payload=""
-    if ! version_payload=$(curl -fsSL "https://go.dev/VERSION?m=text" 2>/dev/null); then
-        log_message WARN "Unable to fetch latest stable Go version. Skipping Go installation."
-        return 0
-    fi
+    local source_archive_dir="${REPOSITORY_DIR:-.}/sources"
+    local github_sources_base_url="https://media.githubusercontent.com/media/3x3cut0r/environment/main/sources"
 
+    update_go_path() {
+        if [ -d "/usr/local/go/bin" ]; then
+            case ":$PATH:" in
+                *":/usr/local/go/bin:"*)
+                    ;;
+                *)
+                    PATH="/usr/local/go/bin:$PATH"
+                    ;;
+            esac
+        fi
+
+        if [ -d "$HOME/go/bin" ]; then
+            case ":$PATH:" in
+                *":$HOME/go/bin:"*)
+                    ;;
+                *)
+                    PATH="$HOME/go/bin:$PATH"
+                    ;;
+            esac
+        fi
+
+        export PATH
+    }
+
+    install_go_archive() {
+        local archive_path="$1"
+        local source_label="$2"
+        local expected_version="${3:-}"
+        local install_dir="/usr/local/go"
+        local install_failed=0
+
+        if [ ! -f "$archive_path" ]; then
+            log_message WARN "Go archive not found: $archive_path"
+            return 1
+        fi
+
+        if [ "${EUID:-$(id -u)}" -ne 0 ]; then
+            if ! command -v sudo >/dev/null 2>&1; then
+                log_message WARN "Cannot install Go to $install_dir: elevated privileges required but sudo not available."
+                return 1
+            fi
+
+            if ! sudo rm -rf "$install_dir" >/dev/null 2>&1; then
+                install_failed=1
+            elif ! sudo tar -C /usr/local -xzf "$archive_path" >/dev/null 2>&1; then
+                install_failed=1
+            fi
+        else
+            if ! rm -rf "$install_dir" >/dev/null 2>&1; then
+                install_failed=1
+            elif ! tar -C /usr/local -xzf "$archive_path" >/dev/null 2>&1; then
+                install_failed=1
+            fi
+        fi
+
+        if [ $install_failed -eq 1 ]; then
+            log_message WARN "Failed to install Go archive from $source_label"
+            return 1
+        fi
+
+        if [ -x "/usr/local/go/bin/go" ]; then
+            local installed_version=""
+            installed_version=$(/usr/local/go/bin/go version 2>/dev/null | awk '{print $3}')
+
+            if [ -n "$expected_version" ]; then
+                if [ "$installed_version" = "$expected_version" ]; then
+                    log_message INFO "Installed Go $expected_version from $source_label"
+                else
+                    log_message WARN "Go installed from $source_label, but detected version is '$installed_version' (expected '$expected_version')."
+                fi
+            else
+                log_message INFO "Installed Go from $source_label (detected $installed_version)."
+            fi
+
+            update_go_path
+            return 0
+        fi
+
+        log_message WARN "Go installation from $source_label finished, but /usr/local/go/bin/go was not found."
+        return 1
+    }
+
+    is_lfs_pointer_file() {
+        local file_path="$1"
+        if [ ! -f "$file_path" ]; then
+            return 1
+        fi
+
+        local first_line=""
+        first_line=$(sed -n '1p' "$file_path" 2>/dev/null || true)
+        if [ "$first_line" = "version https://git-lfs.github.com/spec/v1" ]; then
+            return 0
+        fi
+
+        return 1
+    }
+
+    select_local_go_archive_name() {
+        local candidate
+        for candidate in "$source_archive_dir"/go*.${go_os}-${go_arch}.tar.gz; do
+            if [ -f "$candidate" ]; then
+                basename "$candidate"
+                return 0
+            fi
+        done
+
+        return 1
+    }
+
+    ensure_local_go_archive() {
+        local archive_name="$1"
+        local archive_path="$source_archive_dir/$archive_name"
+        local temp_archive=""
+
+        if [ -f "$archive_path" ] && ! is_lfs_pointer_file "$archive_path"; then
+            printf '%s' "$archive_path"
+            return 0
+        fi
+
+        if [ ! -f "$archive_path" ]; then
+            log_message WARN "Local Go archive missing: $archive_path"
+        else
+            log_message WARN "Local Go archive is a Git LFS pointer. Downloading archive on demand: $archive_name"
+        fi
+
+        if ! command -v curl >/dev/null 2>&1; then
+            log_message WARN "curl not found. Cannot download fallback archive $archive_name"
+            return 1
+        fi
+
+        mkdir -p "$source_archive_dir"
+        temp_archive=$(mktemp "${TMPDIR:-/tmp}/go-local-fallback-XXXXXX.tar.gz") || {
+            log_message WARN "Unable to create temporary file for local Go fallback archive."
+            return 1
+        }
+
+        local go_dev_url="https://go.dev/dl/$archive_name"
+        local github_url="${github_sources_base_url}/$archive_name"
+
+        if curl -fsSL -o "$temp_archive" "$go_dev_url" >/dev/null 2>&1; then
+            log_message INFO "Downloaded fallback archive from go.dev: $archive_name"
+        elif curl -fsSL -o "$temp_archive" "$github_url" >/dev/null 2>&1; then
+            log_message INFO "Downloaded fallback archive from GitHub sources: $archive_name"
+        else
+            log_message WARN "Unable to download fallback archive $archive_name from go.dev or GitHub."
+            rm -f "$temp_archive"
+            return 1
+        fi
+
+        if ! tar -tzf "$temp_archive" >/dev/null 2>&1; then
+            log_message WARN "Downloaded fallback archive is invalid: $archive_name"
+            rm -f "$temp_archive"
+            return 1
+        fi
+
+        if mv "$temp_archive" "$archive_path"; then
+            printf '%s' "$archive_path"
+            return 0
+        fi
+
+        log_message WARN "Failed to persist fallback archive at $archive_path"
+        rm -f "$temp_archive"
+        return 1
+    }
+
+    local version_payload=""
     local go_version=""
-    go_version=$(printf '%s\n' "$version_payload" | awk 'NR==1 {print $1}')
-    if [[ ! "$go_version" =~ ^go[0-9] ]]; then
-        log_message WARN "Received invalid Go version string: $go_version"
-        return 0
+
+    if command -v curl >/dev/null 2>&1; then
+        if version_payload=$(curl -fsSL "https://go.dev/VERSION?m=text" 2>/dev/null); then
+            go_version=$(printf '%s\n' "$version_payload" | awk 'NR==1 {print $1}')
+            if [[ ! "$go_version" =~ ^go[0-9] ]]; then
+                log_message WARN "Received invalid Go version string: $go_version"
+                go_version=""
+            fi
+        else
+            log_message WARN "Unable to fetch latest stable Go version from go.dev."
+        fi
+    else
+        log_message WARN "curl not found. Skipping Go installation from go.dev and using local fallback if available."
     fi
 
     local current_go_version=""
-    if command -v go >/dev/null 2>&1; then
+    if [ -n "$go_version" ] && command -v go >/dev/null 2>&1; then
         current_go_version=$(go version 2>/dev/null | awk '{print $3}')
         if [ "$current_go_version" = "$go_version" ]; then
             log_message INFO "Go $go_version already installed."
+            update_go_path
             return 0
         fi
     fi
 
-    local archive_name="${go_version}.${go_os}-${go_arch}.tar.gz"
-    local download_url="https://go.dev/dl/${archive_name}"
-    local temp_archive=""
-    temp_archive=$(mktemp "${TMPDIR:-/tmp}/go-archive-XXXXXX.tar.gz") || {
-        log_message WARN "Unable to create temporary file for Go archive."
-        return 0
-    }
-
-    log_message INFO "Downloading Go archive: $archive_name"
-    if ! curl -fsSL -o "$temp_archive" "$download_url" >/dev/null 2>&1; then
-        log_message WARN "Failed to download Go archive from $download_url"
-        rm -f "$temp_archive"
+    local fallback_archive_name=""
+    if [ -n "$go_version" ]; then
+        fallback_archive_name="${go_version}.${go_os}-${go_arch}.tar.gz"
+    elif fallback_archive_name=$(select_local_go_archive_name); then
+        :
+    else
+        log_message WARN "No local Go archive found for ${go_os}-${go_arch} in $source_archive_dir"
         return 0
     fi
 
-    local install_dir="/usr/local/go"
-    local install_failed=0
+    if [ -n "$go_version" ] && command -v curl >/dev/null 2>&1; then
+        local archive_name="$fallback_archive_name"
+        local download_url="https://go.dev/dl/${archive_name}"
+        local temp_archive=""
+        temp_archive=$(mktemp "${TMPDIR:-/tmp}/go-archive-XXXXXX.tar.gz") || {
+            log_message WARN "Unable to create temporary file for Go archive."
+            go_version=""
+        }
 
-    if [ "${EUID:-$(id -u)}" -ne 0 ]; then
-        if ! command -v sudo >/dev/null 2>&1; then
-            log_message WARN "Cannot install Go to $install_dir: elevated privileges required but sudo not available."
+        if [ -n "$temp_archive" ]; then
+            log_message INFO "Downloading Go archive from go.dev: $archive_name"
+            if curl -fsSL -o "$temp_archive" "$download_url" >/dev/null 2>&1; then
+                if install_go_archive "$temp_archive" "go.dev" "$go_version"; then
+                    rm -f "$temp_archive"
+                    return 0
+                fi
+                log_message WARN "Installation from go.dev failed. Trying local fallback."
+            else
+                log_message WARN "Failed to download Go archive from $download_url"
+                log_message WARN "Trying local fallback."
+            fi
             rm -f "$temp_archive"
-            return 0
-        fi
-
-        if ! sudo rm -rf "$install_dir" >/dev/null 2>&1; then
-            install_failed=1
-        elif ! sudo tar -C /usr/local -xzf "$temp_archive" >/dev/null 2>&1; then
-            install_failed=1
-        fi
-    else
-        if ! rm -rf "$install_dir" >/dev/null 2>&1; then
-            install_failed=1
-        elif ! tar -C /usr/local -xzf "$temp_archive" >/dev/null 2>&1; then
-            install_failed=1
         fi
     fi
 
-    rm -f "$temp_archive"
-
-    if [ $install_failed -eq 1 ]; then
-        log_message WARN "Failed to install Go archive into /usr/local/go"
+    local local_archive=""
+    if ! local_archive=$(ensure_local_go_archive "$fallback_archive_name"); then
+        log_message WARN "Local Go fallback archive not available: $fallback_archive_name"
         return 0
     fi
 
-    if [ -x "/usr/local/go/bin/go" ]; then
-        local installed_version=""
-        installed_version=$(/usr/local/go/bin/go version 2>/dev/null | awk '{print $3}')
-        if [ "$installed_version" = "$go_version" ]; then
-            log_message INFO "Installed Go $go_version from go.dev"
-        else
-            log_message WARN "Go installed, but detected version is '$installed_version' (expected '$go_version')."
-        fi
-    else
-        log_message WARN "Go installation finished, but /usr/local/go/bin/go was not found."
+    local fallback_version="$go_version"
+    if [ -z "$fallback_version" ]; then
+        local local_name=""
+        local_name=$(basename "$local_archive")
+        fallback_version=${local_name%%.${go_os}-${go_arch}.tar.gz}
     fi
 
-    if [ -d "/usr/local/go/bin" ]; then
-        case ":$PATH:" in
-            *":/usr/local/go/bin:"*)
-                ;;
-            *)
-                PATH="/usr/local/go/bin:$PATH"
-                ;;
-        esac
+    if ! install_go_archive "$local_archive" "local sources archive ($local_archive)" "$fallback_version"; then
+        log_message WARN "Local Go fallback installation failed."
     fi
-
-    if [ -d "$HOME/go/bin" ]; then
-        case ":$PATH:" in
-            *":$HOME/go/bin:"*)
-                ;;
-            *)
-                PATH="$HOME/go/bin:$PATH"
-                ;;
-        esac
-    fi
-
-    export PATH
 }
 
 install_nerd_font() {
@@ -1950,6 +2188,7 @@ main() {
     fi
     install_go_official
     install_packages
+    install_lazy_tools
     install_nerd_font
     install_starship
     install_tmux_plugin_manager

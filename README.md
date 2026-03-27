@@ -5,7 +5,7 @@
 This repository provides a setup script that performs fundamental shell customizations and merges curated configuration snippets into an existing workstation.
 
 - `install_packages`: Installs the baseline package set required for the configured tooling.
-- `install_go_official`: Installs or updates Go from the latest official `go.dev` archive.
+- `install_go_official`: Installs or updates Go from the latest official `go.dev` archive, with local `sources/` fallback on failure.
 - `install_nerd_font`: Downloads and installs the Nerd Font variant used across prompts and editors.
 - `install_starship`: Sets up the Starship prompt with the repository's theme defaults.
 - `install_tmux_plugin_manager`: Fetches and configures the tmux plugin manager (TPM) for plugin handling.
@@ -69,6 +69,7 @@ This repository provides a setup script that performs fundamental shell customiz
 │   ├── .zprofile.append             # Zsh login shell profile additions
 │   └── .zshrc.append                # Zsh interactive shell configuration
 ├── packages.list                    # System packages (before marker) and pip packages (after marker)
+├── sources/                         # Bundled Go archives used as fallback during setup
 ├── setup.sh                         # Bootstrap script orchestrating the environment setup
 └── vars/                            # Prompt and helper data consumed by the setup script
     ├── PATH                         # PATH snippet merged into shell profiles
@@ -112,13 +113,20 @@ cd environment
 - Entries before the marker are installed as system packages via the detected package manager.
 - Entries before the marker can also contain one or more quoted commands. Everything inside `"..."` is treated as a shell command.
   Example lines:
-  `lazydocker "curl -fsSL https://raw.githubusercontent.com/jesseduffield/lazydocker/master/scripts/install_update_linux.sh | bash"`
-  `"go install github.com/jesseduffield/lazygit@latest" lazygit`
+  `fd fd-find fdfind`
+  `make gmake`
   If a line starts with a quoted command, the command runs first and package-manager fallback runs afterwards.
   Otherwise, package-manager install runs first and quoted commands run afterwards.
 - Entries after the marker are installed via `python3 -m pip install`.
 - Go is installed separately from the official `go.dev` release archive (latest stable, dynamic version lookup), not from the system package manager, before package processing starts.
+- If official Go archive download or installation fails, setup falls back to a matching local archive from `sources/` (for example `go*.linux-amd64.tar.gz` or `go*.linux-arm64.tar.gz`).
+- If that local archive is missing or present as a Git LFS pointer (common when running via `curl ... | bash` tarball flow), setup fetches it on demand (first from `go.dev`, then from GitHub `sources/`) and then installs it.
 - When Go is installed in `/usr/local/go`, the setup also adds `/usr/local/go/bin` and (if present) `$HOME/go/bin` to `PATH`.
+- After `install_packages`, setup installs `lazygit`, `lazydocker`, `lazysvn`, and `lazynpm` via `go install`.
+- If `go install` fails for one of these tools, setup falls back to `git clone --depth 1` and `go install .` from the cloned repository.
+
+Archive files in this repository are tracked with Git LFS.
+When using a local clone, `git lfs pull` remains optional because setup can now fetch fallback archives on demand if needed.
 
 After a successful run, the script also tries to install the user-local wrapper command `environment` at `~/.local/bin/environment`.
 The wrapper always downloads and runs the latest `setup.sh` from GitHub.

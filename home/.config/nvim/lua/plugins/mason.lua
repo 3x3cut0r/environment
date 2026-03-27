@@ -1,7 +1,6 @@
 return {
   {
     "williamboman/mason.nvim",
-    build = ":MasonUpdate",
     opts = {
       ui = {
         border = "rounded",
@@ -25,7 +24,6 @@ return {
         "ansiblels",
         "groovyls",
       },
-      automatic_enable = false,
     },
   },
   {
@@ -37,6 +35,7 @@ return {
       ensure_installed = {
         "ruff",
         "ansible-lint",
+        "shellcheck",
       },
       auto_update = false,
       run_on_start = true,

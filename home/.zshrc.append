@@ -1,9 +1,11 @@
+# shellcheck shell=bash
 export EDITOR="nvim"
 export VISUAL="nvim"
 
 # history
 HISTFILE="$HOME/.zsh_history"
 HISTSIZE=100000
+# shellcheck disable=SC2034
 SAVEHIST=100000
 
 setopt APPEND_HISTORY        # append to history file, don't overwrite
@@ -42,7 +44,7 @@ if [[ $- == *i* ]]; then
 fi
 
 if [ -f "${HOME}/.config/aliases.list" ]; then
-  # shellcheck disable=SC1090
+  # shellcheck disable=SC1091
   . "${HOME}/.config/aliases.list"
 fi
 

@@ -1,3 +1,5 @@
+# shellcheck shell=sh
 if [ -n "${ZSH_VERSION-}" ] && [ -f "${HOME}/.zshrc" ]; then
+  # shellcheck disable=SC1091
   . "${HOME}/.zshrc"
 fi

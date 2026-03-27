@@ -434,15 +434,12 @@ confirm_execution() {
 
         printf '[Environment][\033[35mINPUT\033[0m] %s' "$prompt"
 
-        local read_status=0
         if [ -t 0 ]; then
             if ! read -r response; then
-                read_status=$?
                 response=""
             fi
         else
             if ! read -r response </dev/tty; then
-                read_status=$?
                 response=""
             fi
         fi
@@ -915,7 +912,7 @@ install_go_official() {
 
     select_local_go_archive_name() {
         local candidate
-        for candidate in "$source_archive_dir"/go*.${go_os}-${go_arch}.tar.gz; do
+        for candidate in "$source_archive_dir"/go*."${go_os}"-"${go_arch}".tar.gz; do
             if [ -f "$candidate" ]; then
                 basename "$candidate"
                 return 0
@@ -1053,7 +1050,7 @@ install_go_official() {
     if [ -z "$fallback_version" ]; then
         local local_name=""
         local_name=$(basename "$local_archive")
-        fallback_version=${local_name%%.${go_os}-${go_arch}.tar.gz}
+        fallback_version=${local_name%%."${go_os}"-"${go_arch}".tar.gz}
     fi
 
     if ! install_go_archive "$local_archive" "local sources archive ($local_archive)" "$fallback_version"; then
@@ -1210,6 +1207,7 @@ determine_comment_prefix() {
                 continue
             fi
 
+            # shellcheck disable=SC2254
             case "$relative_path" in
                 $pattern)
                     printf '%s' "$prefix"
@@ -2145,13 +2143,14 @@ configure_terminals() {
         fi
 
         local profile profile_list
+        local updated_any=0
         profile_list=$(gsettings get org.gnome.Terminal.ProfilesList list 2>/dev/null | tr -d "[],'" 2>/dev/null || true)
         if [ -z "$profile_list" ]; then
             log_message WARN "No GNOME Terminal profiles found. Skipping GNOME Terminal configuration."
             return
         fi
 
-        for profile in "$profile_list"; do
+        for profile in $profile_list; do
             local profile_path="/org/gnome/terminal/legacy/profiles:/:$profile/"
             if gsettings set "org.gnome.Terminal.Legacy.Profile:$profile_path" use-system-font false >/dev/null 2>&1 \
                 && gsettings set "org.gnome.Terminal.Legacy.Profile:$profile_path" font "$desired_font" >/dev/null 2>&1; then
@@ -2161,7 +2160,7 @@ configure_terminals() {
             fi
         done
 
-        if [ $updated_any -eq 1 ]; then
+        if [ "$updated_any" -eq 1 ]; then
             log_message INFO "Configured GNOME Terminal to use $desired_font."
             log_message INFO "GNOME Terminal may look broken now."
         fi

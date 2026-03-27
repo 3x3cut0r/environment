@@ -161,7 +161,7 @@ Options:
          --skip-nerdfont     Skip Nerd Font installation
   -ss,  --skip-starship     Skip Starship installation
   -st,  --skip-tpm          Skip tmux plugin manager installation
-  -sv,  --skip-vim-plug     Skip vim plugin manager installation
+  -sv,  --skip-vim-plug     Skip vim-plug installation for Vim
   -sc,  --skip-catppuccin   Skip Catppuccin installations for Vim, Neovim, bat, Gedit, GNOME Text Editor, Terminal.app, Xfce4 Terminal, and Hyprland
   -scv, --skip-catppuccin-vim
                               Skip Catppuccin installation for Vim
@@ -1457,13 +1457,12 @@ install_tmux_plugin_manager() {
 
 install_vim_plugin_manager() {
     if [ "${SKIP_VIM_PLUGIN_MANAGER:-no}" = "yes" ]; then
-        log_message WARN "Skipping vim-plug (vim plugin manager) installation"
+        log_message WARN "Skipping vim-plug installation for Vim."
         return 0
     fi
 
     local plug_url="https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim"
     local vim_plug_path="$HOME/.vim/autoload/plug.vim"
-    local nvim_plug_path="$HOME/.local/share/nvim/site/autoload/plug.vim"
 
     if ! command -v curl >/dev/null 2>&1; then
         log_message WARN "curl is required to install vim-plug. Skipping installation."
@@ -1475,13 +1474,6 @@ install_vim_plugin_manager() {
         log_message INFO "Installed vim-plug for Vim at $vim_plug_path."
     else
         log_message WARN "Failed to install vim-plug for Vim."
-    fi
-
-    mkdir -p "$(dirname "$nvim_plug_path")"
-    if curl -fLo "$nvim_plug_path" --create-dirs "$plug_url" >/dev/null 2>&1; then
-        log_message INFO "Installed vim-plug for Neovim at $nvim_plug_path."
-    else
-        log_message WARN "Failed to install vim-plug for Neovim."
     fi
 }
 
@@ -1518,25 +1510,26 @@ install_catppuccin_neovim() {
         return 0
     fi
 
-    local source_init="${REPOSITORY_DIR:-.}/home/.config/nvim/init.vim"
+    local source_init="${REPOSITORY_DIR:-.}/home/.config/nvim/init.lua"
+    local catppuccin_plugin="${REPOSITORY_DIR:-.}/home/.config/nvim/lua/plugins/catppuccin.lua"
 
     if ! command -v nvim >/dev/null 2>&1; then
         log_message WARN "Neovim is required to install plugins. Skipping Catppuccin installation for Neovim."
         return 0
     fi
 
-    if [ ! -f "$HOME/.local/share/nvim/site/autoload/plug.vim" ]; then
-        log_message WARN "vim-plug is not installed for Neovim. Skipping Catppuccin installation for Neovim."
-        return 0
-    fi
-
     if [ ! -f "$source_init" ]; then
-        log_message WARN "Neovim configuration with Catppuccin plugin definition not found. Skipping installation."
+        log_message WARN "Neovim init.lua not found in repository. Skipping Catppuccin installation."
         return 0
     fi
 
-    log_message INFO "Installing Catppuccin theme for Neovim using vim-plug."
-    nvim --headless -u "$source_init" +'PlugInstall --sync' +qa </dev/null >/dev/null 2>&1 || true
+    if [ ! -f "$catppuccin_plugin" ]; then
+        log_message WARN "Neovim Catppuccin lazy.nvim plugin definition not found. Skipping installation."
+        return 0
+    fi
+
+    log_message INFO "Installing Catppuccin theme for Neovim using lazy.nvim."
+    nvim --headless -u "$source_init" "+lua require('lazy').sync({ wait = true })" +qa </dev/null >/dev/null 2>&1 || true
 }
 
 install_catppuccin_bat() {

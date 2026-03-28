@@ -37,6 +37,7 @@ vi
 vim vim-enhanced
 watch procps-ng procps
 wget
+wl-clipboard
 wormhole magic-wormhole
 xclip
 xsel

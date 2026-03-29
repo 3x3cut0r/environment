@@ -1,0 +1,80 @@
+{
+  "$schema": "https://opencode.ai/config.json",
+  "permission": {
+    "*": "ask",
+
+    // Read-only tools: always allow
+    "read": {
+      "*": "allow",
+
+      // Secret-like files should never be readable
+      "*.env": "deny",
+      "*.env.*": "deny",
+      "*.credentials*": "deny",
+      "*.secret*": "deny",
+      "*.pem": "deny",
+      "*.key": "deny",
+      "*.p12": "deny",
+      "*.pfx": "deny",
+      "*.kdbx": "deny",
+      "*.agekey": "deny",
+      "*/id_rsa": "deny",
+      "*/id_ed25519": "deny"
+    },
+    "glob": {
+      "*": "allow"
+    },
+    "grep": {
+      "*": "allow"
+    },
+    "list": {
+      "*": "allow"
+    },
+    "lsp": "allow",
+    "webfetch": {
+      "*": "allow"
+    },
+    "websearch": {
+      "*": "allow"
+    },
+    "codesearch": {
+      "*": "allow"
+    },
+
+    // Allow access outside workspace specifically for HOME,
+    // then block security-critical paths/files.
+    "external_directory": {
+      "*": "ask",
+      "~/*": "allow",
+      "$HOME/*": "allow",
+
+      "~/.ssh/*": "deny",
+      "$HOME/.ssh/*": "deny",
+      "~/.gnupg/*": "deny",
+      "$HOME/.gnupg/*": "deny",
+      "~/.aws/credentials": "deny",
+      "$HOME/.aws/credentials": "deny",
+      "~/.kube/config": "deny",
+      "$HOME/.kube/config": "deny",
+      "~/.docker/config.json": "deny",
+      "$HOME/.docker/config.json": "deny",
+      "~/.netrc": "deny",
+      "$HOME/.netrc": "deny",
+      "~/.pypirc": "deny",
+      "$HOME/.pypirc": "deny",
+      "~/.npmrc": "deny",
+      "$HOME/.npmrc": "deny",
+
+      "~/*/.env": "deny",
+      "~/*/.env.*": "deny",
+      "~/*.credentials*": "deny",
+      "~/*.secret*": "deny",
+      "~/*.pem": "deny",
+      "~/*.key": "deny",
+      "~/*.p12": "deny",
+      "~/*.pfx": "deny",
+      "~/*/id_rsa": "deny",
+      "~/*/id_ed25519": "deny"
+    }
+  }
+}

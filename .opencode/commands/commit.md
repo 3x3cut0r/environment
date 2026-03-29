@@ -34,16 +34,21 @@ Rules:
    - If `confirm=true`: ask for explicit confirmation before committing.
    - If confirmation is declined: stop without creating a commit.
 7. Untracked file behavior for git:
-   - Default is `untracked=ask`: if untracked files exist, list them and ask whether to include them.
-   - If `untracked=true`: stage untracked files before commit.
-   - If `untracked=false`: never stage untracked files automatically.
-   - Always refuse to auto-stage likely sensitive or artifact paths (for example `.env*`, `*.pem`, `*.key`, `*.p12`, `id_rsa*`, `credentials*`, `*.log`, `node_modules/`, `dist/`, `build/`, `.cache/`) unless explicitly and individually confirmed.
+    - Default is `untracked=ask`: if untracked files exist, list them and ask whether to include them.
+    - If `untracked=true`: stage untracked files before commit.
+    - If `untracked=false`: never stage untracked files automatically.
+    - Always refuse to auto-stage likely sensitive or artifact paths (for example `.env*`, `*.pem`, `*.key`, `*.p12`, `id_rsa*`, `credentials*`, `*.log`, `node_modules/`, `dist/`, `build/`, `.cache/`) unless explicitly and individually confirmed.
 
 Execution:
 - If `VCS=none`: stop and report that neither git nor svn repository was detected.
 - If `VCS=git`:
+  - Determine untracked files first via `git status --porcelain`.
   - If there are no staged changes but tracked modifications exist, run `git add -u`.
-  - Apply `untracked` behavior to untracked files.
+  - Apply `untracked` behavior to untracked files explicitly:
+    - `untracked=true`: stage all allowed untracked files.
+    - `untracked=false`: stage none.
+    - `untracked=ask`: prompt once with the file list; stage only if confirmed.
+  - If `untracked=true` is set, never print or enforce "Do not auto-add untracked files".
   - If there is still nothing to commit, stop with a clear message.
   - Respect `confirm` behavior before running the commit.
   - Commit with the generated message.

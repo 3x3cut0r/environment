@@ -13,6 +13,7 @@ Rules:
    - `type=<feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert>`
    - `scope=<name>`
    - `breaking=true|false`
+   - `untracked=ask|true|false` (default: `ask`)
    - `confirm=true|false` (default: `false`; when `true`, require confirmation before commit)
    - `desc="short summary"`
    - `body="longer explanation"`
@@ -32,12 +33,17 @@ Rules:
    - Default is `confirm=false`: commit immediately after preview.
    - If `confirm=true`: ask for explicit confirmation before committing.
    - If confirmation is declined: stop without creating a commit.
+7. Untracked file behavior for git:
+   - Default is `untracked=ask`: if untracked files exist, list them and ask whether to include them.
+   - If `untracked=true`: stage untracked files before commit.
+   - If `untracked=false`: never stage untracked files automatically.
+   - Always refuse to auto-stage likely sensitive or artifact paths (for example `.env*`, `*.pem`, `*.key`, `*.p12`, `id_rsa*`, `credentials*`, `*.log`, `node_modules/`, `dist/`, `build/`, `.cache/`) unless explicitly and individually confirmed.
 
 Execution:
 - If `VCS=none`: stop and report that neither git nor svn repository was detected.
 - If `VCS=git`:
   - If there are no staged changes but tracked modifications exist, run `git add -u`.
-  - Do not auto-add untracked files.
+  - Apply `untracked` behavior to untracked files.
   - If there is still nothing to commit, stop with a clear message.
   - Respect `confirm` behavior before running the commit.
   - Commit with the generated message.

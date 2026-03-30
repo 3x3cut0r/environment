@@ -6,6 +6,7 @@ This repository provides a setup script that performs fundamental shell customiz
 
 - `install_packages`: Installs the baseline package set required for the configured tooling.
 - `install_go_official`: Installs or updates Go from the latest official `go.dev` archive, with local `sources/` fallback on failure.
+- `install_neovim_official`: Installs or updates Neovim from the latest official GitHub `tar.gz` release, deploys to `/opt/nvim/neovim-<version>`, and links `/usr/local/bin/nvim`.
 - `install_nerd_font`: Downloads and installs the Nerd Font variant used across prompts and editors.
 - `install_starship`: Sets up the Starship prompt with the repository's theme defaults.
 - `install_tmux_plugin_manager`: Fetches and configures the tmux plugin manager (TPM) for plugin handling.
@@ -119,6 +120,8 @@ cd environment
   Otherwise, package-manager install runs first and quoted commands run afterwards.
 - Entries after the marker are installed via `python3 -m pip install`.
 - Go is installed separately from the official `go.dev` release archive (latest stable, dynamic version lookup), not from the system package manager, before package processing starts.
+- Neovim is installed separately from the latest GitHub release `tar.gz` archive (not from the system package manager), then linked to `/usr/local/bin/nvim`.
+- After successful Neovim installation, old versions under `/opt/nvim/neovim-*` are removed automatically.
 - If official Go archive download or installation fails, setup falls back to a matching local archive from `sources/` (for example `go*.linux-amd64.tar.gz` or `go*.linux-arm64.tar.gz`).
 - If that local archive is missing or present as a Git LFS pointer (common when running via `curl ... | bash` tarball flow), setup fetches it on demand (first from `go.dev`, then from GitHub `sources/`) and then installs it.
 - When Go is installed in `/usr/local/go`, the setup also adds `/usr/local/go/bin` and (if present) `$HOME/go/bin` to `PATH`.
@@ -157,7 +160,7 @@ Options:
   -h,   --help              Show this help message and exit
   -y,   --yes               Automatically answer prompts with yes
   -r,   --reconfigure       Reconfigure dotfiles only (skip installs and terminal config)
-  -sp,  --skip-packages     Skip package-related installs (system packages, Go, lazy tools)
+  -sp,  --skip-packages     Skip package-related installs (system packages, Go, Neovim, lazy tools)
   -sn,  --skip-nerd-font,
          --skip-nerdfont     Skip Nerd Font installation
   -ss,  --skip-starship     Skip Starship installation

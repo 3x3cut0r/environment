@@ -156,7 +156,7 @@ Options:
   -h,   --help              Show this help message and exit
   -y,   --yes               Automatically answer prompts with yes
   -r,   --reconfigure       Reconfigure dotfiles only (skip installs and terminal config)
-  -sp,  --skip-packages     Skip package-related installs (system packages, Go, lazy tools)
+  -sp,  --skip-packages     Skip package-related installs (system packages, Go, Neovim, lazy tools)
   -sn,  --skip-nerd-font,
          --skip-nerdfont     Skip Nerd Font installation
   -ss,  --skip-starship     Skip Starship installation
@@ -1087,6 +1087,166 @@ install_go_official() {
     if ! install_go_archive "$local_archive" "local sources archive ($local_archive)" "$fallback_version"; then
         log_message WARN "Local Go fallback installation failed."
     fi
+}
+
+install_neovim_official() {
+    if [ "${SKIP_PACKAGES:-no}" = "yes" ]; then
+        log_message WARN "Skipping Neovim installation."
+        return 0
+    fi
+
+    if ! command -v curl >/dev/null 2>&1; then
+        log_message WARN "curl not found. Skipping Neovim installation."
+        return 0
+    fi
+
+    if ! command -v tar >/dev/null 2>&1; then
+        log_message WARN "tar not found. Skipping Neovim installation."
+        return 0
+    fi
+
+    local nvim_os=""
+    case "$OS_KERNEL" in
+        Linux)
+            nvim_os="linux"
+            ;;
+        Darwin)
+            nvim_os="macos"
+            ;;
+        *)
+            log_message WARN "Unsupported OS for official Neovim archive installation: $OS_KERNEL"
+            return 0
+            ;;
+    esac
+
+    local nvim_arch=""
+    case "$OS_ARCH" in
+        x86_64|amd64)
+            nvim_arch="x86_64"
+            ;;
+        aarch64|arm64)
+            nvim_arch="arm64"
+            ;;
+        *)
+            log_message WARN "Unsupported architecture for official Neovim archive installation: $OS_ARCH"
+            return 0
+            ;;
+    esac
+
+    local release_payload=""
+    local nvim_version=""
+    local latest_release_api="https://api.github.com/repos/neovim/neovim/releases/latest"
+    if release_payload=$(curl -fsSL "$latest_release_api" 2>/dev/null); then
+        nvim_version=$(printf '%s\n' "$release_payload" | sed -n 's/.*"tag_name":[[:space:]]*"\([^"]*\)".*/\1/p' | awk 'NR==1 {print; exit}')
+    fi
+
+    if [ -z "$nvim_version" ]; then
+        nvim_version="latest"
+    fi
+
+    local archive_name="nvim-${nvim_os}-${nvim_arch}.tar.gz"
+    local download_url="https://github.com/neovim/neovim/releases/latest/download/${archive_name}"
+    local temp_archive=""
+    local temp_dir=""
+    temp_archive=$(mktemp "${TMPDIR:-/tmp}/nvim-archive-XXXXXX.tar.gz") || {
+        log_message ERROR "Unable to create temporary archive file for Neovim installation."
+        return 1
+    }
+
+    temp_dir=$(mktemp -d) || {
+        log_message ERROR "Unable to create temporary directory for Neovim installation."
+        rm -f "$temp_archive"
+        return 1
+    }
+
+    log_message INFO "Downloading Neovim archive from GitHub: $archive_name"
+    if ! curl -fsSL -o "$temp_archive" "$download_url" >/dev/null 2>&1; then
+        log_message ERROR "Failed to download Neovim archive from GitHub: $download_url"
+        rm -f "$temp_archive"
+        rm -rf "$temp_dir"
+        return 1
+    fi
+
+    if ! tar -xzf "$temp_archive" -C "$temp_dir" >/dev/null 2>&1; then
+        log_message ERROR "Failed to extract Neovim archive: $archive_name"
+        rm -f "$temp_archive"
+        rm -rf "$temp_dir"
+        return 1
+    fi
+
+    local extracted_dir=""
+    extracted_dir=$(find "$temp_dir" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | awk 'NR==1 {print; exit}')
+    if [ -z "$extracted_dir" ] || [ ! -x "$extracted_dir/bin/nvim" ]; then
+        log_message ERROR "Extracted Neovim archive does not contain a usable bin/nvim binary."
+        rm -f "$temp_archive"
+        rm -rf "$temp_dir"
+        return 1
+    fi
+
+    local install_base_dir="/opt/nvim"
+    local install_dir="${install_base_dir}/neovim-${nvim_version}"
+    local symlink_path="/usr/local/bin/nvim"
+    local install_failed=0
+
+    if [ "${EUID:-$(id -u)}" -ne 0 ]; then
+        if ! command -v sudo >/dev/null 2>&1; then
+            log_message ERROR "Cannot install Neovim to $install_dir: elevated privileges required but sudo not available."
+            rm -f "$temp_archive"
+            rm -rf "$temp_dir"
+            return 1
+        fi
+
+        if ! sudo mkdir -p "$install_base_dir" >/dev/null 2>&1; then
+            install_failed=1
+        elif ! sudo rm -rf "$install_dir" >/dev/null 2>&1; then
+            install_failed=1
+        elif ! sudo cp -R "$extracted_dir" "$install_dir" >/dev/null 2>&1; then
+            install_failed=1
+        elif ! sudo chown -R root:root "$install_dir" >/dev/null 2>&1; then
+            install_failed=1
+        elif ! sudo chmod -R a+rX "$install_dir" >/dev/null 2>&1; then
+            install_failed=1
+        elif ! sudo ln -sfn "$install_dir/bin/nvim" "$symlink_path" >/dev/null 2>&1; then
+            install_failed=1
+        fi
+    else
+        if ! mkdir -p "$install_base_dir" >/dev/null 2>&1; then
+            install_failed=1
+        elif ! rm -rf "$install_dir" >/dev/null 2>&1; then
+            install_failed=1
+        elif ! cp -R "$extracted_dir" "$install_dir" >/dev/null 2>&1; then
+            install_failed=1
+        elif ! chown -R root:root "$install_dir" >/dev/null 2>&1; then
+            install_failed=1
+        elif ! chmod -R a+rX "$install_dir" >/dev/null 2>&1; then
+            install_failed=1
+        elif ! ln -sfn "$install_dir/bin/nvim" "$symlink_path" >/dev/null 2>&1; then
+            install_failed=1
+        fi
+    fi
+
+    rm -f "$temp_archive"
+    rm -rf "$temp_dir"
+
+    if [ $install_failed -eq 1 ] || [ ! -x "$symlink_path" ]; then
+        log_message ERROR "Failed to install Neovim to $symlink_path"
+        return 1
+    fi
+
+    local candidate_dir=""
+    for candidate_dir in "$install_base_dir"/neovim-*; do
+        if [ "$candidate_dir" = "$install_dir" ] || [ ! -d "$candidate_dir" ]; then
+            continue
+        fi
+
+        if [ "${EUID:-$(id -u)}" -ne 0 ]; then
+            sudo rm -rf "$candidate_dir" >/dev/null 2>&1 || true
+        else
+            rm -rf "$candidate_dir" >/dev/null 2>&1 || true
+        fi
+    done
+
+    log_message INFO "Installed Neovim ${nvim_version} at $install_dir and linked $symlink_path"
 }
 
 install_nerd_font() {
@@ -2230,6 +2390,7 @@ main() {
         log_message INFO "Reconfigure mode enabled. Skipping installation and terminal configuration steps."
     fi
     install_go_official
+    install_neovim_official
     install_packages
     install_lazy_tools
     install_nerd_font

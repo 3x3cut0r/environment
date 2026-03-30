@@ -24,7 +24,6 @@ make gmake
 mtr mtr-tiny
 nano
 ncdu
-nvim neovim
 net-tools
 python3
 python3-pip

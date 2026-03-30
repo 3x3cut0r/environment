@@ -13,6 +13,10 @@ git-lfs
 jq
 lshw
 lua
+lua5.1
+lua5.2
+lua5.3
+lua5.4
 make gmake
 mtr mtr-tiny
 nano

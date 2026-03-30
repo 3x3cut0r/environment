@@ -2,6 +2,8 @@ bash-completion
 bat
 bind bind-utils dnsutils
 btop
+ca-certificates
+cmake
 curl
 dog
 eza exa

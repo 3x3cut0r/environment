@@ -1,5 +1,5 @@
 ---
-description: Update working copy for git or svn
+description: Update working copy for git or svn (no parameters)
 agent: build
 ---
 

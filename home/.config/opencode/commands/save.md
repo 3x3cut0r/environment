@@ -1,5 +1,5 @@
 ---
-description: Save current session context into TASKS.md
+description: Save current session context into TASKS.md (path=, mode=, confirm=)
 agent: build
 ---
 

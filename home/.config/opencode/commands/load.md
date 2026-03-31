@@ -1,5 +1,5 @@
 ---
-description: Load TASKS.md context and optionally execute an instruction
+description: Load TASKS.md context and optionally execute an instruction (path=, instruction=, strict=)
 agent: build
 ---
 

@@ -1,5 +1,5 @@
 ---
-description: Create, review, simplify, or expand a README
+description: Create, review, simplify, or expand a README (mode=, length=, audience=, path=, instruction=)
 agent: build
 ---
 

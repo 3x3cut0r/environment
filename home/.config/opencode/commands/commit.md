@@ -1,5 +1,5 @@
 ---
-description: Create a Conventional Commit for git or svn
+description: Create a Conventional Commit for git or svn (type=, scope=, untracked=, track=, push=)
 agent: build
 ---
 
@@ -14,6 +14,7 @@ Rules:
    - `scope=<name>`
    - `breaking=true|false`
    - `untracked=ask|true|false` (default: `ask`)
+   - `track=<path>` (optional; stage one explicitly specified untracked file)
    - `confirm=true|false` (default: `false`; when `true`, require confirmation before commit)
    - `push=true|false` (default: `false`; git only, pushes after a successful commit)
    - `desc="short summary"`
@@ -35,14 +36,22 @@ Rules:
    - If `confirm=true`: ask for explicit confirmation before committing.
    - If confirmation is declined: stop without creating a commit.
 7. Untracked file behavior for git:
-    - Default is `untracked=ask`: if untracked files exist, list them and ask whether to include them.
-    - If `untracked=true`: stage untracked files before commit.
-    - If `untracked=false`: never stage untracked files automatically.
-    - Always refuse to auto-stage likely sensitive or artifact paths (for example `.env*`, `*.pem`, `*.key`, `*.p12`, `id_rsa*`, `credentials*`, `*.log`, `node_modules/`, `dist/`, `build/`, `.cache/`) unless explicitly and individually confirmed.
+     - Default is `untracked=ask`: if untracked files exist, list them and ask whether to include them.
+     - If `untracked=true`: stage untracked files before commit.
+     - If `untracked=false`: never stage untracked files automatically.
+     - Always refuse to auto-stage likely sensitive or artifact paths (for example `.env*`, `*.pem`, `*.key`, `*.p12`, `id_rsa*`, `credentials*`, `*.log`, `node_modules/`, `dist/`, `build/`, `.cache/`) unless explicitly and individually confirmed.
+8. `track` behavior (git and svn):
+    - If `track=<path>` is provided, attempt to add exactly this file to version control before commit.
+    - If the path does not exist, stop with a clear error.
+    - If the path is already tracked/versioned, continue and report that no add step was needed.
+    - If the path looks sensitive or like a build artifact (same patterns as above), require explicit one-time confirmation before adding.
 
 Execution:
 - If `VCS=none`: stop and report that neither git nor svn repository was detected.
 - If `VCS=git`:
+  - If `track=<path>` is set, process it first:
+    - If file exists and is untracked, run `git add -- <path>` (after required sensitive-path confirmation).
+    - If file exists but is already tracked, continue without `git add` and note it.
   - Determine untracked files first via `git status --porcelain`.
   - If there are no staged changes but tracked modifications exist, run `git add -u`.
   - Apply `untracked` behavior to untracked files explicitly:
@@ -57,13 +66,17 @@ Execution:
     - If no upstream is configured for the current branch, stop with a clear push error and guidance.
     - Do not attempt any push when the commit failed or was skipped.
 - If `VCS=svn`:
+  - If `track=<path>` is set, process it first:
+    - If file exists and is not versioned, run `svn add -- <path>` (after required sensitive-path confirmation).
+    - If file exists but is already versioned, continue without `svn add` and note it.
   - Commit only already versioned changes.
-  - Do not auto-run `svn add`.
+  - Do not auto-run `svn add` for any files except explicitly requested via `track=`.
   - If there are no changes, stop with a clear message.
   - Respect `confirm` behavior before running the commit.
   - Commit with the generated message.
 
 Output requirements:
 - Return the final commit message used.
+- Return whether `track` was requested and, when applicable, whether add succeeded or was skipped.
 - Return the commit result summary (revision/sha and changed file count).
 - Return whether `push` was requested and, when attempted, a short push result summary.

@@ -43,7 +43,15 @@ This repository provides a setup script that performs fundamental shell customiz
 │   │   ├── nvim/                    # Neovim configuration directory for themed setup
 │   │   │   ├── init.lua             # Neovim entrypoint
 │   │   │   └── lua/                 # Neovim Lua configuration modules
-│   │   ├── opencode/                # OpenCode profile snippets
+│   │   ├── opencode/                # OpenCode profile snippets and slash-commands
+│   │   │   ├── commands/            # Custom slash-command definitions
+│   │   │   │   ├── commit.md        # Create a Conventional Commit for git or svn
+│   │   │   │   ├── jira.md          # Draft a Jira proposal from changes, path, or workspace context
+│   │   │   │   ├── load.md          # Load TASKS.md context and optionally execute an instruction
+│   │   │   │   ├── readme.md        # Create, review, simplify, or expand a README
+│   │   │   │   ├── review.md        # Review staged or working changes for commit readiness
+│   │   │   │   ├── save.md          # Save current session context into TASKS.md
+│   │   │   │   └── update.md        # Update working copy for git or svn
 │   │   │   ├── opencode.jsonc.ask   # Ask profile configuration
 │   │   │   └── opencode.jsonc.proxmox # Proxmox profile configuration
 │   │   ├── starship.toml            # Starship prompt theme configuration

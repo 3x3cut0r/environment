@@ -15,6 +15,7 @@ Rules:
    - `breaking=true|false`
    - `untracked=ask|true|false` (default: `ask`)
    - `confirm=true|false` (default: `false`; when `true`, require confirmation before commit)
+   - `push=true|false` (default: `false`; git only, pushes after a successful commit)
    - `desc="short summary"`
    - `body="longer explanation"`
    - `refs=<token>` (append to headline in parentheses, for example `#123` -> `... (#123)`)
@@ -52,6 +53,9 @@ Execution:
   - If there is still nothing to commit, stop with a clear message.
   - Respect `confirm` behavior before running the commit.
   - Commit with the generated message.
+  - If `push=true`, push after a successful commit via `git push`.
+    - If no upstream is configured for the current branch, stop with a clear push error and guidance.
+    - Do not attempt any push when the commit failed or was skipped.
 - If `VCS=svn`:
   - Commit only already versioned changes.
   - Do not auto-run `svn add`.
@@ -62,3 +66,4 @@ Execution:
 Output requirements:
 - Return the final commit message used.
 - Return the commit result summary (revision/sha and changed file count).
+- Return whether `push` was requested and, when attempted, a short push result summary.

@@ -127,8 +127,9 @@ cd environment
   If a line starts with a quoted command, the command runs first and package-manager fallback runs afterwards.
   Otherwise, package-manager install runs first and quoted commands run afterwards.
 - Entries after the marker are installed via `python3 -m pip install`.
+- On macOS, setup ensures Homebrew is installed before running installation steps.
 - Go is installed separately from the official `go.dev` release archive (latest stable, dynamic version lookup), not from the system package manager, before package processing starts.
-- Neovim is installed separately from the latest GitHub release `tar.gz` archive (not from the system package manager), then linked to `/usr/local/bin/nvim`.
+- Neovim is installed separately from the latest GitHub release `tar.gz` archive (not from the system package manager), then linked to `/usr/local/bin/nvim`. On macOS, setup falls back to `brew install neovim` if the archive-based installation fails.
 - After successful Neovim installation, old versions under `/opt/nvim/neovim-*` are removed automatically.
 - If official Go archive download or installation fails, setup falls back to a matching local archive from `sources/` (for example `go*.linux-amd64.tar.gz` or `go*.linux-arm64.tar.gz`).
 - If that local archive is missing or present as a Git LFS pointer (common when running via `curl ... | bash` tarball flow), setup fetches it on demand (first from `go.dev`, then from GitHub `sources/`) and then installs it.

@@ -365,17 +365,17 @@ manager_requires_privilege() {
     esac
 }
 
-ensure_homebrew_for_macos() {
+install_homebrew_for_macos() {
     local os_id_lower os_name_lower
     os_id_lower=$(printf '%s' "${OS_ID:-}" | tr '[:upper:]' '[:lower:]')
     os_name_lower=$(printf '%s' "${OS_NAME:-}" | tr '[:upper:]' '[:lower:]')
 
     if [ "$OS_KERNEL" != "Darwin" ] && [ "$os_id_lower" != "macos" ] && [ "$os_name_lower" != "macos" ]; then
-        return
+        return 0
     fi
 
     if command -v brew >/dev/null 2>&1; then
-        return
+        return 0
     fi
 
     log_message INFO "Homebrew not detected. Installing Homebrew."
@@ -391,8 +391,10 @@ ensure_homebrew_for_macos() {
 
     if command -v brew >/dev/null 2>&1; then
         log_message INFO "Homebrew installation completed."
+        return 0
     else
-        log_message WARN "Homebrew installation did not make the 'brew' command available."
+        log_message ERROR "Homebrew installation did not make the 'brew' command available."
+        return 1
     fi
 }
 
@@ -503,7 +505,6 @@ install_packages() {
         return
     fi
 
-    ensure_homebrew_for_macos
     detect_package_managers
 
     local python_marker="# <<< Add python packages below"
@@ -1089,6 +1090,37 @@ install_go_official() {
     fi
 }
 
+install_neovim_with_homebrew_fallback() {
+    if [ "$OS_KERNEL" != "Darwin" ]; then
+        return 1
+    fi
+
+    log_message WARN "Trying Homebrew fallback for Neovim on macOS."
+    if ! command -v brew >/dev/null 2>&1; then
+        log_message ERROR "Homebrew not available. Neovim fallback installation failed."
+        return 1
+    fi
+
+    if brew install neovim >/dev/null 2>&1; then
+        if command -v nvim >/dev/null 2>&1; then
+            local fallback_version=""
+            fallback_version=$(nvim --version 2>/dev/null | awk 'NR==1 {print $2}')
+            if [ -n "$fallback_version" ]; then
+                log_message INFO "Installed Neovim via Homebrew fallback ($fallback_version)."
+            else
+                log_message INFO "Installed Neovim via Homebrew fallback."
+            fi
+            return 0
+        fi
+
+        log_message ERROR "Homebrew reported success, but 'nvim' was not found in PATH."
+        return 1
+    fi
+
+    log_message ERROR "Homebrew fallback failed: brew install neovim"
+    return 1
+}
+
 install_neovim_official() {
     if [ "${SKIP_PACKAGES:-no}" = "yes" ]; then
         log_message WARN "Skipping Neovim installation."
@@ -1150,12 +1182,14 @@ install_neovim_official() {
     local temp_dir=""
     temp_archive=$(mktemp "${TMPDIR:-/tmp}/nvim-archive-XXXXXX.tar.gz") || {
         log_message ERROR "Unable to create temporary archive file for Neovim installation."
+        install_neovim_with_homebrew_fallback && return 0
         return 1
     }
 
     temp_dir=$(mktemp -d) || {
         log_message ERROR "Unable to create temporary directory for Neovim installation."
         rm -f "$temp_archive"
+        install_neovim_with_homebrew_fallback && return 0
         return 1
     }
 
@@ -1164,6 +1198,7 @@ install_neovim_official() {
         log_message ERROR "Failed to download Neovim archive from GitHub: $download_url"
         rm -f "$temp_archive"
         rm -rf "$temp_dir"
+        install_neovim_with_homebrew_fallback && return 0
         return 1
     fi
 
@@ -1171,6 +1206,7 @@ install_neovim_official() {
         log_message ERROR "Failed to extract Neovim archive: $archive_name"
         rm -f "$temp_archive"
         rm -rf "$temp_dir"
+        install_neovim_with_homebrew_fallback && return 0
         return 1
     fi
 
@@ -1180,6 +1216,7 @@ install_neovim_official() {
         log_message ERROR "Extracted Neovim archive does not contain a usable bin/nvim binary."
         rm -f "$temp_archive"
         rm -rf "$temp_dir"
+        install_neovim_with_homebrew_fallback && return 0
         return 1
     fi
 
@@ -1193,6 +1230,7 @@ install_neovim_official() {
             log_message ERROR "Cannot install Neovim to $install_dir: elevated privileges required but sudo not available."
             rm -f "$temp_archive"
             rm -rf "$temp_dir"
+            install_neovim_with_homebrew_fallback && return 0
             return 1
         fi
 
@@ -1230,6 +1268,7 @@ install_neovim_official() {
 
     if [ $install_failed -eq 1 ] || [ ! -x "$symlink_path" ]; then
         log_message ERROR "Failed to install Neovim to $symlink_path"
+        install_neovim_with_homebrew_fallback && return 0
         return 1
     fi
 
@@ -2389,6 +2428,7 @@ main() {
     if [ "$RECONFIGURE_MODE" = "yes" ]; then
         log_message INFO "Reconfigure mode enabled. Skipping installation and terminal configuration steps."
     fi
+    install_homebrew_for_macos
     install_go_official
     install_neovim_official
     install_packages

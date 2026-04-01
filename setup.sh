@@ -1553,22 +1553,37 @@ install_starship() {
 
     if [ $proceed -eq 1 ]; then
         local install_success=0
-        log_message INFO "Installing Starship prompt using official installer."
-        if curl -fsSL https://starship.rs/install.sh | sh -s -- --yes >/dev/null; then
-            install_success=1
-        else
-            log_message WARN "Primary Starship installation failed. Attempting git-based fallback."
-            local temp_dir=""
-            temp_dir=$(mktemp -d 2>/dev/null || true)
+        local os_id_lower os_name_lower
+        os_id_lower=$(printf '%s' "${OS_ID:-}" | tr '[:upper:]' '[:lower:]')
+        os_name_lower=$(printf '%s' "${OS_NAME:-}" | tr '[:upper:]' '[:lower:]')
 
-            if [ -n "$temp_dir" ] \
-                && git clone --depth 1 https://github.com/starship/starship.git "$temp_dir" >/dev/null 2>&1 \
-                && (cd "$temp_dir" && sh ./install/install.sh --yes >/dev/null 2>&1); then
+        if [ "$OS_KERNEL" = "Darwin" ] || [ "$os_id_lower" = "macos" ] || [ "$os_name_lower" = "macos" ]; then
+            log_message INFO "Installing Starship prompt using Homebrew on macOS."
+            if command -v brew >/dev/null 2>&1 && brew install starship >/dev/null 2>&1; then
                 install_success=1
+            else
+                log_message WARN "Homebrew installation for Starship failed. Falling back to Starship installer."
             fi
+        fi
 
-            if [ -n "$temp_dir" ]; then
-                rm -rf "$temp_dir"
+        if [ $install_success -eq 0 ]; then
+            log_message INFO "Installing Starship prompt using official installer."
+            if curl -fsSL https://starship.rs/install.sh | sh -s -- --yes >/dev/null; then
+                install_success=1
+            else
+                log_message WARN "Primary Starship installation failed. Attempting git-based fallback."
+                local temp_dir=""
+                temp_dir=$(mktemp -d 2>/dev/null || true)
+
+                if [ -n "$temp_dir" ] \
+                    && git clone --depth 1 https://github.com/starship/starship.git "$temp_dir" >/dev/null 2>&1 \
+                    && (cd "$temp_dir" && sh ./install/install.sh --yes >/dev/null 2>&1); then
+                    install_success=1
+                fi
+
+                if [ -n "$temp_dir" ]; then
+                    rm -rf "$temp_dir"
+                fi
             fi
         fi
 

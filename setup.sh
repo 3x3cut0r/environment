@@ -666,11 +666,15 @@ install_packages() {
             fi
 
             if [ $command_first -eq 1 ]; then
-                run_installer_commands "${quoted_commands[@]}"
+                if [ ${#quoted_commands[@]} -gt 0 ]; then
+                    run_installer_commands "${quoted_commands[@]}"
+                fi
                 install_package_segment "$package_segment"
             else
                 install_package_segment "$package_segment"
-                run_installer_commands "${quoted_commands[@]}"
+                if [ ${#quoted_commands[@]} -gt 0 ]; then
+                    run_installer_commands "${quoted_commands[@]}"
+                fi
             fi
         done
     fi

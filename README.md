@@ -154,6 +154,7 @@ The setup supports these environment variables:
 - `ENVIRONMENT_AUTO_CONFIRM=yes`: Enables non-interactive mode (same behavior as `--yes`).
 - `ENVIRONMENT_WRAPPER_PATH=/custom/path/environment`: Overrides wrapper install location.
 - `BAT_CONFIG_DIR=/custom/path/bat`: Overrides where bat config/themes are written.
+- Shell PATH snippets now evaluate `brew shellenv` when Homebrew is available, so Homebrew toolchains (for example `python3`) are preferred over system defaults.
 
 ## Notes
 

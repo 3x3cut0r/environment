@@ -21,6 +21,7 @@ lua5.3
 lua5.4
 luarocks
 make gmake
+mise
 mtr mtr-tiny
 nano
 ncdu

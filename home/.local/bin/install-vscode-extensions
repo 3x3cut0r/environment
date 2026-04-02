@@ -2,9 +2,20 @@
 # Script to install VScode extensions from a list file
 
 EXTENSIONS_FILE="$HOME/.config/vscode/extensions.list"
+CODE_BIN=""
 
-if ! command -v code &> /dev/null; then
-    echo "[ERROR] VScode not installed or code command not found"
+if command -v code &> /dev/null; then
+    CODE_BIN="$(command -v code)"
+elif [[ "$(uname -s)" == "Darwin" ]]; then
+    if [[ -x "/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code" ]]; then
+        CODE_BIN="/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code"
+    elif [[ -x "$HOME/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code" ]]; then
+        CODE_BIN="$HOME/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code"
+    fi
+fi
+
+if [[ -z "$CODE_BIN" ]]; then
+    echo "[ERROR] VS Code CLI not found. Checked 'code' in PATH and macOS app bundle paths."
     exit 1
 fi
 
@@ -22,7 +33,7 @@ while IFS= read -r ext || [[ -n "$ext" ]]; do
         continue
     fi
     echo "Installing extension: $ext"
-    code --install-extension "$ext" --force
+    "$CODE_BIN" --install-extension "$ext" --force
 done < "$EXTENSIONS_FILE"
 
 echo "[INFO] Installing VScode extensions done"

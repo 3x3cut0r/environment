@@ -159,6 +159,7 @@ The setup supports these environment variables:
 ## Notes
 
 - Current script behavior: `install_catppuccin_neovim` checks for `home/.config/nvim/init.vim`, while this repository currently provides `home/.config/nvim/init.lua`. This can cause the Neovim Catppuccin install step to be skipped.
+- `install-vscode-extensions` now auto-detects the VS Code CLI on macOS via standard app bundle paths if `code` is not available in `PATH`.
 
 ```bash
 Environment bootstrap script

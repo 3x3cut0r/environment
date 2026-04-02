@@ -16,7 +16,7 @@ Rules:
    - `untracked=ask|true|false` (default: `ask`)
    - `track=<path>` (optional; stage one explicitly specified untracked file)
    - `confirm=true|false` (default: `false`; when `true`, require confirmation before commit)
-   - `push=true|false` (default: `false`; git only, pushes after a successful commit)
+   - `push=true|false` (default: `true`; git only, pushes after a successful commit)
    - `desc="short summary"`
    - `body="longer explanation"`
    - `refs=<token>` (append to headline in parentheses, for example `#123` -> `... (#123)`)
@@ -62,7 +62,7 @@ Execution:
   - If there is still nothing to commit, stop with a clear message.
   - Respect `confirm` behavior before running the commit.
   - Commit with the generated message.
-  - If `push=true`, push after a successful commit via `git push`.
+  - Unless `push=false`, push after a successful commit via `git push`.
     - If no upstream is configured for the current branch, stop with a clear push error and guidance.
     - Do not attempt any push when the commit failed or was skipped.
 - If `VCS=svn`:

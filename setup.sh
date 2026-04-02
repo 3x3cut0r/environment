@@ -2429,6 +2429,12 @@ configure_terminals() {
 
 main() {
     parse_args "$@"
+    if [ "${EUID:-$(id -u)}" -ne 0 ] && command -v sudo >/dev/null 2>&1; then
+        log_message INFO "Requesting sudo credentials early..."
+        if ! sudo -v; then
+            log_message WARN "Failed to cache sudo credentials. Continuing; privileged steps may fail later."
+        fi
+    fi
     trap 'cleanup_temp_resources' EXIT
     trap 'cleanup_temp_resources; exit 129' HUP
     trap 'cleanup_temp_resources; exit 130' INT

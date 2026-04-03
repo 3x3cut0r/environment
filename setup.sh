@@ -1288,6 +1288,72 @@ install_neovim_official() {
     log_message INFO "Installed Neovim ${nvim_version} at $install_dir and linked $symlink_path"
 }
 
+install_npm() {
+    if [ "${SKIP_PACKAGES:-no}" = "yes" ]; then
+        log_message WARN "Skipping nvm and Node.js installation."
+        return 0
+    fi
+
+    if ! command -v curl >/dev/null 2>&1; then
+        log_message WARN "curl not found. Skipping nvm and Node.js installation."
+        return 0
+    fi
+
+    local nvm_install_url="https://raw.githubusercontent.com/nvm-sh/nvm/HEAD/install.sh"
+    local nvm_dir="${HOME}/.nvm"
+    export NVM_DIR="$nvm_dir"
+
+    if [ ! -s "$NVM_DIR/nvm.sh" ]; then
+        log_message INFO "Installing latest nvm from GitHub."
+        if ! curl -fsSL "$nvm_install_url" | bash >/dev/null 2>&1; then
+            log_message ERROR "Failed to install nvm from $nvm_install_url"
+            return 1
+        fi
+    else
+        log_message INFO "nvm is already installed. Reusing existing installation."
+    fi
+
+    if [ ! -s "$NVM_DIR/nvm.sh" ]; then
+        log_message ERROR "nvm installation completed, but $NVM_DIR/nvm.sh was not found."
+        return 1
+    fi
+
+    # shellcheck disable=SC1091
+    . "$NVM_DIR/nvm.sh"
+
+    if ! command -v nvm >/dev/null 2>&1; then
+        log_message ERROR "nvm is not available after sourcing $NVM_DIR/nvm.sh"
+        return 1
+    fi
+
+    log_message INFO "Installing latest LTS Node.js with nvm."
+    if ! nvm install --lts >/dev/null 2>&1; then
+        log_message ERROR "Failed to install the latest LTS Node.js version with nvm."
+        return 1
+    fi
+
+    if ! nvm use --lts >/dev/null 2>&1; then
+        log_message WARN "Installed the latest LTS Node.js version, but could not activate it in the current shell."
+    fi
+
+    local node_version=""
+    local npm_version=""
+    if command -v node >/dev/null 2>&1; then
+        node_version=$(node --version 2>/dev/null || true)
+    fi
+    if command -v npm >/dev/null 2>&1; then
+        npm_version=$(npm --version 2>/dev/null || true)
+    fi
+
+    if [ -n "$node_version" ] && [ -n "$npm_version" ]; then
+        log_message INFO "Installed Node.js $node_version and npm $npm_version via nvm."
+    elif [ -n "$node_version" ]; then
+        log_message INFO "Installed Node.js $node_version via nvm."
+    else
+        log_message INFO "Installed the latest LTS Node.js version via nvm."
+    fi
+}
+
 install_nerd_font() {
     if [ "${SKIP_NERD_FONT:-no}" = "yes" ]; then
         log_message WARN "Skipping Nerd Font installation."
@@ -2452,6 +2518,7 @@ main() {
     install_homebrew_for_macos
     install_go_official
     install_neovim_official
+    install_npm
     install_packages
     install_lazy_tools
     install_nerd_font

@@ -1,26 +1,22 @@
-case ":$PATH:" in
-  *":/opt/scripts:"*) ;;
-  *) PATH="/opt/scripts:$PATH" ;;
-esac
-
-if command -v brew >/dev/null 2>&1; then
-  eval "$(brew shellenv)"
-elif [ -x "/opt/homebrew/bin/brew" ]; then
-  eval "$(/opt/homebrew/bin/brew shellenv)"
-elif [ -x "/usr/local/bin/brew" ]; then
-  eval "$(/usr/local/bin/brew shellenv)"
+# Java on MacOS
+if [ -d "/opt/homebrew/opt/openjdk/bin" ]; then
+    case ":$PATH:" in
+      *":/opt/homebrew/opt/openjdk/bin:"*) ;;
+      *) PATH="/opt/homebrew/opt/openjdk/bin:$PATH" ;;
+    esac
+  fi
 fi
 
-case ":$PATH:" in
-  *":/opt/bin:"*) ;;
-  *) PATH="/opt/bin:$PATH" ;;
-esac
+# Java on Debian/Ubuntu
+if [ -d "/usr/lib/jvm/default-java/bin" ]; then
+    case ":$PATH:" in
+      *":/usr/lib/jvm/default-java/bin:"*) ;;
+      *) PATH="/usr/lib/jvm/default-java/bin:$PATH" ;;
+    esac
+  fi
+fi
 
-case ":$PATH:" in
-  *":$HOME/.local/bin:"*) ;;
-  *) PATH="$HOME/.local/bin:$PATH" ;;
-esac
-
+# go
 if [ -x "/usr/local/go/bin/go" ]; then
   case ":$PATH:" in
     *":/usr/local/go/bin:"*) ;;
@@ -34,5 +30,31 @@ if [ -x "/usr/local/go/bin/go" ]; then
     esac
   fi
 fi
+
+# Homebrew (brew) on MacOS
+if command -v brew >/dev/null 2>&1; then
+  eval "$(brew shellenv)"
+elif [ -x "/opt/homebrew/bin/brew" ]; then
+  eval "$(/opt/homebrew/bin/brew shellenv)"
+elif [ -x "/usr/local/bin/brew" ]; then
+  eval "$(/usr/local/bin/brew shellenv)"
+fi
+
+# OS
+case ":$PATH:" in
+  *":/opt/bin:"*) ;;
+  *) PATH="/opt/bin:$PATH" ;;
+esac
+
+case ":$PATH:" in
+  *":$HOME/.local/bin:"*) ;;
+  *) PATH="$HOME/.local/bin:$PATH" ;;
+esac
+
+# Custom scripts
+case ":$PATH:" in
+  *":/opt/scripts:"*) ;;
+  *) PATH="/opt/scripts:$PATH" ;;
+esac
 
 export PATH

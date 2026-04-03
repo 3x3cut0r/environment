@@ -1,19 +1,17 @@
 # Java on MacOS
 if [ -d "/opt/homebrew/opt/openjdk/bin" ]; then
-    case ":$PATH:" in
-      *":/opt/homebrew/opt/openjdk/bin:"*) ;;
-      *) PATH="/opt/homebrew/opt/openjdk/bin:$PATH" ;;
-    esac
-  fi
+  case ":$PATH:" in
+    *":/opt/homebrew/opt/openjdk/bin:"*) ;;
+    *) PATH="/opt/homebrew/opt/openjdk/bin:$PATH" ;;
+  esac
 fi
 
 # Java on Debian/Ubuntu
 if [ -d "/usr/lib/jvm/default-java/bin" ]; then
-    case ":$PATH:" in
-      *":/usr/lib/jvm/default-java/bin:"*) ;;
-      *) PATH="/usr/lib/jvm/default-java/bin:$PATH" ;;
-    esac
-  fi
+  case ":$PATH:" in
+    *":/usr/lib/jvm/default-java/bin:"*) ;;
+    *) PATH="/usr/lib/jvm/default-java/bin:$PATH" ;;
+  esac
 fi
 
 # go

@@ -2577,9 +2577,9 @@ main() {
     install_homebrew_for_macos
     install_go_official
     install_neovim_official
-    install_npm
     install_packages
     install_opencode
+    install_npm
     install_lazy_tools
     install_nerd_font
     install_starship

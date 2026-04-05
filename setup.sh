@@ -1320,12 +1320,47 @@ install_npm() {
 
     local nvm_install_url="https://raw.githubusercontent.com/nvm-sh/nvm/HEAD/install.sh"
     local nvm_dir="${HOME}/.nvm"
+    local temp_root="${TEMP_DIR:-${TMPDIR:-/tmp}}"
+    local nvm_log_file=""
     export NVM_DIR="$nvm_dir"
+
+    run_nvm_command() {
+        local log_level="$1"
+        local description="$2"
+        shift 2
+
+        : > "$nvm_log_file"
+        set +e
+        "$@" >"$nvm_log_file" 2>&1
+        local command_status=$?
+        set -e
+
+        if [ "$command_status" -ne 0 ]; then
+            log_message "$log_level" "$description failed with exit code $command_status."
+            while IFS= read -r output_line; do
+                [ -n "$output_line" ] || continue
+                log_message "$log_level" "nvm: $output_line"
+            done < "$nvm_log_file"
+            return "$command_status"
+        fi
+
+        return 0
+    }
+
+    nvm_log_file=$(mktemp "$temp_root/environment-nvm-XXXXXX.log") || {
+        log_message ERROR "Unable to create temporary log file for nvm installation."
+        return 1
+    }
 
     if [ ! -s "$NVM_DIR/nvm.sh" ]; then
         log_message INFO "Installing latest nvm from GitHub."
-        if ! curl -fsSL "$nvm_install_url" | bash >/dev/null 2>&1; then
+        if ! curl -fsSL "$nvm_install_url" | bash >"$nvm_log_file" 2>&1; then
             log_message ERROR "Failed to install nvm from $nvm_install_url"
+            while IFS= read -r output_line; do
+                [ -n "$output_line" ] || continue
+                log_message ERROR "nvm installer: $output_line"
+            done < "$nvm_log_file"
+            rm -f "$nvm_log_file"
             return 1
         fi
     else
@@ -1334,6 +1369,7 @@ install_npm() {
 
     if [ ! -s "$NVM_DIR/nvm.sh" ]; then
         log_message ERROR "nvm installation completed, but $NVM_DIR/nvm.sh was not found."
+        rm -f "$nvm_log_file"
         return 1
     fi
 
@@ -1342,17 +1378,39 @@ install_npm() {
 
     if ! command -v nvm >/dev/null 2>&1; then
         log_message ERROR "nvm is not available after sourcing $NVM_DIR/nvm.sh"
+        rm -f "$nvm_log_file"
         return 1
     fi
 
-    log_message INFO "Installing latest LTS Node.js with nvm."
-    if ! nvm install --lts >/dev/null 2>&1; then
-        log_message ERROR "Failed to install the latest LTS Node.js version with nvm."
-        return 1
+    local current_nvm_node=""
+    local installed_lts_version=""
+    local nvm_ls_summary=""
+    local installed_or_reused_action="installed"
+    current_nvm_node=$(nvm current 2>/dev/null || true)
+    installed_lts_version=$(nvm version --lts 2>/dev/null || true)
+    nvm_ls_summary=$(nvm ls --no-colors 2>/dev/null || true)
+
+    log_message INFO "nvm status before Node.js install: current=${current_nvm_node:-unknown}, installed_lts=${installed_lts_version:-unknown}"
+    if [ -n "$nvm_ls_summary" ]; then
+        while IFS= read -r output_line; do
+            [ -n "$output_line" ] || continue
+            log_message INFO "nvm ls: $output_line"
+        done <<< "$nvm_ls_summary"
     fi
 
-    if ! nvm use --lts >/dev/null 2>&1; then
-        log_message WARN "Installed the latest LTS Node.js version, but could not activate it in the current shell."
+    if [ -n "$installed_lts_version" ] && [ "$installed_lts_version" != "N/A" ]; then
+        installed_or_reused_action="reused"
+        log_message INFO "Node.js LTS $installed_lts_version is already installed. Reusing existing version."
+    else
+        log_message INFO "Installing latest LTS Node.js with nvm."
+        if ! run_nvm_command ERROR "Installing the latest LTS Node.js version with nvm" nvm install --lts; then
+            rm -f "$nvm_log_file"
+            return 1
+        fi
+    fi
+
+    if ! run_nvm_command WARN "Activating the latest LTS Node.js version with nvm" nvm use --lts; then
+        log_message WARN "Node.js LTS is installed, but could not be activated in the current shell."
     fi
 
     local node_version=""
@@ -1364,12 +1422,14 @@ install_npm() {
         npm_version=$(npm --version 2>/dev/null || true)
     fi
 
+    rm -f "$nvm_log_file"
+
     if [ -n "$node_version" ] && [ -n "$npm_version" ]; then
-        log_message INFO "Installed Node.js $node_version and npm $npm_version via nvm."
+        log_message INFO "${installed_or_reused_action^} Node.js $node_version and npm $npm_version via nvm."
     elif [ -n "$node_version" ]; then
-        log_message INFO "Installed Node.js $node_version via nvm."
+        log_message INFO "${installed_or_reused_action^} Node.js $node_version via nvm."
     else
-        log_message INFO "Installed the latest LTS Node.js version via nvm."
+        log_message INFO "${installed_or_reused_action^} the latest LTS Node.js version via nvm."
     fi
 }
 

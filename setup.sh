@@ -3,6 +3,7 @@ set -euo pipefail
 
 AUTO_CONFIRM="${ENVIRONMENT_AUTO_CONFIRM:-no}"
 SKIP_PACKAGES="no"
+SKIP_NPM="no"
 SKIP_NERD_FONT="no"
 SKIP_STARSHIP="no"
 SKIP_TMUX_PLUGIN_MANAGER="no"
@@ -39,6 +40,7 @@ parse_args() {
             -r|--reconfigure)
                 RECONFIGURE_MODE="yes"
                 SKIP_PACKAGES="yes"
+                SKIP_NPM="yes"
                 SKIP_NERD_FONT="yes"
                 SKIP_STARSHIP="yes"
                 SKIP_TMUX_PLUGIN_MANAGER="yes"
@@ -57,6 +59,10 @@ parse_args() {
                 ;;
             --skip-packages|-sp)
                 SKIP_PACKAGES="yes"
+                shift
+                ;;
+            --skip-npm|-sm)
+                SKIP_NPM="yes"
                 shift
                 ;;
             --skip-nerd-font|--skip-nerdfont|-sn)
@@ -156,7 +162,8 @@ Options:
   -h,   --help              Show this help message and exit
   -y,   --yes               Automatically answer prompts with yes
   -r,   --reconfigure       Reconfigure dotfiles only (skip installs and terminal config)
-  -sp,  --skip-packages     Skip package-related installs (system packages, Go, Neovim, lazy tools)
+  -sp,  --skip-packages     Skip package-related installs (Homebrew bootstrap on macOS, system packages, Go, Neovim, Node.js/npm, lazy tools)
+  -sm,  --skip-npm          Skip nvm, Node.js, and npm installation
   -sn,  --skip-nerd-font,
          --skip-nerdfont     Skip Nerd Font installation
   -ss,  --skip-starship     Skip Starship installation
@@ -366,6 +373,11 @@ manager_requires_privilege() {
 }
 
 install_homebrew_for_macos() {
+    if [ "${SKIP_PACKAGES:-no}" = "yes" ]; then
+        log_message WARN "Skipping Homebrew bootstrap."
+        return 0
+    fi
+
     local os_id_lower os_name_lower
     os_id_lower=$(printf '%s' "${OS_ID:-}" | tr '[:upper:]' '[:lower:]')
     os_name_lower=$(printf '%s' "${OS_NAME:-}" | tr '[:upper:]' '[:lower:]')
@@ -1289,7 +1301,7 @@ install_neovim_official() {
 }
 
 install_npm() {
-    if [ "${SKIP_PACKAGES:-no}" = "yes" ]; then
+    if [ "${SKIP_PACKAGES:-no}" = "yes" ] || [ "${SKIP_NPM:-no}" = "yes" ]; then
         log_message WARN "Skipping nvm and Node.js installation."
         return 0
     fi

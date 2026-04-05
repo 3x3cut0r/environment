@@ -4,6 +4,7 @@ set -euo pipefail
 AUTO_CONFIRM="${ENVIRONMENT_AUTO_CONFIRM:-no}"
 SKIP_PACKAGES="no"
 SKIP_NPM="no"
+SKIP_OPENCODE="no"
 SKIP_NERD_FONT="no"
 SKIP_STARSHIP="no"
 SKIP_TMUX_PLUGIN_MANAGER="no"
@@ -41,6 +42,7 @@ parse_args() {
                 RECONFIGURE_MODE="yes"
                 SKIP_PACKAGES="yes"
                 SKIP_NPM="yes"
+                SKIP_OPENCODE="yes"
                 SKIP_NERD_FONT="yes"
                 SKIP_STARSHIP="yes"
                 SKIP_TMUX_PLUGIN_MANAGER="yes"
@@ -63,6 +65,10 @@ parse_args() {
                 ;;
             --skip-npm|-sm)
                 SKIP_NPM="yes"
+                shift
+                ;;
+            --skip-opencode|-so)
+                SKIP_OPENCODE="yes"
                 shift
                 ;;
             --skip-nerd-font|--skip-nerdfont|-sn)
@@ -164,6 +170,7 @@ Options:
   -r,   --reconfigure       Reconfigure dotfiles only (skip installs and terminal config)
   -sp,  --skip-packages     Skip package-related installs (Homebrew bootstrap on macOS, system packages, Go, Neovim, Node.js/npm, lazy tools)
   -sm,  --skip-npm          Skip nvm, Node.js, and npm installation
+  -so,  --skip-opencode     Skip OpenCode installation
   -sn,  --skip-nerd-font,
          --skip-nerdfont     Skip Nerd Font installation
   -ss,  --skip-starship     Skip Starship installation
@@ -1366,6 +1373,46 @@ install_npm() {
     fi
 }
 
+install_opencode() {
+    if [ "${SKIP_OPENCODE:-no}" = "yes" ]; then
+        log_message WARN "Skipping OpenCode installation."
+        return 0
+    fi
+
+    local install_url="https://opencode.ai/install"
+
+    if ! command -v curl >/dev/null 2>&1; then
+        log_message WARN "curl not found. Skipping official OpenCode installer and trying npm fallback if available."
+    else
+        log_message INFO "Installing OpenCode using the official installer."
+        if curl -fsSL "$install_url" | bash >/dev/null 2>&1; then
+            if command -v opencode >/dev/null 2>&1; then
+                log_message INFO "Installed OpenCode using the official installer."
+            else
+                log_message INFO "Official OpenCode installer completed. The 'opencode' command may require a new shell session."
+            fi
+            return 0
+        fi
+
+        log_message WARN "Official OpenCode installer failed. Falling back to npm installation."
+    fi
+
+    if ! command -v npm >/dev/null 2>&1; then
+        log_message WARN "npm not found. Cannot install OpenCode fallback package."
+        return 0
+    fi
+
+    if npm install -g opencode-ai >/dev/null 2>&1; then
+        if command -v opencode >/dev/null 2>&1; then
+            log_message INFO "Installed OpenCode using npm fallback."
+        else
+            log_message INFO "npm installed OpenCode, but the 'opencode' command is not available in the current shell yet."
+        fi
+    else
+        log_message WARN "Failed to install OpenCode using npm fallback."
+    fi
+}
+
 install_nerd_font() {
     if [ "${SKIP_NERD_FONT:-no}" = "yes" ]; then
         log_message WARN "Skipping Nerd Font installation."
@@ -2532,6 +2579,7 @@ main() {
     install_neovim_official
     install_npm
     install_packages
+    install_opencode
     install_lazy_tools
     install_nerd_font
     install_starship

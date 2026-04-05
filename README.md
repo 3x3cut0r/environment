@@ -8,6 +8,7 @@ This repository provides a setup script that performs fundamental shell customiz
 - `install_go_official`: Installs or updates Go from the latest official `go.dev` archive, with local `sources/` fallback on failure.
 - `install_neovim_official`: Installs or updates Neovim from the latest official GitHub `tar.gz` release, deploys to `/opt/nvim/neovim-<version>`, and links `/usr/local/bin/nvim`.
 - `install_npm`: Installs the latest `nvm` release and uses it to install the latest LTS Node.js version, including `npm`.
+- `install_opencode`: Installs OpenCode via the official `curl -fsSL https://opencode.ai/install | bash` installer and falls back to `npm install -g opencode-ai` if needed.
 - `install_nerd_font`: Downloads and installs the Nerd Font variant used across prompts and editors.
 - `install_starship`: Sets up the Starship prompt with the repository's theme defaults.
 - `install_tmux_plugin_manager`: Fetches and configures the tmux plugin manager (TPM) for plugin handling.
@@ -133,6 +134,7 @@ cd environment
 - Neovim is installed separately from the latest GitHub release `tar.gz` archive (not from the system package manager), then linked to `/usr/local/bin/nvim`. On macOS, setup falls back to `brew install neovim` if the archive-based installation fails.
 - After successful Neovim installation, old versions under `/opt/nvim/neovim-*` are removed automatically.
 - After Neovim, setup installs the latest `nvm` release and uses it to install and activate the latest LTS Node.js version together with `npm`.
+- After `install_packages`, setup installs OpenCode using the official install script and falls back to `npm install -g opencode-ai` if the official installer fails.
 - If official Go archive download or installation fails, setup falls back to a matching local archive from `sources/` (for example `go*.linux-amd64.tar.gz` or `go*.linux-arm64.tar.gz`).
 - If that local archive is missing or present as a Git LFS pointer (common when running via `curl ... | bash` tarball flow), setup fetches it on demand (first from `go.dev`, then from GitHub `sources/`) and then installs it.
 - When Go is installed in `/usr/local/go`, the setup also adds `/usr/local/go/bin` and (if present) `$HOME/go/bin` to `PATH`.
@@ -175,6 +177,7 @@ Options:
   -r,   --reconfigure       Reconfigure dotfiles only (skip installs and terminal config)
   -sp,  --skip-packages     Skip package-related installs (Homebrew bootstrap on macOS, system packages, Go, Neovim, Node.js/npm, lazy tools)
   -sm,  --skip-npm          Skip nvm, Node.js, and npm installation
+  -so,  --skip-opencode     Skip OpenCode installation
   -sn,  --skip-nerd-font,
          --skip-nerdfont     Skip Nerd Font installation
   -ss,  --skip-starship     Skip Starship installation

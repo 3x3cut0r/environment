@@ -55,6 +55,8 @@ return {
       { "<leader>u", group = "ui" },
       { "<leader>w", group = "window" },
       { "<leader>x", group = "diagnostics" },
+      { "[t", desc = "Previous todo comment" },
+      { "]t", desc = "Next todo comment" },
     })
   end,
 }

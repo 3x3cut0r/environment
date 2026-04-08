@@ -18,6 +18,7 @@ vim.opt.title = true
 vim.opt.background = "dark"
 vim.opt.history = 1000
 vim.opt.mouse = "a"
+vim.opt.completeopt = { "menuone", "noinsert", "noselect" }
 
 vim.cmd("syntax enable")
 

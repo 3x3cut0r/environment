@@ -3,9 +3,12 @@ return {
     "neovim/nvim-lspconfig",
     event = { "BufReadPre", "BufNewFile" },
     dependencies = {
+      "ms-jpq/coq_nvim",
+      "ms-jpq/coq.artifacts",
       "williamboman/mason-lspconfig.nvim",
     },
     config = function()
+      local coq = require("coq")
       local capabilities = vim.lsp.protocol.make_client_capabilities()
       local has_ansible_lint = vim.fn.executable("ansible-lint") == 1
 
@@ -61,7 +64,7 @@ return {
 
       for server_name, server_opts in pairs(servers) do
         server_opts.capabilities = vim.tbl_deep_extend("force", {}, capabilities, server_opts.capabilities or {})
-        vim.lsp.config(server_name, server_opts)
+        vim.lsp.config(server_name, coq.lsp_ensure_capabilities(server_opts))
         vim.lsp.enable(server_name)
       end
     end,

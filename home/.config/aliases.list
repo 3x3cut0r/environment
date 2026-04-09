@@ -16,6 +16,9 @@ alias ll='ls -alF'
 alias llh='ls -alhF'
 fi
 
+# Expand aliasses in watch
+alias watch='watch '
+
 # Provide a vi alias that maps to Vim when it is available.
 if command -v vim >/dev/null 2>&1; then
 alias vi='vim'

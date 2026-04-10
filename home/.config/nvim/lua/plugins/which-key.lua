@@ -50,6 +50,7 @@ return {
       { "<leader>h", group = "help" },
       { "<leader>n", group = "notifications" },
       { "<leader>q", group = "quit/session" },
+      { "<leader>r", group = "remote" },
       { "<leader>s", group = "search" },
       { "<leader>t", group = "toggle/terminal" },
       { "<leader>u", group = "ui" },

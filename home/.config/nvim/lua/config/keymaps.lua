@@ -13,6 +13,23 @@ vim.keymap.set("n", "<leader>bd", "<cmd>bdelete<cr>", { desc = "Close tab" })
 vim.keymap.set("n", "<leader>bn", "<cmd>BufferLineCycleNext<cr>", { desc = "Next tab" })
 vim.keymap.set("n", "<leader>bp", "<cmd>BufferLineCyclePrev<cr>", { desc = "Previous tab" })
 
+-- Windows
+-- Defaults:
+-- <C-w>s -> split window below
+-- <C-w>v -> split window right
+-- <C-w>c -> close current window
+-- <C-w>o -> close all other windows
+-- <C-w>h/j/k/l -> move focus between windows
+
+vim.keymap.set("n", "<leader>ws", "<C-w>s", { desc = "Split below" })
+vim.keymap.set("n", "<leader>wv", "<C-w>v", { desc = "Split right" })
+vim.keymap.set("n", "<leader>wc", "<C-w>c", { desc = "Close window" })
+vim.keymap.set("n", "<leader>wo", "<C-w>o", { desc = "Only window" })
+vim.keymap.set("n", "<leader>wh", "<C-w>h", { desc = "Focus left" })
+vim.keymap.set("n", "<leader>wj", "<C-w>j", { desc = "Focus down" })
+vim.keymap.set("n", "<leader>wk", "<C-w>k", { desc = "Focus up" })
+vim.keymap.set("n", "<leader>wl", "<C-w>l", { desc = "Focus right" })
+
 -- CodeCompanion
 -- Defaults:
 -- none
@@ -152,5 +169,5 @@ vim.keymap.set("n", "<leader>gg", function()
     vim.notify("lazygit not found in PATH", vim.log.levels.WARN)
   end
 end, { desc = "Lazygit" })
-vim.keymap.set("n", "<leader>q", "<cmd>q<cr>", { desc = "Quit window/tab" })
-vim.keymap.set("n", "<leader>w", "<cmd>bdelete<cr>", { desc = "Close tab" })
+vim.keymap.set("n", "<leader>qq", "<cmd>q<cr>", { desc = "Quit window/tab" })
+vim.keymap.set("n", "<leader>qa", "<cmd>qa<cr>", { desc = "Quit all" })

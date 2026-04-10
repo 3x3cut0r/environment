@@ -3,7 +3,7 @@ return {
   event = "VeryLazy",
   opts = {
     preset = "helix",
-    delay = 500,
+    delay = 0,
     plugins = {
       marks = true,
       registers = true,

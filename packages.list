@@ -12,7 +12,7 @@ fzf
 gh
 git
 git-lfs
-jre-openjdk openjdk java-latest-openjdk-headless default-jdk-headless
+java-25-openjdk-devel openjdk-25-jdk-headless java-21-openjdk-devel openjdk-21-jdk-headless java-latest-openjdk-headless default-jdk-headless openjdk
 jq
 lshw
 lua

@@ -3,12 +3,23 @@ local M = {}
 local has_ansible_lint = vim.fn.executable("ansible-lint") == 1
 
 M.servers = {
-  bashls = {},
-  jsonls = {},
-  yamlls = {},
-  marksman = {},
-  pyright = {},
+  bashls = {
+    filetypes = { "sh" },
+  },
+  jsonls = {
+    filetypes = { "json", "jsonc" },
+  },
+  yamlls = {
+    filetypes = { "yaml" },
+  },
+  marksman = {
+    filetypes = { "markdown" },
+  },
+  pyright = {
+    filetypes = { "python" },
+  },
   lua_ls = {
+    filetypes = { "lua" },
     settings = {
       Lua = {
         diagnostics = {
@@ -73,22 +84,10 @@ function M.with_capabilities(server_opts)
 end
 
 function M.filetype_to_server()
-  local ok, lspconfig = pcall(require, "lspconfig")
-  if not ok then
-    return {}
-  end
-
   local mapping = {}
 
   for server_name, server_opts in pairs(M.servers) do
-    local filetypes = server_opts.filetypes
-
-    if not filetypes then
-      local config = lspconfig[server_name]
-      filetypes = config and config.document_config and config.document_config.default_config.filetypes or {}
-    end
-
-    for _, filetype in ipairs(filetypes or {}) do
+    for _, filetype in ipairs(server_opts.filetypes or {}) do
       mapping[filetype] = server_name
     end
   end

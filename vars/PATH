@@ -10,11 +10,13 @@ fi
 java_bin_dir=""
 for candidate_dir in \
   /usr/lib/jvm/java-25-openjdk/bin \
-  /usr/lib/jvm/java-25-openjdk-*/bin \
-  /usr/lib/jvm/jdk-25*/bin \
+  /usr/lib/jvm/java-25-openjdk-amd64/bin \
+  /usr/lib/jvm/java-25-openjdk-arm64/bin \
+  /usr/lib/jvm/jdk-25/bin \
   /usr/lib/jvm/java-21-openjdk/bin \
-  /usr/lib/jvm/java-21-openjdk-*/bin \
-  /usr/lib/jvm/jdk-21*/bin \
+  /usr/lib/jvm/java-21-openjdk-amd64/bin \
+  /usr/lib/jvm/java-21-openjdk-arm64/bin \
+  /usr/lib/jvm/jdk-21/bin \
   /usr/lib/jvm/default-java/bin
 do
   if [ -d "$candidate_dir" ]; then

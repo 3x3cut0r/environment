@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 # Aliases for enhanced command-line productivity.
 # The blocks are organized by the tools they extend.
 
@@ -76,6 +77,113 @@ findb() { _find_by_type b "$@"; }
 # Fuzzy Finder
 alias fzf='fzf --preview "bat --style=numbers --color=always --line-range :500 {} 2>/dev/null || cat {}"'
 
+_fzf_paths() {
+  local path_type="$1"
+  local search_root="${2:-.}"
+
+  if command -v fd >/dev/null 2>&1; then
+    fd --type "$path_type" . "$search_root"
+  elif command -v fdfind >/dev/null 2>&1; then
+    fdfind --type "$path_type" . "$search_root"
+  else
+    find "$search_root" -type "$path_type"
+  fi
+}
+
+_fzf_pick_path() {
+  local path_type="$1"
+  local search_root="${2:-.}"
+  local preview_cmd=
+
+  if [[ "$path_type" == "f" ]]; then
+    preview_cmd='bat --style=numbers --color=always --line-range :500 {} 2>/dev/null || cat {}'
+    _fzf_paths "$path_type" "$search_root" | command fzf --preview "$preview_cmd"
+  else
+    _fzf_paths "$path_type" "$search_root" | command fzf
+  fi
+}
+
+_fzf_pick_pid() {
+  ps -axo pid=,ppid=,%cpu=,%mem=,stat=,time=,command= |
+    command fzf "$@" |
+    awk '{print $1}'
+}
+
+fcd() {
+  local dir
+
+  dir="$(_fzf_pick_path d "$1")" || return
+  [[ -n "$dir" ]] || return
+
+  cd "$dir" || return
+}
+
+fvi() {
+  local file
+
+  file="$(_fzf_pick_path f "$1")" || return
+  [[ -n "$file" ]] || return
+
+  vi "$file"
+}
+
+fedit() {
+  local file
+  local editor_cmd="${EDITOR:-vi}"
+
+  file="$(_fzf_pick_path f "$1")" || return
+  [[ -n "$file" ]] || return
+
+  "$editor_cmd" "$file"
+}
+
+fproc() {
+  _fzf_pick_pid "$@"
+}
+
+ftop() {
+  local pid
+
+  pid="$(_fzf_pick_pid)" || return
+  [[ -n "$pid" ]] || return
+
+  if command -v htop >/dev/null 2>&1; then
+    htop -p "$pid"
+    return
+  fi
+
+  if command -v top >/dev/null 2>&1; then
+    if top -pid "$pid" -l 1 >/dev/null 2>&1; then
+      top -pid "$pid"
+    else
+      top -p "$pid"
+    fi
+    return
+  fi
+
+  if command -v btop >/dev/null 2>&1; then
+    btop
+  fi
+}
+
+fkill() {
+  local signal="-TERM"
+  local pids
+
+  if [[ "${1:-}" == "-9" ]]; then
+    signal="-KILL"
+    shift
+  fi
+
+  pids="$(ps -axo pid=,ppid=,%cpu=,%mem=,stat=,time=,command= | command fzf -m "$@" | awk '{print $1}')" || return
+  [[ -n "$pids" ]] || return
+
+  while IFS= read -r pid; do
+    [[ -n "$pid" ]] || continue
+    kill "$signal" "$pid"
+  done <<< "$pids"
+}
+
 # Shortcuts for Git workflows.
 alias g='git'
 alias ga='git add'
@@ -85,6 +193,9 @@ alias gs='git status'
 alias gst='git status'
 alias gd='git diff'
 alias gl='git log --oneline --graph --decorate'
+
+alias gg='lazygit'
+alias lg='lazygit'
 
 # Package management aliases for multiple distributions.
 if command -v sudo >/dev/null 2>&1; then

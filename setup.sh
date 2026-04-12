@@ -1384,22 +1384,14 @@ install_npm() {
 
     local current_nvm_node=""
     local installed_lts_version=""
-    local nvm_ls_summary=""
-    local installed_or_reused_action="installed"
+    local installed_or_reused_label="Installed"
     current_nvm_node=$(nvm current 2>/dev/null || true)
     installed_lts_version=$(nvm version --lts 2>/dev/null || true)
-    nvm_ls_summary=$(nvm ls --no-colors 2>/dev/null || true)
 
     log_message INFO "nvm status before Node.js install: current=${current_nvm_node:-unknown}, installed_lts=${installed_lts_version:-unknown}"
-    if [ -n "$nvm_ls_summary" ]; then
-        while IFS= read -r output_line; do
-            [ -n "$output_line" ] || continue
-            log_message INFO "nvm ls: $output_line"
-        done <<< "$nvm_ls_summary"
-    fi
 
     if [ -n "$installed_lts_version" ] && [ "$installed_lts_version" != "N/A" ]; then
-        installed_or_reused_action="reused"
+        installed_or_reused_label="Reused"
         log_message INFO "Node.js LTS $installed_lts_version is already installed. Reusing existing version."
     else
         log_message INFO "Installing latest LTS Node.js with nvm."
@@ -1425,11 +1417,11 @@ install_npm() {
     rm -f "$nvm_log_file"
 
     if [ -n "$node_version" ] && [ -n "$npm_version" ]; then
-        log_message INFO "${installed_or_reused_action^} Node.js $node_version and npm $npm_version via nvm."
+        log_message INFO "$installed_or_reused_label Node.js $node_version and npm $npm_version via nvm."
     elif [ -n "$node_version" ]; then
-        log_message INFO "${installed_or_reused_action^} Node.js $node_version via nvm."
+        log_message INFO "$installed_or_reused_label Node.js $node_version via nvm."
     else
-        log_message INFO "${installed_or_reused_action^} the latest LTS Node.js version via nvm."
+        log_message INFO "$installed_or_reused_label the latest LTS Node.js version via nvm."
     fi
 }
 

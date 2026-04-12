@@ -169,5 +169,5 @@ vim.keymap.set("n", "<leader>gg", function()
     vim.notify("lazygit not found in PATH", vim.log.levels.WARN)
   end
 end, { desc = "Lazygit" })
-vim.keymap.set("n", "<leader>qq", "<cmd>q<cr>", { desc = "Quit window/tab" })
-vim.keymap.set("n", "<leader>qa", "<cmd>qa<cr>", { desc = "Quit all" })
+vim.keymap.set("n", "<leader>qq", "<cmd>q!<cr>", { desc = "Quit window/tab (force)" })
+vim.keymap.set("n", "<leader>qa", "<cmd>qa!<cr>", { desc = "Quit all (force)" })

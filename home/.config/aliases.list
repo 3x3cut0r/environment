@@ -184,6 +184,13 @@ fkill() {
   done <<< "$pids"
 }
 
+fh() {
+  local cmd
+  cmd="$(fc -l 1 | command fzf --tac | sed 's/^[[:space:]]*[0-9]*[[:space:]]*//')" || return
+  [[ -n "$cmd" ]] || return
+  eval "$cmd"
+}
+
 # Shortcuts for Git workflows.
 alias g='git'
 alias ga='git add'

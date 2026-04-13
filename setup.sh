@@ -1094,13 +1094,23 @@ install_go_official() {
         }
 
         if [ -n "$temp_archive" ]; then
-            log_message INFO "Downloading Go archive from go.dev: $archive_name"
+            if [ -n "$go_version" ]; then
+                log_message INFO "Downloading Go archive from go.dev: $archive_name"
+            else
+                log_message INFO "Downloading Go archive from GitHub: $archive_name"
+            fi
             if curl -fsSL -o "$temp_archive" "$download_url" >/dev/null 2>&1; then
-                if install_go_archive "$temp_archive" "go.dev" "$go_version"; then
+                local source_label
+                if [ -n "$go_version" ]; then
+                    source_label="go.dev"
+                else
+                    source_label="GitHub"
+                fi
+                if install_go_archive "$temp_archive" "$source_label" "$go_version"; then
                     rm -f "$temp_archive"
                     return 0
                 fi
-                log_message WARN "Installation from go.dev failed. Trying local fallback."
+                log_message WARN "Installation from $source_label failed. Trying local fallback."
             else
                 log_message WARN "Failed to download Go archive from $download_url"
                 log_message WARN "Trying local fallback."

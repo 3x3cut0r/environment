@@ -1,5 +1,6 @@
 {
   "$schema": "https://opencode.ai/config.json",
+  "small_model": "anthropic/claude-haiku-4-5",
   "permission": {
     "*": "ask",
 
@@ -75,6 +76,111 @@
       "~/*.pfx": "deny",
       "~/*/id_rsa": "deny",
       "~/*/id_ed25519": "deny"
+    }
+  },
+
+  "agent": {
+    "build": {
+      "description": "Primary agent for development with full tool access",
+      "mode": "primary",
+      "model": "anthropic/claude-opus-4-6",
+      "temperature": 0.2,
+      "steps": 25,
+      "permission": {
+        "task": {
+          "*": "allow"
+        }
+      }
+    },
+    "plan": {
+      "description": "Analysis and planning agent without making changes",
+      "mode": "primary",
+      "model": "anthropic/claude-sonnet-4-6",
+      "temperature": 0.1,
+      "steps": 15,
+      "permission": {
+        "edit": "deny",
+        "bash": "deny",
+        "write": "deny"
+      }
+    },
+    "explore": {
+      "description": "Fast, read-only agent for exploring codebases",
+      "mode": "subagent",
+      "model": "anthropic/claude-haiku-4-5",
+      "temperature": 0.0,
+      "steps": 12,
+      "permission": {
+        "edit": "deny",
+        "bash": "deny",
+        "write": "deny"
+      }
+    },
+    "general": {
+      "description": "General-purpose agent for multi-step tasks and research",
+      "mode": "subagent",
+      "model": "anthropic/claude-sonnet-4-6",
+      "temperature": 0.2,
+      "steps": 25
+    },
+    "code-reviewer": {
+      "description": "Reviews code for quality, best practices and potential issues",
+      "mode": "subagent",
+      "model": "anthropic/claude-sonnet-4-6",
+      "temperature": 0.1,
+      "steps": 15,
+      "permission": {
+        "edit": "deny",
+        "bash": "deny",
+        "write": "deny"
+      }
+    },
+    "debugger": {
+      "description": "Agent focused on debugging and log analysis",
+      "mode": "subagent",
+      "model": "anthropic/claude-haiku-4-5",
+      "temperature": 0.1,
+      "steps": 15,
+      "permission": {
+        "edit": "deny",
+        "write": "deny",
+        "bash": "ask"
+      }
+    },
+    "test-runner": {
+      "description": "Runs tests and analyzes results",
+      "mode": "subagent",
+      "model": "anthropic/claude-haiku-4-5",
+      "temperature": 0.0,
+      "steps": 8,
+      "permission": {
+        "edit": "deny",
+        "write": "deny",
+        "bash": "allow"
+      }
+    },
+    "docs-writer": {
+      "description": "Writes and maintains project documentation",
+      "mode": "subagent",
+      "model": "anthropic/claude-haiku-4-5",
+      "temperature": 0.3,
+      "steps": 12,
+      "permission": {
+        "edit": "ask",
+        "bash": "deny"
+      }
+    },
+    "security-auditor": {
+      "description": "Performs security audits and identifies vulnerabilities",
+      "mode": "subagent",
+      "model": "anthropic/claude-sonnet-4-6",
+      "temperature": 0.1,
+      "steps": 15,
+      "permission": {
+        "edit": "deny",
+        "bash": "deny",
+        "write": "deny"
+      }
     }
   }
 }

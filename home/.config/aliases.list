@@ -184,6 +184,13 @@ fkill() {
   done <<< "$pids"
 }
 
+fh() {
+  local cmd
+  cmd="$(fc -l 1 | command fzf --tac | sed 's/^[[:space:]]*[0-9]*[[:space:]]*//')" || return
+  [[ -n "$cmd" ]] || return
+  eval "$cmd"
+}
+
 # Shortcuts for Git workflows.
 alias g='git'
 alias ga='git add'
@@ -194,8 +201,10 @@ alias gst='git status'
 alias gd='git diff'
 alias gl='git log --oneline --graph --decorate'
 
+if command -v lazygit >/dev/null 2>&1; then
 alias gg='lazygit'
 alias lg='lazygit'
+fi
 
 # Package management aliases for multiple distributions.
 if command -v sudo >/dev/null 2>&1; then

@@ -964,7 +964,7 @@ install_go_official() {
     select_local_go_archive_name() {
         local candidate
         for candidate in "$source_archive_dir"/go*."${go_os}"-"${go_arch}".tar.gz; do
-            if [ -f "$candidate" ]; then
+            if [ -f "$candidate" ] && ! is_lfs_pointer_file "$candidate"; then
                 basename "$candidate"
                 return 0
             fi
@@ -1063,12 +1063,30 @@ install_go_official() {
         :
     else
         log_message WARN "No local Go archive found for ${go_os}-${go_arch} in $source_archive_dir"
-        return 0
+
+        # Try to get archive name from LFS pointer for GitHub download
+        local lfs_candidate
+        for lfs_candidate in "$source_archive_dir"/go*."${go_os}"-"${go_arch}".tar.gz; do
+            if [ -f "$lfs_candidate" ] && is_lfs_pointer_file "$lfs_candidate"; then
+                fallback_archive_name=$(basename "$lfs_candidate")
+                log_message INFO "Found LFS pointer archive: $fallback_archive_name, will attempt download from GitHub"
+                break
+            fi
+        done
+
+        if [ -z "$fallback_archive_name" ]; then
+            return 1
+        fi
     fi
 
-    if [ -n "$go_version" ] && command -v curl >/dev/null 2>&1; then
+    if [ -n "$fallback_archive_name" ] && command -v curl >/dev/null 2>&1; then
         local archive_name="$fallback_archive_name"
-        local download_url="https://go.dev/dl/${archive_name}"
+        local download_url
+        if [ -n "$go_version" ]; then
+            download_url="https://go.dev/dl/${archive_name}"
+        else
+            download_url="${github_sources_base_url}/${archive_name}"
+        fi
         local temp_archive=""
         temp_archive=$(mktemp "${TMPDIR:-/tmp}/go-archive-XXXXXX.tar.gz") || {
             log_message WARN "Unable to create temporary file for Go archive."
@@ -1076,13 +1094,23 @@ install_go_official() {
         }
 
         if [ -n "$temp_archive" ]; then
-            log_message INFO "Downloading Go archive from go.dev: $archive_name"
+            if [ -n "$go_version" ]; then
+                log_message INFO "Downloading Go archive from go.dev: $archive_name"
+            else
+                log_message INFO "Downloading Go archive from GitHub: $archive_name"
+            fi
             if curl -fsSL -o "$temp_archive" "$download_url" >/dev/null 2>&1; then
-                if install_go_archive "$temp_archive" "go.dev" "$go_version"; then
+                local source_label
+                if [ -n "$go_version" ]; then
+                    source_label="go.dev"
+                else
+                    source_label="GitHub"
+                fi
+                if install_go_archive "$temp_archive" "$source_label" "$go_version"; then
                     rm -f "$temp_archive"
                     return 0
                 fi
-                log_message WARN "Installation from go.dev failed. Trying local fallback."
+                log_message WARN "Installation from $source_label failed. Trying local fallback."
             else
                 log_message WARN "Failed to download Go archive from $download_url"
                 log_message WARN "Trying local fallback."
@@ -1094,7 +1122,7 @@ install_go_official() {
     local local_archive=""
     if ! local_archive=$(ensure_local_go_archive "$fallback_archive_name"); then
         log_message WARN "Local Go fallback archive not available: $fallback_archive_name"
-        return 0
+        return 1
     fi
 
     local fallback_version="$go_version"
@@ -1106,6 +1134,7 @@ install_go_official() {
 
     if ! install_go_archive "$local_archive" "local sources archive ($local_archive)" "$fallback_version"; then
         log_message WARN "Local Go fallback installation failed."
+        return 1
     fi
 }
 

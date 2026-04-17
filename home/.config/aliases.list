@@ -59,14 +59,27 @@ alias most-used-commands="history | awk '{print \$2}' | sort | uniq -c | sort -n
 _find_by_type() {
   local type="$1"
   shift
-
   local dir="."
-  if (($# > 0)) && [[ "$1" != -* ]]; then
-    dir="$1"
-    shift
+  local name_pattern=""
+  if (($# > 0)); then
+    if [[ "$1" == -* ]]; then
+      # Beginnt mit -, also ein find-Option → Standard-Verzeichnis verwenden
+      :
+    elif [[ -d "$1" ]]; then
+      # Ist ein Verzeichnis
+      dir="$1"
+      shift
+    else
+      # Ist weder Option noch Verzeichnis → Name-Pattern
+      name_pattern="$1"
+      shift
+    fi
   fi
-
-  find "$dir" -type "$type" "$@"
+  if [[ -n "$name_pattern" ]]; then
+    find "$dir" -type "$type" -name "$name_pattern" "$@"
+  else
+    find "$dir" -type "$type" "$@"
+  fi
 }
 
 findf() { _find_by_type f "$@"; }

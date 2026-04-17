@@ -63,14 +63,16 @@ _find_by_type() {
   local name_pattern=""
   if (($# > 0)); then
     if [[ "$1" == -* ]]; then
-      # Beginnt mit -, also ein find-Option → Standard-Verzeichnis verwenden
+      # Is an option → using default directory
       :
-    elif [[ -d "$1" ]]; then
-      # Ist ein Verzeichnis
-      dir="$1"
-      shift
+    elif [[ "$1" == /* || "$1" == ./* || "$1" == ../* ]]; then
+      # Is a path → update directory
+      if [[ -d "$1" ]]; then
+        dir="$1"
+        shift
+      fi
     else
-      # Ist weder Option noch Verzeichnis → Name-Pattern
+      # Is neither an option or path → set as name-pattern
       name_pattern="$1"
       shift
     fi

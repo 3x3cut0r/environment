@@ -29,16 +29,10 @@
       "*": "allow"
     },
     "lsp": "allow",
-    "webfetch": {
-      "*": "allow"
-    },
-    "websearch": {
-      "*": "allow"
-    },
-    "codesearch": {
-      "*": "allow"
-    },
-
+    "webfetch": "allow",
+    "websearch": "allow",
+    "codesearch": "allow",
+    
     // Allow access outside workspace specifically for HOME,
     // then block security-critical paths/files.
     "external_directory": {

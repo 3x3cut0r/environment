@@ -83,7 +83,7 @@
     "build": {
       "description": "Primary agent for development with full tool access",
       "mode": "primary",
-      "model": "anthropic/claude-opus-4-6",
+      "model": "anthropic/claude-opus-4-7",
       "temperature": 0.2,
       "steps": 25,
       "permission": {

@@ -37,6 +37,22 @@ General engineering principles:
 - ASCII unless the file already uses non-ASCII
 - No dead code, no commented-out blocks, no leftover debug prints
 
+Delegation to subagents (via the `task` tool):
+Use subagents to keep your own context lean and to push narrow work to cheaper or specialized models. Do not delegate trivial work; the overhead is not worth it for single-file changes.
+
+- `explore`: Use for non-trivial read-only codebase research before editing - broad glob/grep sweeps, locating call sites, mapping unfamiliar modules, collecting file:line references across many files. Skip for 1-2 known files you can read directly.
+- `debugger`: Use when a failure is reproducible but the root cause is unclear and requires methodical bisection, log analysis, or stack-trace interpretation. Skip for obvious errors where the fix is immediate.
+- `test-runner`: Use after non-trivial changes spanning multiple files, or when test discovery itself is unclear (unknown framework, custom scripts). For single-file edits with an obvious check (bash -n, py_compile), run the check yourself.
+- `code-reviewer`: Use before finalizing a larger change set (multiple files or non-trivial logic) to catch issues you may have missed. Skip for one-line fixes, pure doc edits, or config tweaks.
+- `security-auditor`: Use when the change touches auth, secrets, crypto, network boundaries, deserialization, shell execution with user input, or new dependencies. Skip for pure refactors that do not alter trust boundaries.
+- `docs-writer`: Use when the change requires new or substantially updated user-facing docs (README sections, CHANGELOG entries, runbooks). Skip for inline code comments or small README tweaks that you can do in-line.
+- `general`: Use only when no specialized subagent fits and the task is still multi-step and research-heavy.
+
+Rules of thumb:
+- One subagent per distinct concern. Do not chain `explore` -> `code-reviewer` -> `security-auditor` for a two-line fix.
+- Batch independent subagent calls in parallel (e.g. `code-reviewer` and `security-auditor` after a larger change).
+- If you already have the information a subagent would gather, do not call it.
+
 Verification after changes:
 - Run the narrowest useful checks for the stack you touched
   - Bash: bash -n <file>, shellcheck <file>

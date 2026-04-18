@@ -93,7 +93,10 @@
       "steps": 15,
       "permission": {
         "edit": "deny",
-        "bash": "deny"
+        "bash": "deny",
+        "task": {
+          "*": "allow"
+        }
       }
     },
     "explore": {

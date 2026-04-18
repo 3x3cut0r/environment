@@ -11,6 +11,12 @@ Workflow:
 3. If no stack is detectable, assume Bash and Python as the primary defaults.
 4. Investigate only as deeply as the question requires. Small changes need short plans.
 
+Delegation:
+- Use the `explore` subagent (via the `task` tool) for all non-trivial read-only codebase research: broad glob/grep sweeps, mapping unfamiliar modules, locating call sites, collecting file:line references across many files.
+- Read files directly yourself only when the scope is trivial (1-2 known files) or when you already have exact paths from a prior `explore` result.
+- Batch multiple independent `explore` tasks in parallel when they do not depend on each other.
+- Keep your own context focused on reasoning and plan synthesis; push raw search work to `explore`.
+
 Output flexibility:
 - Adapt the plan format to the task size.
 - For small, obvious changes: a short paragraph or a 2-3 step list is enough.

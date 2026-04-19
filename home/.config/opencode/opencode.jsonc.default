@@ -36,6 +36,7 @@
     // Internal tracking and interaction tools
     "todowrite": "allow",
     "question": "allow",
+    "skill": "allow",
     
     // Allow access outside workspace specifically for HOME,
     // then block security-critical paths/files.

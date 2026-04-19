@@ -32,6 +32,10 @@
     "webfetch": "allow",
     "websearch": "allow",
     "codesearch": "allow",
+
+    // Internal tracking and interaction tools
+    "todowrite": "allow",
+    "question": "allow",
     
     // Allow access outside workspace specifically for HOME,
     // then block security-critical paths/files.
@@ -108,7 +112,8 @@
       "steps": 12,
       "permission": {
         "edit": "deny",
-        "bash": "deny"
+        "bash": "deny",
+        "question": "deny"
       }
     },
     "general": {
@@ -127,7 +132,8 @@
       "steps": 15,
       "permission": {
         "edit": "deny",
-        "bash": "deny"
+        "bash": "deny",
+        "question": "deny"
       }
     },
     "debugger": {
@@ -151,7 +157,8 @@
       "steps": 8,
       "permission": {
         "edit": "deny",
-        "bash": "allow"
+        "bash": "allow",
+        "question": "deny"
       }
     },
     "docs-writer": {
@@ -175,7 +182,8 @@
       "steps": 15,
       "permission": {
         "edit": "deny",
-        "bash": "deny"
+        "bash": "deny",
+        "question": "deny"
       }
     }
   }

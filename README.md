@@ -54,8 +54,10 @@ This repository provides a setup script that performs fundamental shell customiz
 │   │   │   │   ├── review.md        # Review staged or working changes for commit readiness
 │   │   │   │   ├── save.md          # Save current session context into TASKS.md
 │   │   │   │   └── update.md        # Update working copy for git or svn
-│   │   │   ├── opencode.jsonc.ask   # Ask profile configuration
-│   │   │   └── opencode.jsonc.proxmox # Proxmox profile configuration
+│   │   │   ├── opencode.jsonc.anthropic # Anthropic profile configuration
+│   │   │   ├── opencode.jsonc.default # Default OpenAI profile configuration
+│   │   │   ├── opencode.jsonc.proxmox # Proxmox profile configuration
+│   │   │   ├── tui.json             # TUI keybindings
 │   │   ├── starship.toml            # Starship prompt theme configuration
 │   │   ├── tmux/                    # tmux configuration and helper scripts
 │   │       ├── tmux.conf            # tmux configuration with TPM setup
@@ -159,6 +161,7 @@ The setup supports these environment variables:
 - `ENVIRONMENT_WRAPPER_PATH=/custom/path/environment`: Overrides wrapper install location.
 - `BAT_CONFIG_DIR=/custom/path/bat`: Overrides where bat config/themes are written.
 - Shell PATH snippets now evaluate `brew shellenv` when Homebrew is available, so Homebrew toolchains (for example `python3`) are preferred over system defaults.
+- OpenCode TUI keybinding profiles live next to the matching runtime profiles as `tui.json`. They keep the default `<leader>e` editor shortcut and add `<leader>v` for editing prompts in `$EDITOR`/Neovim before returning them to OpenCode.
 
 ## Notes
 

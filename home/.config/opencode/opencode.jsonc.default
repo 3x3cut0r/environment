@@ -2,7 +2,7 @@
   "$schema": "https://opencode.ai/config.json",
   "small_model": "openai/gpt-5.4-mini",
   "permission": {
-    "*": "ask",
+    "*": "allow",
 
     // Read-only tools: always allow
     "read": {
@@ -22,56 +22,44 @@
       "*/id_rsa": "deny",
       "*/id_ed25519": "deny"
     },
+
     "glob": {
       "*": "allow"
     },
+   
     "grep": {
       "*": "allow"
     },
+   
     "lsp": "allow",
     "webfetch": "allow",
     "websearch": "allow",
     "codesearch": "allow",
-
-    // Internal tracking and interaction tools
     "todowrite": "allow",
     "question": "allow",
     "skill": "allow",
 
-    // Allow access outside workspace specifically for HOME,
-    // then block security-critical paths/files.
+    // Ask before accessing external locations, but always deny secret-like files.
     "external_directory": {
       "*": "ask",
-      "~/*": "allow",
-      "$HOME/*": "allow",
 
-      "~/.ssh/*": "deny",
-      "$HOME/.ssh/*": "deny",
-      "~/.gnupg/*": "deny",
-      "$HOME/.gnupg/*": "deny",
-      "~/.aws/credentials": "deny",
-      "$HOME/.aws/credentials": "deny",
-      "~/.kube/config": "deny",
-      "$HOME/.kube/config": "deny",
-      "~/.docker/config.json": "deny",
-      "$HOME/.docker/config.json": "deny",
-      "~/.netrc": "deny",
-      "$HOME/.netrc": "deny",
-      "~/.pypirc": "deny",
-      "$HOME/.pypirc": "deny",
-      "~/.npmrc": "deny",
-      "$HOME/.npmrc": "deny",
+      "*.env": "deny",
+      "*.env.*": "deny",
+      "*.credentials*": "deny",
+      "*.secret*": "deny",
+      "*.pem": "deny",
+      "*.key": "deny",
+      "*.p12": "deny",
+      "*.pfx": "deny",
+      "*.kdbx": "deny",
+      "*.agekey": "deny",
 
-      "~/*/.env": "deny",
-      "~/*/.env.*": "deny",
-      "~/*.credentials*": "deny",
-      "~/*.secret*": "deny",
-      "~/*.pem": "deny",
-      "~/*.key": "deny",
-      "~/*.p12": "deny",
-      "~/*.pfx": "deny",
-      "~/*/id_rsa": "deny",
-      "~/*/id_ed25519": "deny"
+      "*/.env": "deny",
+      "*/.env.*": "deny",
+      "*/.credentials*": "deny",
+      "*/.secret*": "deny",
+      "*/id_rsa": "deny",
+      "*/id_ed25519": "deny"
     }
   },
 

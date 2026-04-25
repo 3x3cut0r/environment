@@ -1,8 +1,14 @@
+# groups
 bash-completion
+ca-certificates
+java-25-openjdk-devel openjdk-25-jdk-headless java-21-openjdk-devel openjdk-21-jdk-headless java-latest-openjdk-headless default-jdk-headless openjdk
+net-tools
+wl-clipboard
+
+# packages
 bat
 bind bind-utils dnsutils
 btop
-ca-certificates
 cmake
 curl
 dog
@@ -12,7 +18,6 @@ fzf
 gh
 git
 git-lfs
-java-25-openjdk-devel openjdk-25-jdk-headless java-21-openjdk-devel openjdk-21-jdk-headless java-latest-openjdk-headless default-jdk-headless openjdk
 jq
 lshw
 lua
@@ -26,7 +31,6 @@ mise
 mtr mtr-tiny
 nano
 ncdu
-net-tools
 python3
 python3.11
 python3.14 python3.13 python3.12
@@ -47,12 +51,12 @@ vi
 vim vim-enhanced
 watch procps-ng procps
 wget
-wl-clipboard
 wormhole magic-wormhole
 xclip
 xsel
 zip info-zip
 zoxide
+
 # <<< Add python packages below
 llm
 pip

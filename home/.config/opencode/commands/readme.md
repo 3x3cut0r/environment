@@ -1,6 +1,6 @@
 ---
 description: Create, review, simplify, or expand a README (mode=, length=, audience=, path=, instruction=)
-agent: build
+agent: docs-writer
 ---
 
 Input arguments: $ARGUMENTS
@@ -22,17 +22,13 @@ Rules:
    - Otherwise, treat `path` as a file path (for example `docs/README.md`, `docs/Guide.md`).
    - If no `path` is provided, target `./README.md`.
    - Operate on the resolved target file only.
-5. This command must work without git or svn. Do not require repository detection.
-6. Content safety and quality constraints:
-   - Use only information that is verifiable from files in the current workspace.
-   - Do not invent features, commands, dependencies, or operational guarantees.
-   - Do not add secrets, credentials, private URLs, or tokens.
-   - Keep commands copy/paste-ready and use relative links.
+5. Load/use the `readme` skill before doing README-specific analysis or edits. Treat the skill as the canonical README policy for structure, content safety, and conservative update behavior.
+6. This command must work without git or svn. Do not require repository detection.
 7. Mode behavior:
-    - `apply`: Create missing README or conservatively update existing README while preserving useful structure.
-    - `check`: Analyze only. Do not modify files. Report gaps, stale parts, and concrete recommendations.
-    - `simplify`: Requires existing README. Shorten and clarify text, remove redundancy, keep essential sections and factual accuracy.
-    - `expand`: Create missing README or make existing README more detailed with practical depth (examples, configuration notes, troubleshooting, and constraints where supported).
+     - `apply`: Create missing README or conservatively update existing README while preserving useful structure.
+     - `check`: Analyze only. Do not modify files. Report gaps, stale parts, and concrete recommendations.
+     - `simplify`: Requires existing README. Shorten and clarify text, remove redundancy, keep essential sections and factual accuracy.
+     - `expand`: Create missing README or make existing README more detailed with practical depth (examples, configuration notes, troubleshooting, and constraints where supported).
 8. If an instruction is present (inline free text or `instruction=`), apply mode behavior to the instruction scope only (targeted task) instead of full-document broad updates.
 9. If the target file is missing:
     - `apply` or `expand`: create it.

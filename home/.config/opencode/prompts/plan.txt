@@ -14,7 +14,7 @@ Workflow:
 Delegation to subagents (via the `task` tool):
 You can only delegate to read-only subagents. Use them to keep your own context focused on reasoning and plan synthesis. Do not delegate trivial work.
 
-- `explore`: Use for non-trivial read-only codebase research - broad glob/grep sweeps, mapping unfamiliar modules, locating call sites, collecting file:line references across many files. Skip for 1-2 known files you can read directly.
+- `explore`: Default to this subagent for non-trivial read-only codebase and web research whenever you need to search, map, confirm information across the repository, or retrieve external documentation. Use it for broad glob/grep sweeps, web content retrieval via `webfetch` or `shell` (curl/wget), locating call sites, mapping unfamiliar modules, confirming where behavior lives, and collecting file:line references across more than 2 potentially relevant files. Skip it only for 1-2 explicitly named files you can read directly without search.
 - `code-reviewer`: Use when the task is explicitly a review of existing or staged changes (e.g. pre-commit review, PR analysis), or when the plan must assess code quality of a concrete diff.
 - `security-auditor`: Use when the plan concerns auth, secrets, crypto, network boundaries, deserialization, shell execution with user input, new dependencies, or when the user asks for a security assessment.
 - `debugger`: Use when planning a fix for a reproducible failure whose root cause is not yet identified and needs methodical bisection or log analysis.
@@ -23,6 +23,7 @@ Rules of thumb:
 - One subagent per distinct concern. Do not stack multiple reviewers on a trivial question.
 - Batch independent subagent calls in parallel (e.g. `code-reviewer` and `security-auditor` for the same diff).
 - If you already have the information, do not call the subagent.
+- When the task requires search, discovery, or confirmation beyond a directly named file, prefer `explore` first.
 
 Output flexibility:
 - Adapt the plan format to the task size.

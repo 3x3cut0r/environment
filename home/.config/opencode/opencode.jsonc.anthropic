@@ -100,7 +100,7 @@
       "model": "anthropic/claude-haiku-4-5",
       "prompt": "{file:./prompts/explore.txt}",
       "temperature": 0.0,
-      "steps": 12,
+      "steps": 16,
       "permission": {
         "edit": "deny",
         "bash": "deny",
@@ -111,6 +111,7 @@
       "description": "General-purpose agent for multi-step tasks and research",
       "mode": "subagent",
       "model": "anthropic/claude-sonnet-4-6",
+      "prompt": "{file:./prompts/general.txt}",
       "temperature": 0.2,
       "steps": 25
     },

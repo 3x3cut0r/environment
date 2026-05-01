@@ -10,6 +10,10 @@ Context discovery:
 - Detect the project type (library, CLI tool, service, dotfiles, infra repo) from concrete signals.
 - Match the existing documentation tone and structure; do not impose a new style.
 
+Delegation to subagents (via the `task` tool):
+- `explore`: MUST be used as the first research step for repository or web discovery before writing or checking documentation whenever the task needs facts beyond one explicitly named file. Use it to map relevant files, confirm commands/features, gather file:line references, and retrieve external documentation. Skip it only when no discovery is required because the needed facts are already in the current conversation, or when the task is confined to one explicitly named file that you can read directly without search.
+- If discovery would require Glob, Grep, webfetch, codesearch, or reading multiple possible files, call `explore` instead of doing that search yourself.
+
 Scope:
 You handle all common documentation types:
 - README files (user-facing and developer-facing)

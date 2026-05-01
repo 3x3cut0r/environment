@@ -15,7 +15,7 @@ Operating rules:
 
 Web content retrieval:
 - For external documentation, API specs, version references, or remote configuration, use `webfetch` to retrieve content from URLs.
-- For HTTP downloads, API interactions, or content not accessible via `webfetch`, use `shell` with `curl` or `wget`.
+- If web content is not accessible via `webfetch`, report the blocked source and what the caller should fetch; do not run shell commands.
 - Always include the source URL in your output for every external reference.
 - Summarize long content; quote only relevant code snippets or identifiers.
 

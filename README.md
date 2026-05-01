@@ -162,6 +162,7 @@ The setup supports these environment variables:
 - `BAT_CONFIG_DIR=/custom/path/bat`: Overrides where bat config/themes are written.
 - Shell PATH snippets now evaluate `brew shellenv` when Homebrew is available, so Homebrew toolchains (for example `python3`) are preferred over system defaults.
 - OpenCode TUI keybinding profiles live next to the matching runtime profiles as `tui.json`. They keep the default `<leader>e` editor shortcut and add `<leader>v` for editing prompts in `$EDITOR`/Neovim before returning them to OpenCode.
+- OpenCode profiles define an `explore` subagent and require primary agents to delegate repository or web discovery to it before planning, coding, or documentation work unless the task is limited to already-known facts or one explicitly named file.
 
 ## Notes
 

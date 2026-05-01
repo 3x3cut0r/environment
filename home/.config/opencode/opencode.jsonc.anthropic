@@ -74,8 +74,19 @@
       "temperature": 0.2,
       "steps": 25,
       "permission": {
+        "glob": "deny",
+        "grep": "deny",
+        "webfetch": "deny",
+        "websearch": "deny",
+        "codesearch": "deny",
         "task": {
-          "*": "allow"
+          "explore": "allow",
+          "general": "allow",
+          "code-reviewer": "allow",
+          "debugger": "allow",
+          "test-runner": "allow",
+          "docs-writer": "allow",
+          "security-auditor": "allow"
         }
       }
     },
@@ -89,8 +100,19 @@
       "permission": {
         "edit": "deny",
         "bash": "deny",
+        "glob": "deny",
+        "grep": "deny",
+        "webfetch": "deny",
+        "websearch": "deny",
+        "codesearch": "deny",
         "task": {
-          "*": "allow"
+          "explore": "allow",
+          "general": "allow",
+          "code-reviewer": "allow",
+          "debugger": "allow",
+          "test-runner": "allow",
+          "docs-writer": "allow",
+          "security-auditor": "allow"
         }
       }
     },
@@ -102,6 +124,14 @@
       "temperature": 0.0,
       "steps": 16,
       "permission": {
+        "read": {
+          "*": "allow"
+        },
+        "glob": "allow",
+        "grep": "allow",
+        "webfetch": "allow",
+        "websearch": "allow",
+        "codesearch": "allow",
         "edit": "deny",
         "bash": "deny",
         "question": "deny"
@@ -113,7 +143,17 @@
       "model": "anthropic/claude-sonnet-4-6",
       "prompt": "{file:./prompts/general.txt}",
       "temperature": 0.2,
-      "steps": 25
+      "steps": 25,
+      "permission": {
+        "glob": "deny",
+        "grep": "deny",
+        "webfetch": "deny",
+        "websearch": "deny",
+        "codesearch": "deny",
+        "task": {
+          "explore": "allow"
+        }
+      }
     },
     "code-reviewer": {
       "description": "Reviews code for quality, best practices and potential issues",
@@ -125,7 +165,15 @@
       "permission": {
         "edit": "deny",
         "bash": "deny",
-        "question": "deny"
+        "question": "deny",
+        "glob": "deny",
+        "grep": "deny",
+        "webfetch": "deny",
+        "websearch": "deny",
+        "codesearch": "deny",
+        "task": {
+          "explore": "allow"
+        }
       }
     },
     "debugger": {
@@ -137,7 +185,15 @@
       "steps": 15,
       "permission": {
         "edit": "deny",
-        "bash": "ask"
+        "bash": "ask",
+        "glob": "deny",
+        "grep": "deny",
+        "webfetch": "deny",
+        "websearch": "deny",
+        "codesearch": "deny",
+        "task": {
+          "explore": "allow"
+        }
       }
     },
     "test-runner": {
@@ -150,7 +206,15 @@
       "permission": {
         "edit": "deny",
         "bash": "allow",
-        "question": "deny"
+        "question": "deny",
+        "glob": "deny",
+        "grep": "deny",
+        "webfetch": "deny",
+        "websearch": "deny",
+        "codesearch": "deny",
+        "task": {
+          "explore": "allow"
+        }
       }
     },
     "docs-writer": {
@@ -162,7 +226,15 @@
       "steps": 12,
       "permission": {
         "edit": "ask",
-        "bash": "deny"
+        "bash": "deny",
+        "glob": "deny",
+        "grep": "deny",
+        "webfetch": "deny",
+        "websearch": "deny",
+        "codesearch": "deny",
+        "task": {
+          "explore": "allow"
+        }
       }
     },
     "security-auditor": {
@@ -175,7 +247,15 @@
       "permission": {
         "edit": "deny",
         "bash": "deny",
-        "question": "deny"
+        "question": "deny",
+        "glob": "deny",
+        "grep": "deny",
+        "webfetch": "deny",
+        "websearch": "deny",
+        "codesearch": "deny",
+        "task": {
+          "explore": "allow"
+        }
       }
     }
   }

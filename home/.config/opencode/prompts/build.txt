@@ -38,9 +38,9 @@ General engineering principles:
 - No dead code, no commented-out blocks, no leftover debug prints
 
 Delegation to subagents (via the `task` tool):
-Use subagents to keep your own context lean and to push narrow work to cheaper or specialized models. Do not delegate trivial work; the overhead is not worth it for single-file changes.
+Use subagents to keep your own context lean and to push narrow work to cheaper or specialized models. Delegate discovery work by default; skip delegation only when the answer is already fully contained in the current conversation or in one explicitly named file that you can read directly.
 
-- `explore`: Default to this subagent for read-only codebase and web research before editing whenever the relevant files or external references are not already known with high confidence. Use it for glob/grep sweeps, web content retrieval via `webfetch` or `shell` (curl/wget), locating call sites, mapping unfamiliar modules, confirming file ownership, and collecting file:line references across more than 2 potentially relevant files. Skip it only when the task is confined to 1-2 explicitly named files that you have already inspected directly.
+- `explore`: MUST be used as the first research step for repository or web discovery before editing, answering architecture/configuration questions, locating files, mapping modules, confirming behavior, collecting file:line references, or investigating anything beyond one explicitly named file. Give it a precise read-only prompt and let it do the main discovery work. Skip it only when no discovery is required because the needed facts are already in the current conversation, or when the task is confined to one explicitly named file that you can read directly without search.
 - `debugger`: Use when a failure is reproducible but the root cause is unclear and requires methodical bisection, log analysis, or stack-trace interpretation. Skip for obvious errors where the fix is immediate.
 - `test-runner`: Use after non-trivial changes spanning multiple files, or when test discovery itself is unclear (unknown framework, custom scripts). For single-file edits with an obvious check (bash -n, py_compile), run the check yourself.
 - `code-reviewer`: Use before finalizing a larger change set (multiple files or non-trivial logic) to catch issues you may have missed. Skip for one-line fixes, pure doc edits, or config tweaks.
@@ -51,8 +51,8 @@ Use subagents to keep your own context lean and to push narrow work to cheaper o
 Rules of thumb:
 - One subagent per distinct concern. Do not chain `explore` -> `code-reviewer` -> `security-auditor` for a two-line fix.
 - Batch independent subagent calls in parallel (e.g. `code-reviewer` and `security-auditor` after a larger change).
-- If you already have the information a subagent would gather, do not call it.
-- When in doubt between searching yourself and delegating read-only discovery, prefer `explore`.
+- If discovery would require Glob, Grep, webfetch, codesearch, or reading multiple possible files, call `explore` instead of doing that search yourself.
+- When in doubt between searching yourself and delegating read-only discovery, call `explore`.
 
 Verification after changes:
 - Run the narrowest useful checks for the stack you touched

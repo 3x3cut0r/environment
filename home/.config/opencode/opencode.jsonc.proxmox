@@ -97,5 +97,200 @@
       "*/id_rsa": "deny",
       "*/id_ed25519": "deny"
     }
+  },
+
+  "agent": {
+    "build": {
+      "description": "Primary agent for development with full tool access",
+      "mode": "primary",
+      "model": "openai/gpt-5.5",
+      "prompt": "{file:./prompts/build.txt}",
+      "temperature": 0.2,
+      "steps": 25,
+      "permission": {
+        "glob": "deny",
+        "grep": "deny",
+        "webfetch": "deny",
+        "websearch": "deny",
+        "codesearch": "deny",
+        "task": {
+          "explore": "allow",
+          "general": "allow",
+          "code-reviewer": "allow",
+          "debugger": "allow",
+          "test-runner": "allow",
+          "docs-writer": "allow",
+          "security-auditor": "allow"
+        }
+      }
+    },
+    "plan": {
+      "description": "Analysis and planning agent without making changes",
+      "mode": "primary",
+      "model": "openai/gpt-5.4",
+      "prompt": "{file:./prompts/plan.txt}",
+      "temperature": 0.1,
+      "steps": 15,
+      "permission": {
+        "edit": "deny",
+        "bash": "deny",
+        "glob": "deny",
+        "grep": "deny",
+        "webfetch": "deny",
+        "websearch": "deny",
+        "codesearch": "deny",
+        "task": {
+          "explore": "allow",
+          "general": "allow",
+          "code-reviewer": "allow",
+          "debugger": "allow",
+          "test-runner": "allow",
+          "docs-writer": "allow",
+          "security-auditor": "allow"
+        }
+      }
+    },
+    "explore": {
+      "description": "Fast, read-only agent for exploring codebases",
+      "mode": "subagent",
+      "model": "openai/gpt-5.3-codex",
+      "prompt": "{file:./prompts/explore.txt}",
+      "temperature": 0.0,
+      "steps": 16,
+      "permission": {
+        "read": {
+          "*": "allow"
+        },
+        "glob": "allow",
+        "grep": "allow",
+        "webfetch": "allow",
+        "websearch": "allow",
+        "codesearch": "allow",
+        "edit": "deny",
+        "bash": "deny",
+        "question": "deny"
+      }
+    },
+    "general": {
+      "description": "General-purpose agent for multi-step tasks and research",
+      "mode": "subagent",
+      "model": "openai/gpt-5.4",
+      "prompt": "{file:./prompts/general.txt}",
+      "temperature": 0.2,
+      "steps": 25,
+      "permission": {
+        "glob": "deny",
+        "grep": "deny",
+        "webfetch": "deny",
+        "websearch": "deny",
+        "codesearch": "deny",
+        "task": {
+          "explore": "allow"
+        }
+      }
+    },
+    "code-reviewer": {
+      "description": "Reviews code for quality, best practices and potential issues",
+      "mode": "subagent",
+      "model": "openai/gpt-5.3-codex",
+      "prompt": "{file:./prompts/code-reviewer.txt}",
+      "temperature": 0.1,
+      "steps": 15,
+      "permission": {
+        "edit": "deny",
+        "bash": "deny",
+        "question": "deny",
+        "glob": "deny",
+        "grep": "deny",
+        "webfetch": "deny",
+        "websearch": "deny",
+        "codesearch": "deny",
+        "task": {
+          "explore": "allow"
+        }
+      }
+    },
+    "debugger": {
+      "description": "Agent focused on debugging and log analysis",
+      "mode": "subagent",
+      "model": "openai/gpt-5.3-codex",
+      "prompt": "{file:./prompts/debugger.txt}",
+      "temperature": 0.1,
+      "steps": 15,
+      "permission": {
+        "edit": "deny",
+        "bash": "ask",
+        "glob": "deny",
+        "grep": "deny",
+        "webfetch": "deny",
+        "websearch": "deny",
+        "codesearch": "deny",
+        "task": {
+          "explore": "allow"
+        }
+      }
+    },
+    "test-runner": {
+      "description": "Runs tests and analyzes results",
+      "mode": "subagent",
+      "model": "openai/gpt-5.1-codex-mini",
+      "prompt": "{file:./prompts/test-runner.txt}",
+      "temperature": 0.0,
+      "steps": 8,
+      "permission": {
+        "edit": "deny",
+        "bash": "allow",
+        "question": "deny",
+        "glob": "deny",
+        "grep": "deny",
+        "webfetch": "deny",
+        "websearch": "deny",
+        "codesearch": "deny",
+        "task": {
+          "explore": "allow"
+        }
+      }
+    },
+    "docs-writer": {
+      "description": "Writes and maintains project documentation",
+      "mode": "subagent",
+      "model": "openai/gpt-5.4-mini",
+      "prompt": "{file:./prompts/docs-writer.txt}",
+      "temperature": 0.3,
+      "steps": 12,
+      "permission": {
+        "edit": "ask",
+        "bash": "deny",
+        "glob": "deny",
+        "grep": "deny",
+        "webfetch": "deny",
+        "websearch": "deny",
+        "codesearch": "deny",
+        "task": {
+          "explore": "allow"
+        }
+      }
+    },
+    "security-auditor": {
+      "description": "Performs security audits and identifies vulnerabilities",
+      "mode": "subagent",
+      "model": "openai/gpt-5.4",
+      "prompt": "{file:./prompts/security-auditor.txt}",
+      "temperature": 0.1,
+      "steps": 15,
+      "permission": {
+        "edit": "deny",
+        "bash": "deny",
+        "question": "deny",
+        "glob": "deny",
+        "grep": "deny",
+        "webfetch": "deny",
+        "websearch": "deny",
+        "codesearch": "deny",
+        "task": {
+          "explore": "allow"
+        }
+      }
+    }
   }
 }

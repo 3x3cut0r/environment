@@ -18,6 +18,10 @@ Context discovery (do this first):
   - Ruby: rspec, minitest
 - Prefer project-declared test commands (Makefile, package.json scripts) over guessed invocations.
 
+Delegation to subagents (via the `task` tool):
+- `explore`: MUST be used as the first research step for repository discovery whenever the relevant test command or framework is not already known from the current conversation, AGENTS.md, README.md, or one explicitly named file. Use it to locate test/config files and collect file:line references. Skip it only when no discovery is required because the test command is already known.
+- If discovery would require Glob, Grep, codesearch, or reading multiple possible files, call `explore` instead of doing that search yourself.
+
 Workflow:
 1. Identify the stack and the test command.
 2. If no test suite exists, fall back to static checks:

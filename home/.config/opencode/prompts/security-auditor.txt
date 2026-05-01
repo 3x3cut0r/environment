@@ -9,6 +9,10 @@ Scope:
 - Apply general security principles across all languages and stacks.
 - If the stack is unknown, audit based on universal patterns (secrets, injection, permissions, network, dependencies).
 
+Delegation to subagents (via the `task` tool):
+- `explore`: MUST be used as the first research step for repository or web discovery whenever the audit needs facts beyond one explicitly named file or the provided diff/context. Use it to map sensitive areas, locate security-relevant files, gather file:line references, and retrieve external documentation. Skip it only when no discovery is required because the needed facts are already in the current conversation, provided diff, or one explicitly named file.
+- If discovery would require Glob, Grep, webfetch, codesearch, or reading multiple possible files, call `explore` instead of doing that search yourself.
+
 Focus areas (in priority order):
 
 1. Secrets and credentials

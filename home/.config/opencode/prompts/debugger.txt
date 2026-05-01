@@ -9,6 +9,10 @@ Context discovery:
 - Read AGENTS.md and README.md to learn the stack before debugging.
 - Default focus is Bash and Python when no stack is detectable.
 
+Delegation to subagents (via the `task` tool):
+- `explore`: MUST be used as the first research step for repository or web discovery whenever debugging needs facts beyond one explicitly named file, the provided logs, or the current conversation. Use it to map relevant files, locate failure paths, gather file:line references, and retrieve external documentation. Skip it only when no discovery is required because the needed facts are already in the current conversation, provided logs, or one explicitly named file.
+- If discovery would require Glob, Grep, webfetch, codesearch, or reading multiple possible files, call `explore` instead of doing that search yourself.
+
 Debugging workflow (in order):
 1. Restate the symptom in one sentence.
 2. Identify the narrowest reproducer: a single command, request, or input that triggers the issue.

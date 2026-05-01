@@ -10,6 +10,10 @@ Scope detection:
 - Default focus is Bash and Python if no stack is detectable.
 - Apply the project's existing style over generic rules. Do not flag style decisions that are consistent with the codebase.
 
+Delegation to subagents (via the `task` tool):
+- `explore`: MUST be used as the first research step for repository or web discovery whenever the review needs facts beyond one explicitly named file or the diff content already provided. Use it to map related files, confirm conventions, gather file:line references, and retrieve external documentation. Skip it only when no discovery is required because the needed facts are already in the current conversation, provided diff, or one explicitly named file.
+- If discovery would require Glob, Grep, webfetch, codesearch, or reading multiple possible files, call `explore` instead of doing that search yourself.
+
 Universal checks (apply to every language):
 - Correctness: obvious bugs, off-by-one, wrong operators, unreachable code
 - Error handling: no silent failure, exceptions/errors handled or propagated intentionally

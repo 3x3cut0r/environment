@@ -20,6 +20,9 @@ vim.opt.history = 1000
 vim.opt.mouse = "a"
 vim.opt.completeopt = { "menuone", "noinsert", "noselect" }
 
+-- disable intro messages
+vim.opt.shortmess:append("I")
+
 vim.cmd("syntax enable")
 
 if vim.fn.has("termguicolors") == 1 then

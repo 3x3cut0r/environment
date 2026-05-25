@@ -117,7 +117,7 @@
     "explore": {
       "description": "Fast, read-only agent for exploring codebases",
       "mode": "subagent",
-      "model": "openai/gpt-5.3-codex",
+      "model": "opencode-go/deepseek-v4-flash",
       "prompt": "{file:./prompts/explore.txt}",
       "temperature": 0.0,
       "steps": 16,
@@ -197,7 +197,7 @@
     "test-runner": {
       "description": "Runs tests and analyzes results",
       "mode": "subagent",
-      "model": "openai/gpt-5.1-codex-mini",
+      "model": "opencode-go/deepseek-v4-flash",
       "prompt": "{file:./prompts/test-runner.txt}",
       "temperature": 0.0,
       "steps": 8,
@@ -218,7 +218,7 @@
     "docs-writer": {
       "description": "Writes and maintains project documentation",
       "mode": "subagent",
-      "model": "openai/gpt-5.4-mini",
+      "model": "opencode-go/deepseek-v4-flash",
       "prompt": "{file:./prompts/docs-writer.txt}",
       "temperature": 0.3,
       "steps": 12,

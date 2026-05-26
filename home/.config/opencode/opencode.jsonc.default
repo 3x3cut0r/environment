@@ -256,5 +256,11 @@
         }
       }
     }
+  },
+  "mcp": { 
+      "byterover": {
+          "type": "local",
+          "command": ["/Users/julian/.brv-cli/bin/brv", "mcp"]
+      }
   }
 }

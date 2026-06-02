@@ -20,7 +20,7 @@ vim.opt.history = 1000
 vim.opt.mouse = "a"
 vim.opt.completeopt = { "menuone", "noinsert", "noselect" }
 vim.opt.pumheight = 8
-vim.opt.pumblend = 10
+vim.opt.pumblend = 30
 
 -- disable intro messages
 vim.opt.shortmess:append("I")

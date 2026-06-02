@@ -10,7 +10,13 @@ return {
     lazy = false,
     init = function()
       vim.g.coq_settings = {
-        auto_start = true,
+        auto_start = false,
+          display = {
+          pum = {
+            y_max_len = 8,
+            y_ratio = 0.2,
+          },
+        },
       }
     end,
   },

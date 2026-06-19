@@ -1,6 +1,7 @@
 {
   "$schema": "./schema/config.json",
   "small_model": "opencode-go/deepseek-v4-flash",
+  "default_agent": "plan",
   "permission": {
     "*": "deny",
     "read": {

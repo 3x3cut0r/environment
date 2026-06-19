@@ -1,5 +1,7 @@
 {
-  "$schema": "https://opencode.ai/config.json",
+  "$schema": "./schema/config.json",
+  "small_model": "opencode-go/deepseek-v4-flash",
+  "default_agent": "plan",
   "permission": {
     "*": "ask",
 
@@ -27,6 +29,8 @@
       "qm destroy *": "deny",
       "pct destroy *": "deny",
       "pvesm remove *": "deny",
+
+      // Docker inspection and config output can expose environment values
       "docker inspect *": "deny",
       "docker compose config*": "deny",
 
@@ -103,16 +107,22 @@
     "build": {
       "description": "Primary agent for development with full tool access",
       "mode": "primary",
-      "model": "openai/gpt-5.5",
+      "model": "openai/gpt-5.4",
       "prompt": "{file:./prompts/build.txt}",
       "temperature": 0.2,
-      "steps": 25,
+      "steps": 32,
       "permission": {
+        "read": "allow",
+        "list": "allow",
+        "edit": "allow",
+        "bash": "allow",
         "glob": "deny",
         "grep": "deny",
         "webfetch": "deny",
         "websearch": "deny",
-        "codesearch": "deny",
+        "todowrite": "allow",
+        "question": "allow",
+        "skill": "allow",
         "task": {
           "explore": "allow",
           "general": "allow",
@@ -130,15 +140,18 @@
       "model": "openai/gpt-5.4",
       "prompt": "{file:./prompts/plan.txt}",
       "temperature": 0.1,
-      "steps": 15,
+      "steps": 32,
       "permission": {
+        "read": "allow",
+        "list": "allow",
         "edit": "deny",
         "bash": "deny",
         "glob": "deny",
         "grep": "deny",
         "webfetch": "deny",
         "websearch": "deny",
-        "codesearch": "deny",
+        "todowrite": "allow",
+        "question": "allow",
         "task": {
           "explore": "allow",
           "general": "allow",
@@ -153,10 +166,10 @@
     "explore": {
       "description": "Fast, read-only agent for exploring codebases",
       "mode": "subagent",
-      "model": "openai/gpt-5.3-codex",
+      "model": "opencode-go/deepseek-v4-flash",
       "prompt": "{file:./prompts/explore.txt}",
-      "temperature": 0.0,
-      "steps": 16,
+      "temperature": 0,
+      "steps": 32,
       "permission": {
         "read": {
           "*": "allow"
@@ -165,7 +178,6 @@
         "grep": "allow",
         "webfetch": "allow",
         "websearch": "allow",
-        "codesearch": "allow",
         "edit": "deny",
         "bash": "deny",
         "question": "deny"
@@ -174,16 +186,21 @@
     "general": {
       "description": "General-purpose agent for multi-step tasks and research",
       "mode": "subagent",
-      "model": "openai/gpt-5.4",
+      "model": "opencode-go/deepseek-v4-flash",
       "prompt": "{file:./prompts/general.txt}",
       "temperature": 0.2,
-      "steps": 25,
+      "steps": 32,
       "permission": {
+        "read": "allow",
+        "list": "allow",
         "glob": "deny",
         "grep": "deny",
         "webfetch": "deny",
         "websearch": "deny",
-        "codesearch": "deny",
+        "edit": "deny",
+        "bash": "deny",
+        "question": "deny",
+        "todowrite": "allow",
         "task": {
           "explore": "allow"
         }
@@ -195,7 +212,7 @@
       "model": "openai/gpt-5.3-codex",
       "prompt": "{file:./prompts/code-reviewer.txt}",
       "temperature": 0.1,
-      "steps": 15,
+      "steps": 32,
       "permission": {
         "edit": "deny",
         "bash": "deny",
@@ -204,7 +221,9 @@
         "grep": "deny",
         "webfetch": "deny",
         "websearch": "deny",
-        "codesearch": "deny",
+        "read": "allow",
+        "list": "allow",
+        "todowrite": "allow",
         "task": {
           "explore": "allow"
         }
@@ -213,18 +232,21 @@
     "debugger": {
       "description": "Agent focused on debugging and log analysis",
       "mode": "subagent",
-      "model": "openai/gpt-5.3-codex",
+      "model": "openai/gpt-5.4",
       "prompt": "{file:./prompts/debugger.txt}",
       "temperature": 0.1,
-      "steps": 15,
+      "steps": 32,
       "permission": {
         "edit": "deny",
-        "bash": "ask",
+        "bash": "allow",
+        "read": "allow",
+        "list": "allow",
         "glob": "deny",
         "grep": "deny",
         "webfetch": "deny",
         "websearch": "deny",
-        "codesearch": "deny",
+        "question": "deny",
+        "todowrite": "allow",
         "task": {
           "explore": "allow"
         }
@@ -233,10 +255,10 @@
     "test-runner": {
       "description": "Runs tests and analyzes results",
       "mode": "subagent",
-      "model": "openai/gpt-5.1-codex-mini",
+      "model": "opencode-go/deepseek-v4-flash",
       "prompt": "{file:./prompts/test-runner.txt}",
-      "temperature": 0.0,
-      "steps": 8,
+      "temperature": 0,
+      "steps": 32,
       "permission": {
         "edit": "deny",
         "bash": "allow",
@@ -245,7 +267,9 @@
         "grep": "deny",
         "webfetch": "deny",
         "websearch": "deny",
-        "codesearch": "deny",
+        "read": "allow",
+        "list": "allow",
+        "todowrite": "allow",
         "task": {
           "explore": "allow"
         }
@@ -254,18 +278,21 @@
     "docs-writer": {
       "description": "Writes and maintains project documentation",
       "mode": "subagent",
-      "model": "openai/gpt-5.4-mini",
+      "model": "opencode-go/deepseek-v4-pro",
       "prompt": "{file:./prompts/docs-writer.txt}",
       "temperature": 0.3,
-      "steps": 12,
+      "steps": 32,
       "permission": {
-        "edit": "ask",
+        "read": "allow",
+        "list": "allow",
+        "edit": "allow",
         "bash": "deny",
         "glob": "deny",
         "grep": "deny",
         "webfetch": "deny",
         "websearch": "deny",
-        "codesearch": "deny",
+        "question": "deny",
+        "todowrite": "allow",
         "task": {
           "explore": "allow"
         }
@@ -277,7 +304,7 @@
       "model": "openai/gpt-5.4",
       "prompt": "{file:./prompts/security-auditor.txt}",
       "temperature": 0.1,
-      "steps": 15,
+      "steps": 32,
       "permission": {
         "edit": "deny",
         "bash": "deny",
@@ -286,7 +313,9 @@
         "grep": "deny",
         "webfetch": "deny",
         "websearch": "deny",
-        "codesearch": "deny",
+        "read": "allow",
+        "list": "allow",
+        "todowrite": "allow",
         "task": {
           "explore": "allow"
         }

@@ -79,7 +79,7 @@
     "build": {
       "description": "Primary agent for development with full tool access",
       "mode": "primary",
-      "model": "openai/gpt-5.5",
+      "model": "openai/gpt-5.4",
       "prompt": "{file:./prompts/build.txt}",
       "temperature": 0.2,
       "steps": 32,
@@ -109,7 +109,7 @@
     "plan": {
       "description": "Analysis and planning agent without making changes",
       "mode": "primary",
-      "model": "openai/gpt-5.5",
+      "model": "openai/gpt-5.4",
       "prompt": "{file:./prompts/plan.txt}",
       "temperature": 0.1,
       "steps": 32,
@@ -204,7 +204,7 @@
     "debugger": {
       "description": "Agent focused on debugging and log analysis",
       "mode": "subagent",
-      "model": "openai/gpt-5.3-codex",
+      "model": "openai/gpt-5.4",
       "prompt": "{file:./prompts/debugger.txt}",
       "temperature": 0.1,
       "steps": 32,
@@ -250,7 +250,7 @@
     "docs-writer": {
       "description": "Writes and maintains project documentation",
       "mode": "subagent",
-      "model": "opencode-go/deepseek-v4-flash",
+      "model": "opencode-go/deepseek-v4-pro",
       "prompt": "{file:./prompts/docs-writer.txt}",
       "temperature": 0.3,
       "steps": 32,

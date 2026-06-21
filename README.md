@@ -160,7 +160,7 @@ The setup supports these environment variables:
 - `ENVIRONMENT_AUTO_CONFIRM=yes`: Enables non-interactive mode (same behavior as `--yes`).
 - `ENVIRONMENT_WRAPPER_PATH=/custom/path/environment`: Overrides wrapper install location.
 - `BAT_CONFIG_DIR=/custom/path/bat`: Overrides where bat config/themes are written.
-- Personal shell environment variables can be stored in `~/.config/env.sh`. The setup now manages this file from `home/.config/env.sh.append` and loads it from Bash and Zsh startup files. Add exports such as `export OPENAI_API_KEY="your-api-key"` there.
+- Personal shell environment variables can be stored in `~/.config/env.sh`. The setup now manages this file from `home/.config/env.sh.append` and loads it from Bash and Zsh startup files. Add exports such as `export OPENAI_API_KEY="your-api-key"` or gp.nvim-specific settings like `export NVIM_GP_API_KEY="your-api-key"`, `export NVIM_GP_PROVIDER="opencode"`, and `export NVIM_GP_BASE_URL="https://opencode.ai/zen/go/v1"` there.
 - Shell PATH snippets now evaluate `brew shellenv` when Homebrew is available, so Homebrew toolchains (for example `python3`) are preferred over system defaults.
 - OpenCode TUI keybinding profiles live next to the matching runtime profiles as `tui.json`. They keep the default `<leader>e` editor shortcut and add `<leader>v` for editing prompts in `$EDITOR`/Neovim before returning them to OpenCode.
 - OpenCode profiles define an `explore` subagent and require primary agents to delegate repository or web discovery to it before planning, coding, or documentation work unless the task is limited to already-known facts or one explicitly named file.

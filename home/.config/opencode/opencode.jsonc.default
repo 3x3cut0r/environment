@@ -73,7 +73,8 @@
       "*/id_rsa": "deny",
       "*/id_ed25519": "deny",
       "**/id_rsa": "deny",
-      "**/id_ed25519": "deny"
+      "**/id_ed25519": "deny",
+      "~/.config/env.sh": "deny"
     }
   },
   "agent": {
@@ -89,6 +90,9 @@
         "list": "allow",
         "edit": "allow",
         "bash": "allow",
+        "external_directory": {
+          "~/.config/env.sh": "deny"
+        },
         "glob": "deny",
         "grep": "deny",
         "webfetch": "deny",
@@ -119,6 +123,9 @@
         "list": "allow",
         "edit": "deny",
         "bash": "deny",
+        "external_directory": {
+          "~/.config/env.sh": "deny"
+        },
         "glob": "deny",
         "grep": "deny",
         "webfetch": "deny",
@@ -151,6 +158,9 @@
         "grep": "allow",
         "webfetch": "allow",
         "websearch": "allow",
+        "external_directory": {
+          "~/.config/env.sh": "deny"
+        },
         "edit": "deny",
         "bash": "deny",
         "question": "deny"
@@ -170,6 +180,9 @@
         "grep": "deny",
         "webfetch": "deny",
         "websearch": "deny",
+        "external_directory": {
+          "~/.config/env.sh": "deny"
+        },
         "edit": "deny",
         "bash": "deny",
         "question": "deny",
@@ -194,6 +207,9 @@
         "grep": "deny",
         "webfetch": "deny",
         "websearch": "deny",
+        "external_directory": {
+          "~/.config/env.sh": "deny"
+        },
         "read": "allow",
         "list": "allow",
         "todowrite": "allow",
@@ -218,6 +234,9 @@
         "grep": "deny",
         "webfetch": "deny",
         "websearch": "deny",
+        "external_directory": {
+          "~/.config/env.sh": "deny"
+        },
         "question": "deny",
         "todowrite": "allow",
         "task": {
@@ -240,6 +259,9 @@
         "grep": "deny",
         "webfetch": "deny",
         "websearch": "deny",
+        "external_directory": {
+          "~/.config/env.sh": "deny"
+        },
         "read": "allow",
         "list": "allow",
         "todowrite": "allow",
@@ -260,6 +282,9 @@
         "list": "allow",
         "edit": "allow",
         "bash": "deny",
+        "external_directory": {
+          "~/.config/env.sh": "deny"
+        },
         "glob": "deny",
         "grep": "deny",
         "webfetch": "deny",
@@ -286,6 +311,9 @@
         "grep": "deny",
         "webfetch": "deny",
         "websearch": "deny",
+        "external_directory": {
+          "~/.config/env.sh": "deny"
+        },
         "read": "allow",
         "list": "allow",
         "todowrite": "allow",

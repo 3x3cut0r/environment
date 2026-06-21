@@ -1676,6 +1676,90 @@ remove_existing_marker_block() {
     ' "$target_file"
 }
 
+replace_existing_marker_block() {
+    local source_file_identifier="$1"
+    local target_file="$2"
+    local replacement_file="$3"
+
+    local comment_prefix="$4"
+    if [ -z "$comment_prefix" ]; then
+        comment_prefix="#"
+    fi
+
+    local start_marker="$comment_prefix >>> environment ~/$source_file_identifier >>>"
+    local end_marker="$comment_prefix <<< environment ~/$source_file_identifier <<<"
+
+    awk -v start="$start_marker" -v end="$end_marker" -v replacement_file="$replacement_file" '
+        function print_replacement_line(line) {
+            print line
+        }
+
+        function print_replacement_block(    line) {
+            print start
+            while ((getline line < replacement_file) > 0) {
+                print_replacement_line(line)
+            }
+            close(replacement_file)
+            print end
+        }
+
+        BEGIN {
+            replaced=0
+            in_block=0
+        }
+
+        $0 == start {
+            if (!replaced) {
+                print_replacement_block()
+                replaced=1
+            }
+            in_block=1
+            next
+        }
+
+        $0 == end {
+            if (in_block) {
+                in_block=0
+                next
+            }
+        }
+
+        in_block {next}
+        {print}
+    ' "$target_file"
+}
+
+target_has_marker_block() {
+    local source_file_identifier="$1"
+    local target_file="$2"
+
+    local comment_prefix="$3"
+    if [ -z "$comment_prefix" ]; then
+        comment_prefix="#"
+    fi
+
+    local start_marker="$comment_prefix >>> environment ~/$source_file_identifier >>>"
+    local end_marker="$comment_prefix <<< environment ~/$source_file_identifier <<<"
+
+    awk -v start="$start_marker" -v end="$end_marker" '
+        BEGIN {
+            found_start=0
+            found_block=0
+        }
+        $0 == start {
+            found_start=1
+            next
+        }
+        found_start && $0 == end {
+            found_block=1
+            exit
+        }
+        END {
+            exit(found_block ? 0 : 1)
+        }
+    ' "$target_file"
+}
+
 trim_trailing_blank_lines() {
     local file_path="$1"
 
@@ -2492,25 +2576,30 @@ configure_environment() {
             local cleaned_target
             cleaned_target=$(mktemp)
             : >"$cleaned_target"
-            if [ -f "$target_path" ]; then
-                remove_existing_marker_block "$marker_identifier" "$target_path" "$comment_prefix" >"$cleaned_target"
-            fi
 
-            if [ -s "$cleaned_target" ]; then
-                trim_trailing_blank_lines "$cleaned_target"
+            if [ -f "$target_path" ] && target_has_marker_block "$marker_identifier" "$target_path" "$comment_prefix"; then
+                replace_existing_marker_block "$marker_identifier" "$target_path" "$processed_file" "$comment_prefix" >"$cleaned_target"
+            else
+                if [ -f "$target_path" ]; then
+                    remove_existing_marker_block "$marker_identifier" "$target_path" "$comment_prefix" >"$cleaned_target"
+                fi
 
                 if [ -s "$cleaned_target" ]; then
-                    ensure_trailing_newline "$cleaned_target"
-                    printf '\n' >>"$cleaned_target"
-                fi
-            fi
+                    trim_trailing_blank_lines "$cleaned_target"
 
-            printf '%s\n' "$start_marker" >>"$cleaned_target"
-            if [ -s "$processed_file" ]; then
-                cat "$processed_file" >>"$cleaned_target"
-                ensure_trailing_newline "$cleaned_target"
+                    if [ -s "$cleaned_target" ]; then
+                        ensure_trailing_newline "$cleaned_target"
+                        printf '\n' >>"$cleaned_target"
+                    fi
+                fi
+
+                printf '%s\n' "$start_marker" >>"$cleaned_target"
+                if [ -s "$processed_file" ]; then
+                    cat "$processed_file" >>"$cleaned_target"
+                    ensure_trailing_newline "$cleaned_target"
+                fi
+                printf '%s\n' "$end_marker" >>"$cleaned_target"
             fi
-            printf '%s\n' "$end_marker" >>"$cleaned_target"
 
             mv "$cleaned_target" "$target_path"
         else

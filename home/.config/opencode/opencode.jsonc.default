@@ -336,7 +336,7 @@
       "url": "https://mcp.context7.com/mcp",
       "enabled": true,
       "headers": {
-        "CONTEXT7_API_KEY": "ctx7sk-d4a148e1-9d15-43a1-9d6f-d32b42f3cfbb"
+        "CONTEXT7_API_KEY": "{env.CONTEXT7_API_KEY}"
       }
     }
   }

@@ -2,6 +2,11 @@
 export EDITOR="nvim"
 export VISUAL="nvim"
 
+if [ -f "${HOME}/.config/env.sh" ]; then
+  # shellcheck disable=SC1091
+  . "${HOME}/.config/env.sh"
+fi
+
 # <<< vars/PS1
 
 if command -v mise >/dev/null 2>&1; then

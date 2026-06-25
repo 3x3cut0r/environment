@@ -12,6 +12,7 @@ SKIP_VIM_PLUGIN_MANAGER="no"
 SKIP_CATPPUCCIN_VIM="no"
 SKIP_CATPPUCCIN_NEOVIM="no"
 SKIP_CATPPUCCIN_BAT="no"
+SKIP_CATPPUCCIN_DELTA="no"
 SKIP_CATPPUCCIN_GEDIT="no"
 SKIP_CATPPUCCIN_GNOME_TEXT_EDITOR="no"
 SKIP_CATPPUCCIN_TERMINAL_APP="no"
@@ -23,6 +24,7 @@ SKIP_CONFIGURE_TERMINALS="no"
 RECONFIGURE_MODE="no"
 WRAPPER_NAME="environment"
 WRAPPER_INSTALL_PATH="${HOME}/.local/bin/${WRAPPER_NAME}"
+DELTA_CONFIG_READY="no"
 
 parse_args() {
     SHOW_HELP=0
@@ -50,6 +52,7 @@ parse_args() {
                 SKIP_CATPPUCCIN_VIM="yes"
                 SKIP_CATPPUCCIN_NEOVIM="yes"
                 SKIP_CATPPUCCIN_BAT="yes"
+                SKIP_CATPPUCCIN_DELTA="yes"
                 SKIP_CATPPUCCIN_GEDIT="yes"
                 SKIP_CATPPUCCIN_GNOME_TEXT_EDITOR="yes"
                 SKIP_CATPPUCCIN_TERMINAL_APP="yes"
@@ -91,6 +94,7 @@ parse_args() {
                 SKIP_CATPPUCCIN_VIM="yes"
                 SKIP_CATPPUCCIN_NEOVIM="yes"
                 SKIP_CATPPUCCIN_BAT="yes"
+                SKIP_CATPPUCCIN_DELTA="yes"
                 SKIP_CATPPUCCIN_GEDIT="yes"
                 SKIP_CATPPUCCIN_GNOME_TEXT_EDITOR="yes"
                 SKIP_CATPPUCCIN_TERMINAL_APP="yes"
@@ -108,6 +112,10 @@ parse_args() {
                 ;;
             --skip-catppuccin-bat|-scb)
                 SKIP_CATPPUCCIN_BAT="yes"
+                shift
+                ;;
+            --skip-catppuccin-delta|-scd)
+                SKIP_CATPPUCCIN_DELTA="yes"
                 shift
                 ;;
             --skip-catppuccin-gedit|-scg)
@@ -168,7 +176,7 @@ Options:
   -h,   --help              Show this help message and exit
   -y,   --yes               Automatically answer prompts with yes
   -r,   --reconfigure       Reconfigure dotfiles only (skip installs and terminal config)
-  -sp,  --skip-packages     Skip package-related installs (Homebrew bootstrap on macOS, system packages, Go, Neovim, Node.js/npm, lazy tools)
+  -sp,  --skip-packages     Skip package-related installs (Homebrew bootstrap on macOS, system packages, Go, Neovim, Node.js/npm, lazy tools, delta)
   -sm,  --skip-npm          Skip nvm, Node.js, and npm installation
   -so,  --skip-opencode     Skip OpenCode installation
   -sn,  --skip-nerd-font,
@@ -176,16 +184,18 @@ Options:
   -ss,  --skip-starship     Skip Starship installation
   -st,  --skip-tpm          Skip tmux plugin manager installation
   -sv,  --skip-vim-plug     Skip vim-plug installation for Vim
-  -sc,  --skip-catppuccin   Skip Catppuccin installations for Vim, Neovim, bat, Gedit, GNOME Text Editor, Terminal.app, Xfce4 Terminal, and Hyprland
+  -sc,  --skip-catppuccin   Skip Catppuccin installations for Vim, Neovim, bat, delta, Gedit, GNOME Text Editor, Terminal.app, Xfce4 Terminal, and Hyprland
   -scv, --skip-catppuccin-vim
-                              Skip Catppuccin installation for Vim
+                               Skip Catppuccin installation for Vim
   -scn, --skip-catppuccin-nvim,
-          --skip-catppuccin-neovim 
-                              Skip Catppuccin installation for Neovim
+           --skip-catppuccin-neovim 
+                               Skip Catppuccin installation for Neovim
   -scb, --skip-catppuccin-bat
-                              Skip Catppuccin installation for bat
+                               Skip Catppuccin installation for bat
+  -scd, --skip-catppuccin-delta
+                               Skip Catppuccin installation for delta
   -scg, --skip-catppuccin-gedit
-                              Skip Catppuccin installation for Gedit
+                               Skip Catppuccin installation for Gedit
   -scgte, --skip-catppuccin-gnome-text-editor
                               Skip Catppuccin installation for GNOME Text Editor
   -scta, --skip-catppuccin-terminal-app
@@ -819,6 +829,222 @@ install_lazy_tools() {
         log_message WARN "$tool_failures lazy tool installation(s) failed."
     else
         log_message INFO "All lazy tools installed successfully."
+    fi
+}
+
+install_delta() {
+    if [ "${SKIP_PACKAGES:-no}" = "yes" ]; then
+        log_message WARN "Skipping delta installation."
+        return 0
+    fi
+
+    if command -v delta >/dev/null 2>&1; then
+        log_message INFO "delta is already installed."
+        DELTA_CONFIG_READY="yes"
+        return 0
+    fi
+
+    if ! command -v curl >/dev/null 2>&1; then
+        log_message WARN "curl not found. Skipping delta installation."
+        return 0
+    fi
+
+    if ! command -v tar >/dev/null 2>&1; then
+        log_message WARN "tar not found. Skipping delta installation."
+        return 0
+    fi
+
+    local target_triple=""
+    case "$OS_KERNEL" in
+        Linux)
+            case "$OS_ARCH" in
+                x86_64|amd64)
+                    target_triple="x86_64-unknown-linux-gnu"
+                    ;;
+                aarch64|arm64)
+                    target_triple="aarch64-unknown-linux-gnu"
+                    ;;
+                *)
+                    log_message WARN "Unsupported architecture for delta installation: $OS_ARCH"
+                    return 0
+                    ;;
+            esac
+            ;;
+        Darwin)
+            case "$OS_ARCH" in
+                x86_64|amd64)
+                    target_triple="x86_64-apple-darwin"
+                    ;;
+                aarch64|arm64)
+                    target_triple="aarch64-apple-darwin"
+                    ;;
+                *)
+                    log_message WARN "Unsupported architecture for delta installation: $OS_ARCH"
+                    return 0
+                    ;;
+            esac
+            ;;
+        *)
+            log_message WARN "Unsupported OS for delta installation: $OS_KERNEL"
+            return 0
+            ;;
+    esac
+
+    local latest_release_api="https://api.github.com/repos/dandavison/delta/releases/latest"
+    local release_payload=""
+    if ! release_payload=$(curl -fsSL "$latest_release_api" 2>/dev/null); then
+        log_message WARN "Failed to query the latest delta release metadata. Skipping delta installation."
+        return 0
+    fi
+
+    local delta_version=""
+    delta_version=$(printf '%s\n' "$release_payload" | sed -n 's/.*"tag_name":[[:space:]]*"\([^"]*\)".*/\1/p' | awk 'NR==1 {print; exit}')
+
+    local download_url=""
+    download_url=$(printf '%s\n' "$release_payload" \
+        | awk -F'"' '/"browser_download_url":/ {print $4}' \
+        | grep -E "/delta/releases/download/.*/delta-[^/]*-${target_triple}\.tar\.gz$" \
+        | awk 'NR==1 {print; exit}')
+
+    if [ -z "$download_url" ]; then
+        log_message WARN "No matching delta release asset found for ${target_triple}."
+        return 0
+    fi
+
+    local temp_archive=""
+    local temp_dir=""
+    temp_archive=$(mktemp "${TMPDIR:-/tmp}/delta-archive-XXXXXX.tar.gz") || {
+        log_message WARN "Unable to create temporary archive file for delta installation."
+        return 0
+    }
+
+    temp_dir=$(mktemp -d) || {
+        log_message WARN "Unable to create temporary directory for delta installation."
+        rm -f "$temp_archive"
+        return 0
+    }
+
+    log_message INFO "Downloading delta archive from GitHub: ${download_url##*/}"
+    if ! curl -fsSL -o "$temp_archive" "$download_url" >/dev/null 2>&1; then
+        log_message WARN "Failed to download delta archive from GitHub: $download_url"
+        rm -f "$temp_archive"
+        rm -rf "$temp_dir"
+        return 0
+    fi
+
+    if ! tar -xzf "$temp_archive" -C "$temp_dir" >/dev/null 2>&1; then
+        log_message WARN "Failed to extract delta archive: ${download_url##*/}"
+        rm -f "$temp_archive"
+        rm -rf "$temp_dir"
+        return 0
+    fi
+
+    local extracted_binary=""
+    extracted_binary=$(find "$temp_dir" -type f -name delta -perm -111 2>/dev/null | awk 'NR==1 {print; exit}')
+    if [ -z "$extracted_binary" ] || [ ! -x "$extracted_binary" ]; then
+        log_message WARN "Extracted delta archive does not contain a usable delta binary."
+        rm -f "$temp_archive"
+        rm -rf "$temp_dir"
+        return 0
+    fi
+
+    local install_path="/usr/local/bin/delta"
+    local install_failed=0
+    if [ "${EUID:-$(id -u)}" -ne 0 ]; then
+        if ! command -v sudo >/dev/null 2>&1; then
+            log_message WARN "Cannot install delta to $install_path: elevated privileges required but sudo not available."
+            rm -f "$temp_archive"
+            rm -rf "$temp_dir"
+            return 0
+        fi
+
+        if ! sudo install -m 755 "$extracted_binary" "$install_path" >/dev/null 2>&1; then
+            install_failed=1
+        fi
+    else
+        if ! install -m 755 "$extracted_binary" "$install_path" >/dev/null 2>&1; then
+            install_failed=1
+        fi
+    fi
+
+    rm -f "$temp_archive"
+    rm -rf "$temp_dir"
+
+    if [ $install_failed -eq 1 ] || [ ! -x "$install_path" ]; then
+        log_message WARN "Failed to install delta to $install_path"
+        return 0
+    fi
+
+    DELTA_CONFIG_READY="yes"
+    if [ -n "$delta_version" ]; then
+        log_message INFO "Installed delta ${delta_version} at $install_path"
+    else
+        log_message INFO "Installed delta at $install_path"
+    fi
+}
+
+configure_git_delta() {
+    if [ "${SKIP_CONFIGURE_ENVIRONMENT:-no}" = "yes" ]; then
+        log_message WARN "Skipping git delta configuration."
+        return 0
+    fi
+
+    if [ "${DELTA_CONFIG_READY:-no}" != "yes" ]; then
+        log_message INFO "delta is not available from this setup run. Skipping git delta configuration."
+        return 0
+    fi
+
+    if ! command -v git >/dev/null 2>&1; then
+        log_message WARN "git not found. Skipping git delta configuration."
+        return 0
+    fi
+
+    if ! command -v delta >/dev/null 2>&1; then
+        log_message WARN "delta command not found in PATH after installation. Skipping git delta configuration."
+        return 0
+    fi
+
+    local configured_any=0
+    local existing_value=""
+
+    existing_value=$(git config --global --get core.pager 2>/dev/null || true)
+    if [ -z "$existing_value" ] || [ "$existing_value" = "delta" ]; then
+        git config --global core.pager "delta"
+        configured_any=1
+    else
+        log_message WARN "git core.pager is already set to '$existing_value'. Keeping the existing value."
+    fi
+
+    existing_value=$(git config --global --get interactive.diffFilter 2>/dev/null || true)
+    if [ -z "$existing_value" ] || [ "$existing_value" = "delta --color-only" ]; then
+        git config --global interactive.diffFilter "delta --color-only"
+        configured_any=1
+    else
+        log_message WARN "git interactive.diffFilter is already set to '$existing_value'. Keeping the existing value."
+    fi
+
+    existing_value=$(git config --global --get delta.navigate 2>/dev/null || true)
+    if [ -z "$existing_value" ]; then
+        git config --global delta.navigate "true"
+        configured_any=1
+    fi
+
+    existing_value=$(git config --global --get delta.side-by-side 2>/dev/null || true)
+    if [ -z "$existing_value" ]; then
+        git config --global delta.side-by-side "true"
+        configured_any=1
+    fi
+
+    existing_value=$(git config --global --get delta.line-numbers 2>/dev/null || true)
+    if [ -z "$existing_value" ]; then
+        git config --global delta.line-numbers "true"
+        configured_any=1
+    fi
+
+    if [ $configured_any -eq 1 ]; then
+        log_message INFO "Configured git to use delta where no conflicting git pager settings existed."
+    else
+        log_message INFO "Git delta configuration already exists or was intentionally left unchanged."
     fi
 }
 
@@ -2113,6 +2339,93 @@ install_catppuccin_bat() {
     fi
 }
 
+install_catppuccin_delta() {
+    if [ "${SKIP_CATPPUCCIN_DELTA:-no}" = "yes" ]; then
+        log_message WARN "Skipping Catppuccin installation for delta."
+        return 0
+    fi
+
+    if [ "${DELTA_CONFIG_READY:-no}" != "yes" ]; then
+        log_message INFO "delta is not available from this setup run. Skipping Catppuccin delta theme installation."
+        return 0
+    fi
+
+    if ! command -v git >/dev/null 2>&1; then
+        log_message WARN "git not found. Skipping Catppuccin installation for delta."
+        return 0
+    fi
+
+    if ! command -v delta >/dev/null 2>&1; then
+        log_message WARN "delta not found in PATH. Skipping Catppuccin installation for delta."
+        return 0
+    fi
+
+    local target_home="$HOME"
+    if [ -z "$target_home" ] && command -v getent >/dev/null 2>&1 && [ -n "$CURRENT_USER" ]; then
+        target_home=$(getent passwd "$CURRENT_USER" | cut -d: -f6)
+    fi
+
+    if [ -z "$target_home" ] || [ ! -d "$target_home" ]; then
+        log_message WARN "Unable to determine a valid home directory for Catppuccin delta theme installation."
+        return 0
+    fi
+
+    local delta_config_dir="$target_home/.config/delta"
+    local theme_file="$delta_config_dir/catppuccin.gitconfig"
+    local theme_url="https://raw.githubusercontent.com/catppuccin/delta/main/catppuccin.gitconfig"
+    local existing_include=""
+    local include_present=0
+    local configured_any=0
+    local existing_value=""
+
+    mkdir -p "$delta_config_dir"
+
+    if command -v curl >/dev/null 2>&1; then
+        if curl -fsSL "$theme_url" -o "$theme_file"; then
+            log_message INFO "Downloaded latest Catppuccin delta theme."
+        else
+            log_message WARN "Failed to download Catppuccin delta theme from upstream."
+            return 0
+        fi
+    elif command -v wget >/dev/null 2>&1; then
+        if wget -q -O "$theme_file" "$theme_url"; then
+            log_message INFO "Downloaded latest Catppuccin delta theme."
+        else
+            log_message WARN "Failed to download Catppuccin delta theme from upstream."
+            return 0
+        fi
+    else
+        log_message WARN "Neither curl nor wget is available. Cannot download Catppuccin delta theme."
+        return 0
+    fi
+
+    while IFS= read -r existing_include; do
+        if [ "$existing_include" = "$theme_file" ]; then
+            include_present=1
+            break
+        fi
+    done < <(git config --global --get-all include.path 2>/dev/null || true)
+
+    if [ $include_present -eq 0 ]; then
+        git config --global --add include.path "$theme_file"
+        configured_any=1
+    fi
+
+    existing_value=$(git config --global --get delta.features 2>/dev/null || true)
+    if [ -z "$existing_value" ] || [ "$existing_value" = "catppuccin-mocha" ]; then
+        git config --global delta.features "catppuccin-mocha"
+        configured_any=1
+    else
+        log_message WARN "git delta.features is already set to '$existing_value'. Keeping the existing value."
+    fi
+
+    if [ $configured_any -eq 1 ]; then
+        log_message INFO "Configured Catppuccin Mocha theme for delta."
+    else
+        log_message INFO "Catppuccin delta theme is already configured or was intentionally left unchanged."
+    fi
+}
+
 install_catppuccin_gedit() {
     if [ "${SKIP_CATPPUCCIN_GEDIT:-no}" = "yes" ]; then
         log_message WARN "Skipping Catppuccin installation for Gedit."
@@ -2751,6 +3064,7 @@ main() {
     install_opencode
     install_npm
     install_lazy_tools
+    install_delta
     install_nerd_font
     install_starship
     install_tmux_plugin_manager
@@ -2758,12 +3072,14 @@ main() {
     install_catppuccin_vim
     install_catppuccin_neovim
     install_catppuccin_bat
+    install_catppuccin_delta
     install_catppuccin_gedit
     install_catppuccin_gnome_text_editor
     install_catppuccin_terminal_app
     install_catppuccin_xfce4_terminal
     install_catppuccin_hyprland
     configure_environment
+    configure_git_delta
     configure_terminals
 }
 

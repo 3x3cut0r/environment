@@ -9,6 +9,7 @@ This repository provides a setup script that performs fundamental shell customiz
 - `install_neovim_official`: Installs or updates Neovim from the latest official GitHub `tar.gz` release, deploys to `/opt/nvim/neovim-<version>`, and links `/usr/local/bin/nvim`.
 - `install_npm`: Installs the latest `nvm` release and uses it to install the latest LTS Node.js version, including `npm`.
 - `install_opencode`: Installs OpenCode via the official `curl -fsSL https://opencode.ai/install | bash` installer and falls back to `npm install -g opencode-ai` if needed.
+- `install_delta`: Downloads the latest matching `delta` release archive from GitHub for Linux or macOS, installs the binary to `/usr/local/bin/delta`, and configures Git to use it when no conflicting pager settings already exist.
 - `install_nerd_font`: Downloads and installs the Nerd Font variant used across prompts and editors.
 - `install_starship`: Sets up the Starship prompt with the repository's theme defaults.
 - `install_tmux_plugin_manager`: Fetches and configures the tmux plugin manager (TPM) for plugin handling.
@@ -16,6 +17,7 @@ This repository provides a setup script that performs fundamental shell customiz
 - `install_catppuccin_vim`: Applies the Catppuccin color scheme to the Vim configuration.
 - `install_catppuccin_neovim`: Mirrors the Catppuccin theme setup for Neovim.
 - `install_catppuccin_bat`: Downloads the latest Catppuccin Mocha bat theme, sets it as default, and rebuilds bat cache.
+- `install_catppuccin_delta`: Downloads the Catppuccin delta theme, enables the `catppuccin-mocha` feature for Git delta, and adds the theme include to `~/.gitconfig` when delta is available.
 - `install_catppuccin_gedit`: Updates Catppuccin Mocha for Gedit from upstream and installs it with a bundled fallback.
 - `install_catppuccin_gnome_text_editor`: Updates Catppuccin Mocha for GNOME Text Editor from upstream and installs it with a bundled fallback.
 - `install_catppuccin_terminal_app`: Updates Catppuccin Mocha for Terminal.app on macOS and applies it as the default profile.
@@ -142,6 +144,9 @@ cd environment
 - When Go is installed in `/usr/local/go`, the setup also adds `/usr/local/go/bin` and (if present) `$HOME/go/bin` to `PATH`.
 - After `install_packages`, setup installs `lazygit`, `lazydocker`, `lazysvn`, and `lazynpm` via `go install`.
 - If `go install` fails for one of these tools, setup falls back to `git clone --depth 1` and `go install .` from the cloned repository.
+- After the lazy tools, setup installs the latest matching `delta` GitHub release archive for Linux or macOS directly to `/usr/local/bin/delta`.
+- If `delta` is available after that step, setup updates `~/.gitconfig` with delta pager settings only when no conflicting Git pager configuration already exists.
+- If `delta` is available after that step, setup also downloads the Catppuccin delta theme to `~/.config/delta/catppuccin.gitconfig`, adds it to Git includes, and enables the `catppuccin-mocha` delta feature unless conflicting delta feature settings already exist.
 
 Archive files in this repository are tracked with Git LFS.
 When using a local clone, `git lfs pull` remains optional because setup can now fetch fallback archives on demand if needed.
@@ -180,7 +185,7 @@ Options:
   -h,   --help              Show this help message and exit
   -y,   --yes               Automatically answer prompts with yes
   -r,   --reconfigure       Reconfigure dotfiles only (skip installs and terminal config)
-  -sp,  --skip-packages     Skip package-related installs (Homebrew bootstrap on macOS, system packages, Go, Neovim, Node.js/npm, lazy tools)
+  -sp,  --skip-packages     Skip package-related installs (Homebrew bootstrap on macOS, system packages, Go, Neovim, Node.js/npm, lazy tools, delta)
   -sm,  --skip-npm          Skip nvm, Node.js, and npm installation
   -so,  --skip-opencode     Skip OpenCode installation
   -sn,  --skip-nerd-font,
@@ -188,16 +193,18 @@ Options:
   -ss,  --skip-starship     Skip Starship installation
   -st,  --skip-tpm          Skip tmux plugin manager installation
   -sv,  --skip-vim-plug     Skip vim plugin manager installation
-  -sc,  --skip-catppuccin   Skip Catppuccin installations for Vim, Neovim, bat, Gedit, GNOME Text Editor, Terminal.app, Xfce4 Terminal, and Hyprland
+  -sc,  --skip-catppuccin   Skip Catppuccin installations for Vim, Neovim, bat, delta, Gedit, GNOME Text Editor, Terminal.app, Xfce4 Terminal, and Hyprland
   -scv, --skip-catppuccin-vim
-                              Skip Catppuccin installation for Vim
+                               Skip Catppuccin installation for Vim
   -scn, --skip-catppuccin-nvim,
-         --skip-catppuccin-neovim
-                              Skip Catppuccin installation for Neovim
+          --skip-catppuccin-neovim
+                               Skip Catppuccin installation for Neovim
   -scb, --skip-catppuccin-bat
-                              Skip Catppuccin installation for bat
+                               Skip Catppuccin installation for bat
+  -scd, --skip-catppuccin-delta
+                               Skip Catppuccin installation for delta
   -scg, --skip-catppuccin-gedit
-                              Skip Catppuccin installation for Gedit
+                               Skip Catppuccin installation for Gedit
   -scgte, --skip-catppuccin-gnome-text-editor
                               Skip Catppuccin installation for GNOME Text Editor
   -scta, --skip-catppuccin-terminal-app
@@ -218,6 +225,8 @@ Options:
 There are currently no automated tests in this repository.
 
 ## Contributing
+
+When adding new user-facing tooling integrations to this repository (for example packages, CLIs, pagers, editor plugins, or similar setup-managed features), also check whether a matching Catppuccin theme/plugin/integration exists upstream and wire it in by default when it fits the existing setup patterns.
 
 Issues and pull requests are welcome.
 

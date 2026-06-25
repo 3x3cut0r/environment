@@ -139,6 +139,7 @@ When introducing a dependency:
 - wire it into the smallest necessary place
 - keep fallback behavior consistent with existing patterns
 - update docs if user-facing behavior changes
+- when adding a new user-facing CLI, package, function, editor integration, pager, or similar tooling surface, check whether a matching Catppuccin theme/plugin/integration exists upstream and integrate it by default when it fits the repo's existing setup patterns
 
 Naming conventions:
 - shell functions: verb-led `snake_case`
@@ -153,6 +154,7 @@ Naming conventions:
 - Avoid broad rewrites of `setup.sh`; it contains many platform branches.
 - When changing package behavior, inspect both `packages.list` and `install_packages`.
 - When changing merge behavior, inspect `configure_environment`, `insert_file_content`, and `determine_comment_prefix` together.
+- When adding new tooling or runtime integrations, explicitly check whether a matching Catppuccin plugin/theme exists and, if it does, integrate it conservatively instead of leaving the tool unthemed.
 
 ## Verification Expectations
 After shell changes, run the narrowest useful checks you can, usually:

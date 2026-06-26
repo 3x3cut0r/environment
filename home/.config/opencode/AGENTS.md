@@ -24,7 +24,7 @@
 
 ## Tool and research rules
 
-- Use the `explore` subagent for repository or web discovery before answering architecture, configuration, or file-location questions.
+- MUST use the `explore` subagent as the first step for repository or web discovery before answering architecture, configuration, or file-location questions. Prefer delegation over doing discovery in a primary agent. If a task can be split into independent subtasks, delegate them to subagents in parallel whenever that reduces latency without creating overlapping work.
 - Use Context7 MCP for current documentation whenever the user asks about a library, framework, SDK, API, CLI tool, or cloud service. Start with `resolve-library-id`, then query the selected docs with the full user question.
 - Do not use Context7 for refactoring, writing scripts from scratch, debugging business logic, code review, or general programming concepts.
 - Include source URLs when using web research.

@@ -38,7 +38,7 @@ General engineering principles:
 - No dead code, no commented-out blocks, no leftover debug prints
 
 Delegation to subagents (via the `task` tool):
-Use subagents to keep your own context lean and to push narrow work to cheaper or specialized models. Delegate discovery work by default; skip delegation only when the answer is already fully contained in the current conversation or in one explicitly named file that you can read directly.
+Use subagents to keep your own context lean and to push narrow work to cheaper or specialized models. Prefer delegation whenever discovery, validation, or specialized analysis is needed. Delegate discovery work by default; skip delegation only when the answer is already fully contained in the current conversation or in one explicitly named file that you can read directly.
 
 - `explore`: MUST be used as the first research step for repository or web discovery before editing, answering architecture/configuration questions, locating files, mapping modules, confirming behavior, collecting file:line references, or investigating anything beyond one explicitly named file. Give it a precise read-only prompt and let it do the main discovery work. Skip it only when no discovery is required because the needed facts are already in the current conversation, or when the task is confined to one explicitly named file that you can read directly without search.
 - `debugger`: Use when a failure is reproducible but the root cause is unclear and requires methodical bisection, log analysis, or stack-trace interpretation. Skip for obvious errors where the fix is immediate.
@@ -46,13 +46,14 @@ Use subagents to keep your own context lean and to push narrow work to cheaper o
 - `code-reviewer`: Use before finalizing a larger change set (multiple files or non-trivial logic) to catch issues you may have missed. Skip for one-line fixes, pure doc edits, or config tweaks.
 - `security-auditor`: Use when the change touches auth, secrets, crypto, network boundaries, deserialization, shell execution with user input, or new dependencies. Skip for pure refactors that do not alter trust boundaries.
 - `docs-writer`: Use when the change requires new or substantially updated user-facing docs (README sections, CHANGELOG entries, runbooks). Skip for inline code comments or small README tweaks that you can do in-line.
-- `general`: Use only when no specialized subagent fits and the task is still multi-step and research-heavy.
+- `general`: Use for multi-step execution tasks when no specialized subagent fits, especially scoped implementation work, file edits, command execution, and parallelizable units of work after `explore` has already gathered the needed context.
 
 Rules of thumb:
 - One subagent per distinct concern. Do not chain `explore` -> `code-reviewer` -> `security-auditor` for a two-line fix.
-- Batch independent subagent calls in parallel (e.g. `code-reviewer` and `security-auditor` after a larger change).
+- Batch independent subagent calls in parallel whenever the task can be split into non-overlapping subtasks (e.g. `code-reviewer` and `security-auditor` after a larger change).
 - If discovery would require Glob, Grep, webfetch, codesearch, or reading multiple possible files, call `explore` instead of doing that search yourself.
-- When in doubt between searching yourself and delegating read-only discovery, call `explore`.
+- Once the relevant files or facts are known and the work is a general implementation task, prefer delegating scoped execution to `general` instead of using it for research.
+- When in doubt, call `explore` for read-only discovery and prefer parallel subagent work for independent concerns.
 
 Verification after changes:
 - Run the narrowest useful checks for the stack you touched

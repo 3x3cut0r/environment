@@ -5,7 +5,6 @@
   "permission": {
     "*": "deny",
     "read": {
-      "*": "allow",
       "*.env": "deny",
       "*.env.*": "deny",
       "*.credentials*": "deny",
@@ -41,7 +40,6 @@
     "question": "allow",
     "skill": "allow",
     "external_directory": {
-      "*": "allow",
       "*.env": "deny",
       "*.env.*": "deny",
       "*.credentials*": "deny",
@@ -91,6 +89,7 @@
         "edit": "allow",
         "bash": "allow",
         "external_directory": {
+          "*": "allow",
           "~/.config/env.sh": "deny"
         },
         "glob": "deny",
@@ -124,6 +123,7 @@
         "edit": "deny",
         "bash": "deny",
         "external_directory": {
+          "*": "allow",
           "~/.config/env.sh": "deny"
         },
         "glob": "deny",
@@ -154,11 +154,13 @@
         "read": {
           "*": "allow"
         },
+        "list": "allow",
         "glob": "allow",
         "grep": "allow",
         "webfetch": "allow",
         "websearch": "allow",
         "external_directory": {
+          "*": "allow",
           "~/.config/env.sh": "deny"
         },
         "edit": "deny",
@@ -167,7 +169,7 @@
       }
     },
     "general": {
-      "description": "General-purpose agent for multi-step tasks and research",
+      "description": "General-purpose execution agent for multi-step tasks when no specialized subagent fits",
       "mode": "subagent",
       "model": "opencode-go/deepseek-v4-flash",
       "prompt": "{file:./prompts/general.txt}",
@@ -181,10 +183,11 @@
         "webfetch": "deny",
         "websearch": "deny",
         "external_directory": {
+          "*": "allow",
           "~/.config/env.sh": "deny"
         },
-        "edit": "deny",
-        "bash": "deny",
+        "edit": "allow",
+        "bash": "allow",
         "question": "deny",
         "todowrite": "allow",
         "task": {
@@ -208,6 +211,7 @@
         "webfetch": "deny",
         "websearch": "deny",
         "external_directory": {
+          "*": "allow",
           "~/.config/env.sh": "deny"
         },
         "read": "allow",
@@ -235,6 +239,7 @@
         "webfetch": "deny",
         "websearch": "deny",
         "external_directory": {
+          "*": "allow",
           "~/.config/env.sh": "deny"
         },
         "question": "deny",
@@ -260,6 +265,7 @@
         "webfetch": "deny",
         "websearch": "deny",
         "external_directory": {
+          "*": "allow",
           "~/.config/env.sh": "deny"
         },
         "read": "allow",
@@ -283,6 +289,7 @@
         "edit": "allow",
         "bash": "deny",
         "external_directory": {
+          "*": "allow",
           "~/.config/env.sh": "deny"
         },
         "glob": "deny",
@@ -312,6 +319,7 @@
         "webfetch": "deny",
         "websearch": "deny",
         "external_directory": {
+          "*": "allow",
           "~/.config/env.sh": "deny"
         },
         "read": "allow",

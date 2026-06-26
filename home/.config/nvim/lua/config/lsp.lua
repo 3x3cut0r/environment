@@ -64,14 +64,7 @@ M.servers = {
 }
 
 local function build_capabilities()
-  local capabilities = vim.lsp.protocol.make_client_capabilities()
-  local ok, coq = pcall(require, "coq")
-
-  if not ok then
-    return capabilities
-  end
-
-  return coq.lsp_ensure_capabilities({ capabilities = capabilities }).capabilities
+  return vim.lsp.protocol.make_client_capabilities()
 end
 
 M.capabilities = build_capabilities()

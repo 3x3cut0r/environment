@@ -19,7 +19,7 @@ vim.opt.background = "dark"
 vim.opt.history = 1000
 vim.opt.mouse = "a"
 vim.opt.completeopt = { "menuone", "noinsert", "noselect" }
-vim.opt.pumheight = 8
+vim.o.pumheight = math.floor(vim.o.lines * 0.3)
 vim.opt.pumblend = 30
 
 -- disable intro messages

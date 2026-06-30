@@ -1179,7 +1179,7 @@ install_go_official() {
         fi
 
         local first_line=""
-        first_line=$(sed -n '1p' "$file_path" 2>/dev/null || true)
+        IFS= read -r first_line < "$file_path" 2>/dev/null || true
         if [ "$first_line" = "version https://git-lfs.github.com/spec/v1" ]; then
             return 0
         fi

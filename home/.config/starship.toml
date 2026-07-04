@@ -1,10 +1,10 @@
 '$schema' = 'https://starship.rs/config-schema.json'
 palette = "catppuccin_mocha"
-add_newline = false
+add_newline = true
 scan_timeout = 300
 
 # format = """$os$python$directory${custom.prompt_symbol}"""
-format = """$os$python$username@$hostname:$directory${custom.prompt_symbol}"""
+format = """$os$username@$hostname:$directory$git_branch$git_status$git_metrics$svn_branch$fill$python\n${custom.prompt_symbol}"""
 
 [fill]
 symbol = " "
@@ -37,7 +37,7 @@ disabled = false
 truncate_to_repo = false
 style = "plain"
 format = "$path "
-truncation_length = 1
+truncation_length = 255
 
 [time]
 disabled = false
@@ -181,21 +181,50 @@ symbol = ' '
 [crystal]
 symbol = ' '
 
-[custom.svn_global]
+[custom.svn_branch]
 symbol = " "
+description = "Show SVN branch when visiting a WC"
+style = "fg:lavender"
+format = "[$output ]($style)"
+when = "svn info >/dev/null 2>&1"
+command = '''
+path="$(svn info --show-item relative-url 2>/dev/null || true)"
+
+case "$path" in
+  */trunk|*/trunk/*)
+    printf 'trunk'
+    ;;
+  */branches|*/branches/*)
+    printf 'branches'
+    ;;
+  */branch_tag|*/branch_tag/*)
+    printf 'branch_tag'
+    ;;
+  */tag|*/tag/*)
+    printf 'tag'
+    ;;
+esac
+'''
+shell = ["bash", "--noprofile", "--norc"]
+
+[custom.svn_global]
 description = "Show SVN (global) revision when visiting a WC"
+style = "fg:lavender"
+format = "[($output) ]($style)"
 when = "svn --non-interactive info >/dev/null 2>&1"
 command = "svn --non-interactive info --no-newline --show-item revision"
  
 [custom.svn_local]
-symbol = " "
 description = "Show SVN last-changed-revision for the current working directory when visiting a WC"
+style = "fg:lavender"
+format = "[($output) ]($style)"
 when = "svn --non-interactive info >/dev/null 2>&1"
 command = "svn --non-interactive info --no-newline --show-item last-changed-revision"
  
 [custom.svn_status]
-symbol = " "
 description = "Show a summary of SVN status flags for the current working directory when visiting a WC"
+style = "fg:lavender"
+format = "[($output) ]($style)"
 when = "svn --non-interactive info >/dev/null 2>&1"
 command = "~/starship-svn-status.sh"
 
@@ -228,19 +257,22 @@ symbol = ' '
 symbol = ' '
 
 [git_branch]
-style = "fg:crust bg:mauve"
-format = "[[](fg:mauve)[  $symbol$branch ]($style)[](fg:mauve)] "
+style = "fg:mauve"
+format = "[$symbol$branch ]($style)"
 
 [git_status]
-style = "fg:peach bg:surface0"
-format = "[[](fg:surface0)[ $all_status$ahead_behind ]($style)[](fg:surface0)] "
+style = "fg:peach"
+format = "[$all_status$ahead_behind ]($style)"
 
 [git_metrics]
 disabled = false
-format = ' [+$added]($added_style)/[-$deleted]($deleted_style) '
+format = '[+$added]($added_style)/[-$deleted]($deleted_style) '
 added_style = 'green'
+deleted_style = 'red'
+ignore_submodules = true
 
 [git_commit]
+format = '[\($hash$tag\)]($style) '
 tag_symbol = '  '
 
 [golang]
@@ -357,6 +389,7 @@ symbol = ' '
 
 [python]
 format = '\($symbol $version $virtualenv\) '
+style = "fg:green"
 symbol = ' '
 detect_extensions = []
 detect_files = []

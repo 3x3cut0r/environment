@@ -316,8 +316,8 @@ symbol = '󰆥 '
 symbol = ' '
 
 [nodejs]
-format = '\[$symbol\] '
-symbol = '󰎙 Node.js'
+format = '[\[$symbol\]]($style) '
+symbol = '󰎙 Node.js $version'
 style = "fg:teal"
 
 [ocaml]
@@ -389,13 +389,11 @@ symbol = ' '
 symbol = ' '
 
 [python]
-format = '[\[$symbol$version $virtualenv\]]($style) '
+# format = '[\[$symbol$version$virtualenv\]]($style) '
+format = '[\[${symbol}${pyenv_prefix}(${version} )(\($virtualenv\))\]]($style) '
 style = "fg:green"
 symbol = ' '
 python_binary = ['python3']
-detect_extensions = []
-detect_files = []
-detect_folders = []
 disabled = false
 
 [rlang]

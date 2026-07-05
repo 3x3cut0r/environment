@@ -4,7 +4,7 @@ add_newline = true
 scan_timeout = 300
 
 # format = """$os$python$directory${custom.prompt_symbol}"""
-format = """$os$username@$hostname:$directory$git_branch$git_status$git_metrics$svn_branch$fill$python\n${custom.prompt_symbol}"""
+format = """$os$username[@](green)$hostname[:](green)$directory$git_branch$git_status$git_metrics$svn_branch$fill$python$nodejs\n${custom.prompt_symbol}"""
 
 [fill]
 symbol = " "
@@ -19,24 +19,24 @@ shell = ["bash", "--noprofile", "--norc"]
 when = "true"
 
 [username]
-format = "$user"
+format = "[$user]($style)"
 show_always = true
-style_user = 'white bold'
+style_user = 'red bold'
 style_root = 'red bold'
 disabled = false
 
 [hostname]
 ssh_only = false
 ssh_symbol = ' ssh://'
-format = "$hostname"
+format = "[$hostname]($style)"
 trim_at = "."
-style = "plain"
+style = "fg:rosewater"
 disabled = false
 
 [directory]
 truncate_to_repo = false
-style = "plain"
-format = "$path "
+style = "fg:peach"
+format = "[$path]($style) "
 truncation_length = 255
 
 [time]
@@ -316,15 +316,16 @@ symbol = '󰆥 '
 symbol = ' '
 
 [nodejs]
-format = '\($symbol\) '
+format = '\[$symbol\] '
 symbol = '󰎙 Node.js'
+style = "fg:teal"
 
 [ocaml]
 symbol = ' '
 
 [os]
 disabled = false
-format = "$symbol "
+format = "$symbol"
 
 [os.symbols]
 Alpaquita = ' '
@@ -388,12 +389,14 @@ symbol = ' '
 symbol = ' '
 
 [python]
-format = '\($symbol $version $virtualenv\) '
+format = '[\[$symbol$version $virtualenv\]]($style) '
 style = "fg:green"
 symbol = ' '
+python_binary = ['python3']
 detect_extensions = []
 detect_files = []
 detect_folders = []
+disabled = false
 
 [rlang]
 symbol = '󰟔 '

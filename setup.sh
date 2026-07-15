@@ -1585,10 +1585,10 @@ install_npm() {
         shift 2
 
         : > "$nvm_log_file"
-        set +e
+        set +e +u
         "$@" >"$nvm_log_file" 2>&1
         local command_status=$?
-        set -e
+        set -e -u
 
         if [ "$command_status" -ne 0 ]; then
             log_message "$log_level" "$description failed with exit code $command_status."
@@ -1629,7 +1629,9 @@ install_npm() {
     fi
 
     # shellcheck disable=SC1091
+    set +u
     . "$NVM_DIR/nvm.sh"
+    set -u
 
     if ! command -v nvm >/dev/null 2>&1; then
         log_message ERROR "nvm is not available after sourcing $NVM_DIR/nvm.sh"
@@ -3062,7 +3064,9 @@ main() {
     install_neovim_official
     install_packages
     install_opencode
-    install_npm
+    if ! install_npm; then
+        log_message WARN "nvm/Node.js installation encountered errors. Continuing with remaining configuration."
+    fi
     install_lazy_tools
     install_delta
     install_nerd_font

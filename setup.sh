@@ -2754,6 +2754,79 @@ install_catppuccin_hyprland() {
     fi
 }
 
+configure_hyprland() {
+    local target_home="$HOME"
+    if [ -z "$target_home" ] && command -v getent >/dev/null 2>&1 && [ -n "$CURRENT_USER" ]; then
+        target_home=$(getent passwd "$CURRENT_USER" | cut -d: -f6)
+    fi
+
+    if [ -z "$target_home" ] || [ ! -d "$target_home" ]; then
+        log_message WARN "Unable to determine a valid home directory for Hyprland configuration."
+        return 0
+    fi
+
+    local hypr_config_dir="$target_home/.config/hypr"
+    local hypr_main_config="$hypr_config_dir/hyprland.conf"
+    local hypr_monitors_config="$hypr_config_dir/monitors.conf"
+    local hypr_autostart_config="$hypr_config_dir/autostart.conf"
+    local monitor_source_line="source = ~/.config/hypr/monitors.conf"
+
+    if ! command -v hyprland >/dev/null 2>&1 && [ ! -f "$hypr_main_config" ]; then
+        log_message INFO "Hyprland not detected (binary and config missing). Skipping Hyprland configuration."
+        return 0
+    fi
+
+    mkdir -p "$hypr_config_dir"
+
+    local monitors_tmp
+    monitors_tmp=$(mktemp)
+    cat <<'EOF' >"$monitors_tmp"
+monitor = , preferred, auto, 1.25
+EOF
+
+    if [ -f "$hypr_monitors_config" ] && cmp -s "$monitors_tmp" "$hypr_monitors_config"; then
+        log_message INFO "Hyprland monitor scale already configured in $hypr_monitors_config."
+    else
+        mv "$monitors_tmp" "$hypr_monitors_config"
+        log_message INFO "Configured Hyprland monitor scale in $hypr_monitors_config."
+    fi
+
+    if [ -f "$monitors_tmp" ]; then
+        rm -f "$monitors_tmp"
+    fi
+
+    if [ -f "$hypr_main_config" ]; then
+        if grep -Eq '^[[:space:]]*source[[:space:]]*=[[:space:]]*~/.config/hypr/monitors\.conf([[:space:]]*#.*)?$' "$hypr_main_config"; then
+            log_message INFO "Hyprland config already sources monitors.conf."
+        else
+            printf '\n%s\n' "$monitor_source_line" >>"$hypr_main_config"
+            log_message INFO "Added monitors source line to $hypr_main_config."
+        fi
+    else
+        log_message WARN "Hyprland config file not found at $hypr_main_config. Add '$monitor_source_line' manually once you create it."
+    fi
+
+    local autostart_tmp
+    autostart_tmp=$(mktemp)
+    cat <<'EOF' >"$autostart_tmp"
+# Extra autostart processes
+# exec-once = [workspace 1 silent] uwsm-app -- my-service
+exec-once = [workspace 1 silent] uwsm-app -- xdg-terminal-exec
+exec-once = [workspace 2 silent] uwsm-app -- google-chrome-stable
+EOF
+
+    if [ -f "$hypr_autostart_config" ] && cmp -s "$autostart_tmp" "$hypr_autostart_config"; then
+        log_message INFO "Hyprland autostart already configured in $hypr_autostart_config."
+    else
+        mv "$autostart_tmp" "$hypr_autostart_config"
+        log_message INFO "Configured Hyprland autostart in $hypr_autostart_config."
+    fi
+
+    if [ -f "$autostart_tmp" ]; then
+        rm -f "$autostart_tmp"
+    fi
+}
+
 install_environment_wrapper() {
     if [ "${SKIP_ENVIRONMENT_WRAPPER:-no}" = "yes" ]; then
         log_message WARN "Skipping wrapper installation."
@@ -3083,6 +3156,7 @@ main() {
     install_catppuccin_xfce4_terminal
     install_catppuccin_hyprland
     configure_environment
+    configure_hyprland
     configure_git_delta
     configure_terminals
 }

@@ -25,6 +25,7 @@ This repository provides a setup script that performs fundamental shell customiz
 - `install_catppuccin_hyprland`: Checks for Hyprland and installs Catppuccin Mocha from upstream, then auto-adds a `source` line to `hyprland.conf`.
 - `install_environment_wrapper`: Installs the `environment` wrapper command at `~/.local/bin/environment`.
 - `configure_environment`: Applies the curated dotfile snippets, Starship theme settings, and environment variables.
+- `configure_hyprland`: Checks for Hyprland, enforces a `1.25` monitor scale via `~/.config/hypr/monitors.conf`, and keeps the Hyprland autostart entries in sync.
 - `configure_terminals`: Optionally configures GNOME Terminal to use JetBrainsMono Nerd Font.
 
 ## Repository overview
@@ -43,7 +44,7 @@ This repository provides a setup script that performs fundamental shell customiz
 │   │   ├── eza/                     # eza color theme configuration
 │   │   │   └── theme.yml            # Catppuccin Mocha theme (mauve accent)
 │   │   ├── hypr/                    # Hyprland configuration snippets
-│   │   │   └── autostart.conf       # Hyprland autostart entries
+│   │   │   └── autostart.conf       # Hyprland autostart entries for terminal and Chrome
 │   │   ├── nvim/                    # Neovim configuration directory for themed setup
 │   │   │   ├── init.lua             # Neovim entrypoint
 │   │   │   └── lua/                 # Neovim Lua configuration modules

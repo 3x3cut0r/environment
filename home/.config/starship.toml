@@ -1,6 +1,6 @@
 '$schema' = 'https://starship.rs/config-schema.json'
 palette = "catppuccin_mocha"
-add_newline = true
+add_newline = false
 scan_timeout = 300
 
 # format = """$os$python$directory${custom.prompt_symbol}"""

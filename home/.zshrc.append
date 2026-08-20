@@ -28,7 +28,7 @@ fi
 
 if command -v starship >/dev/null 2>&1; then
   sleep 0.1
-  precmd() { precmd() { echo } }
+  # precmd() { precmd() { echo } }
   eval "$(starship init zsh)"
 fi
 

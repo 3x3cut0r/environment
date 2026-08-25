@@ -44,6 +44,16 @@ if command -v fzf >/dev/null 2>&1; then
 fi
 
 if [[ $- == *i* ]]; then
+  zshaddhistory() {
+    case "$1" in
+      fcd$'\n'|fcd' '*$'\n'|fvi$'\n'|fvi' '*$'\n'|fedit$'\n'|fedit' '*$'\n'|ftop$'\n'|ftop' '*$'\n'|fkill$'\n'|fkill' '*$'\n'|fh$'\n'|fh' '*$'\n')
+        return 1
+        ;;
+    esac
+
+    return 0
+  }
+
   bindkey -e
   bindkey '^R' history-incremental-search-backward
   bindkey '^S' history-incremental-search-forward

@@ -153,6 +153,30 @@ _history_add_raw() {
   fi
 }
 
+_history_discard_wrapper() {
+  local wrapper_name="$1"
+  local last_entry
+  local history_index
+
+  [[ -n "$wrapper_name" ]] || return
+
+  if [[ -n "${ZSH_VERSION:-}" ]]; then
+    return
+  fi
+
+  last_entry="$(history 1)" || return
+  last_entry="${last_entry#*[[:space:]]}"
+
+  case "$last_entry" in
+    "$wrapper_name"|"$wrapper_name "*)
+      history_index=$((HISTCMD - 1))
+      if ((history_index > 0)); then
+        history -d "$history_index" >/dev/null 2>&1 || true
+      fi
+      ;;
+  esac
+}
+
 _fzf_pick_pid() {
   ps -axo pid=,ppid=,%cpu=,%mem=,stat=,time=,command= |
     command fzf "$@" |
@@ -162,9 +186,16 @@ _fzf_pick_pid() {
 fcd() {
   local dir
 
-  dir="$(_fzf_pick_path d "$1")" || return
-  [[ -n "$dir" ]] || return
+  dir="$(_fzf_pick_path d "$1")" || {
+    _history_discard_wrapper fcd
+    return
+  }
+  [[ -n "$dir" ]] || {
+    _history_discard_wrapper fcd
+    return
+  }
 
+  _history_discard_wrapper fcd
   cd "$dir" || return
   _history_add_command cd "$dir"
 }
@@ -172,9 +203,16 @@ fcd() {
 fvi() {
   local file
 
-  file="$(_fzf_pick_path f "$1")" || return
-  [[ -n "$file" ]] || return
+  file="$(_fzf_pick_path f "$1")" || {
+    _history_discard_wrapper fvi
+    return
+  }
+  [[ -n "$file" ]] || {
+    _history_discard_wrapper fvi
+    return
+  }
 
+  _history_discard_wrapper fvi
   _history_add_command vi "$file"
   vi "$file"
 }
@@ -183,9 +221,16 @@ fedit() {
   local file
   local editor_cmd="${EDITOR:-vi}"
 
-  file="$(_fzf_pick_path f "$1")" || return
-  [[ -n "$file" ]] || return
+  file="$(_fzf_pick_path f "$1")" || {
+    _history_discard_wrapper fedit
+    return
+  }
+  [[ -n "$file" ]] || {
+    _history_discard_wrapper fedit
+    return
+  }
 
+  _history_discard_wrapper fedit
   _history_add_command "$editor_cmd" "$file"
   "$editor_cmd" "$file"
 }
@@ -197,8 +242,16 @@ fproc() {
 ftop() {
   local pid
 
-  pid="$(_fzf_pick_pid)" || return
-  [[ -n "$pid" ]] || return
+  pid="$(_fzf_pick_pid)" || {
+    _history_discard_wrapper ftop
+    return
+  }
+  [[ -n "$pid" ]] || {
+    _history_discard_wrapper ftop
+    return
+  }
+
+  _history_discard_wrapper ftop
 
   if command -v htop >/dev/null 2>&1; then
     _history_add_command htop -p "$pid"
@@ -232,8 +285,16 @@ fkill() {
     shift
   fi
 
-  pids="$(ps -axo pid=,ppid=,%cpu=,%mem=,stat=,time=,command= | command fzf -m "$@" | awk '{print $1}')" || return
-  [[ -n "$pids" ]] || return
+  pids="$(ps -axo pid=,ppid=,%cpu=,%mem=,stat=,time=,command= | command fzf -m "$@" | awk '{print $1}')" || {
+    _history_discard_wrapper fkill
+    return
+  }
+  [[ -n "$pids" ]] || {
+    _history_discard_wrapper fkill
+    return
+  }
+
+  _history_discard_wrapper fkill
 
   while IFS= read -r pid; do
     [[ -n "$pid" ]] || continue
@@ -244,8 +305,15 @@ fkill() {
 
 fh() {
   local cmd
-  cmd="$(fc -l 1 | command fzf --tac | sed 's/^[[:space:]]*[0-9]*[[:space:]]*//')" || return
-  [[ -n "$cmd" ]] || return
+  cmd="$(fc -l 1 | command fzf --tac | sed 's/^[[:space:]]*[0-9]*[[:space:]]*//')" || {
+    _history_discard_wrapper fh
+    return
+  }
+  [[ -n "$cmd" ]] || {
+    _history_discard_wrapper fh
+    return
+  }
+  _history_discard_wrapper fh
   _history_add_raw "$cmd"
   eval "$cmd"
 }

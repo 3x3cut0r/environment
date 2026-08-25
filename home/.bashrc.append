@@ -15,7 +15,15 @@ fi
 
 if command -v starship >/dev/null 2>&1; then
   sleep 0.1
-  # PROMPT_COMMAND="export PROMPT_COMMAND=echo"
+  show_newline() {
+    if [ -z "${NEW_LINE_BEFORE_PROMPT:-}" ]; then
+      NEW_LINE_BEFORE_PROMPT=1
+    else
+      printf '\n'
+    fi
+  }
+
+  PROMPT_COMMAND="show_newline${PROMPT_COMMAND:+;${PROMPT_COMMAND}}"
   eval "$(starship init bash)"
 fi
 

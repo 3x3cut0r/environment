@@ -28,7 +28,8 @@ fi
 
 if command -v starship >/dev/null 2>&1; then
   sleep 0.1
-  # precmd() { precmd() { echo } }
+  # shellcheck disable=SC2329
+  precmd() { precmd() { printf '\n'; } }
   eval "$(starship init zsh)"
 fi
 

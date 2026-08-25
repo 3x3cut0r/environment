@@ -97,9 +97,9 @@ _fzf_paths() {
   local search_root="${2:-.}"
 
   if command -v fd >/dev/null 2>&1; then
-    fd --type "$path_type" . "$search_root"
+    fd --hidden --exclude .git --exclude .svn --type "$path_type" . "$search_root"
   elif command -v fdfind >/dev/null 2>&1; then
-    fdfind --type "$path_type" . "$search_root"
+    fdfind --hidden --exclude .git --exclude .svn --type "$path_type" . "$search_root"
   else
     find "$search_root" -type "$path_type"
   fi

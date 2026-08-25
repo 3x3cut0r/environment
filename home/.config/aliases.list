@@ -118,6 +118,41 @@ _fzf_pick_path() {
   fi
 }
 
+_history_format_command() {
+  local formatted=""
+  local arg
+
+  for arg in "$@"; do
+    if [[ -n "$formatted" ]]; then
+      formatted+=" "
+    fi
+    formatted+=$(printf '%q' "$arg")
+  done
+
+  printf '%s\n' "$formatted"
+}
+
+_history_add_command() {
+  local command_line
+
+  command_line="$(_history_format_command "$@")"
+  [[ -n "$command_line" ]] || return
+
+  _history_add_raw "$command_line"
+}
+
+_history_add_raw() {
+  local command_line="$1"
+
+  [[ -n "$command_line" ]] || return
+
+  if [[ -n "${ZSH_VERSION:-}" ]]; then
+    print -s -- "$command_line"
+  else
+    history -s -- "$command_line"
+  fi
+}
+
 _fzf_pick_pid() {
   ps -axo pid=,ppid=,%cpu=,%mem=,stat=,time=,command= |
     command fzf "$@" |
@@ -131,6 +166,7 @@ fcd() {
   [[ -n "$dir" ]] || return
 
   cd "$dir" || return
+  _history_add_command cd "$dir"
 }
 
 fvi() {
@@ -139,6 +175,7 @@ fvi() {
   file="$(_fzf_pick_path f "$1")" || return
   [[ -n "$file" ]] || return
 
+  _history_add_command vi "$file"
   vi "$file"
 }
 
@@ -149,6 +186,7 @@ fedit() {
   file="$(_fzf_pick_path f "$1")" || return
   [[ -n "$file" ]] || return
 
+  _history_add_command "$editor_cmd" "$file"
   "$editor_cmd" "$file"
 }
 
@@ -163,20 +201,24 @@ ftop() {
   [[ -n "$pid" ]] || return
 
   if command -v htop >/dev/null 2>&1; then
+    _history_add_command htop -p "$pid"
     htop -p "$pid"
     return
   fi
 
   if command -v top >/dev/null 2>&1; then
     if top -pid "$pid" -l 1 >/dev/null 2>&1; then
+      _history_add_command top -pid "$pid"
       top -pid "$pid"
     else
+      _history_add_command top -p "$pid"
       top -p "$pid"
     fi
     return
   fi
 
   if command -v btop >/dev/null 2>&1; then
+    _history_add_command btop
     btop
   fi
 }
@@ -196,6 +238,7 @@ fkill() {
   while IFS= read -r pid; do
     [[ -n "$pid" ]] || continue
     kill "$signal" "$pid"
+    _history_add_command kill "$signal" "$pid"
   done <<< "$pids"
 }
 
@@ -203,6 +246,7 @@ fh() {
   local cmd
   cmd="$(fc -l 1 | command fzf --tac | sed 's/^[[:space:]]*[0-9]*[[:space:]]*//')" || return
   [[ -n "$cmd" ]] || return
+  _history_add_raw "$cmd"
   eval "$cmd"
 }
 

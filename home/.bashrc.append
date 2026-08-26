@@ -23,7 +23,7 @@ if command -v starship >/dev/null 2>&1; then
     fi
   }
 
-  PROMPT_COMMAND="show_newline${PROMPT_COMMAND:+;${PROMPT_COMMAND}}"
+  # PROMPT_COMMAND="show_newline${PROMPT_COMMAND:+;${PROMPT_COMMAND}}"
   eval "$(starship init bash)"
 fi
 

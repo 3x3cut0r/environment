@@ -129,12 +129,46 @@ vim.keymap.set("n", "<leader>rt", ":RemoteTreeBrowser ", { desc = "Browse remote
 -- Defaults:
 -- none
 
+local fd_exclude_dirs = {
+  ".git",
+  ".svn",
+  "node_modules",
+  ".npm",
+  ".nvm",
+  ".bun",
+  ".pnpm-store",
+  ".yarn",
+  ".venv",
+  "venv*",
+  "__pycache__",
+  ".mypy_cache",
+  ".pytest_cache",
+  ".ruff_cache",
+  ".tox",
+  ".nox",
+  ".ipynb_checkpoints",
+  ".cache",
+  ".gradle",
+  ".cargo",
+  ".rustup",
+  ".ollama",
+  ".Trash",
+  "Library",
+}
+
 vim.keymap.set("n", "<leader>fb", "<cmd>Telescope buffers<cr>", { desc = "Find buffers" })
 vim.keymap.set("n", "<leader>ff", function()
+  local find_command = { "fd", "--type", "f", "--hidden", "--no-ignore" }
+
+  for _, dir in ipairs(fd_exclude_dirs) do
+    vim.list_extend(find_command, { "--exclude", dir })
+  end
+
   require("telescope.builtin").find_files({
     hidden = true,
     no_ignore = true,
-    find_command = { "fd", "--type", "f", "--hidden", "--no-ignore", "--exclude", ".git", "--exclude", ".svn" },
+    temp__scrolling_limit = 10000,
+    find_command = find_command,
   })
 end, { desc = "Find files" })
 vim.keymap.set("n", "<leader>fg", "<cmd>Telescope live_grep<cr>", { desc = "Live grep" })

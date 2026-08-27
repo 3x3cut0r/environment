@@ -334,8 +334,11 @@ alias lg='lazygit'
 fi
 
 # Shortcuts for SVN workflows.
-alias svndel='svn st | grep "^!" | awk "{print \$2}" | xargs -d "\n" svn rm'
+alias svnaddall='svn st | grep "^?" | awk "{print \$2}" | xargs -d "\n" -r svn add'
+alias svndelall='svn st | grep "^!" | awk "{print \$2}" | xargs -d "\n" svn rm'
 alias svnclean='svn st | grep "^!" | awk "{print \$2}" | xargs -d "\n" svn rm'
+# SVN: Sync working copy (add new, remove missing)
+alias svnsync='svn st | grep "^?" | awk "{print \$2}" | xargs -d "\n" -r svn add && svn st | grep "^!" | awk "{print \$2}" | xargs -d "\n" -r svn rm'
 
 # Package management aliases for multiple distributions.
 if command -v sudo >/dev/null 2>&1; then

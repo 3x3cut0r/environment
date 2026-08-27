@@ -333,6 +333,10 @@ alias gg='lazygit'
 alias lg='lazygit'
 fi
 
+# Shortcuts for SVN workflows.
+alias svndel='svn st | grep "^!" | awk "{print \$2}" | xargs -d "\n" svn rm'
+alias svnclean='svn st | grep "^!" | awk "{print \$2}" | xargs -d "\n" svn rm'
+
 # Package management aliases for multiple distributions.
 if command -v sudo >/dev/null 2>&1; then
 alias apti='sudo apt install'

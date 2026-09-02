@@ -17,6 +17,7 @@ return {
         "toml",
         "markdown",
         "markdown_inline",
+        "groovy",
       },
       auto_install = true,
       highlight = { enable = true },

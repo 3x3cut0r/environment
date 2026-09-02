@@ -36,6 +36,7 @@ return {
         "ruff",
         "ansible-lint",
         "shellcheck",
+        "npm-groovy-lint",
       },
       auto_update = false,
       run_on_start = true,

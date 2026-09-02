@@ -88,8 +88,13 @@ vim.api.nvim_create_autocmd("LspAttach", {
     map("gr", vim.lsp.buf.references, "LSP: References")
     map("<leader>ca", vim.lsp.buf.code_action, "LSP: Code action")
     map("<leader>cf", function()
-      vim.lsp.buf.format({ async = true })
-    end, "LSP: Format buffer")
+      local ok, conform = pcall(require, "conform")
+      if ok then
+        conform.format({ async = true, lsp_format = "fallback" })
+      else
+        vim.lsp.buf.format({ async = true })
+      end
+    end, "Format buffer")
     map("<leader>rn", vim.lsp.buf.rename, "LSP: Rename")
   end,
 })

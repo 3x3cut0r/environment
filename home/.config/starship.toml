@@ -186,7 +186,16 @@ symbol = " "
 description = "Show SVN branch when visiting a WC"
 style = "fg:lavender"
 format = "[$output ]($style)"
-when = "svn info >/dev/null 2>&1"
+when = '''
+dir="$PWD"
+while [ "$dir" != "/" ]; do
+  if [ -d "$dir/.svn" ]; then
+    exit 0
+  fi
+  dir=$(dirname "$dir")
+done
+exit 1
+'''
 command = '''
 path="$(svn info --show-item relative-url 2>/dev/null || true)"
 
@@ -211,21 +220,48 @@ shell = ["bash", "--noprofile", "--norc"]
 description = "Show SVN (global) revision when visiting a WC"
 style = "fg:lavender"
 format = "[($output) ]($style)"
-when = "svn --non-interactive info >/dev/null 2>&1"
+when = '''
+dir="$PWD"
+while [ "$dir" != "/" ]; do
+  if [ -d "$dir/.svn" ]; then
+    exit 0
+  fi
+  dir=$(dirname "$dir")
+done
+exit 1
+'''
 command = "svn --non-interactive info --no-newline --show-item revision"
  
 [custom.svn_local]
 description = "Show SVN last-changed-revision for the current working directory when visiting a WC"
 style = "fg:lavender"
 format = "[($output) ]($style)"
-when = "svn --non-interactive info >/dev/null 2>&1"
+when = '''
+dir="$PWD"
+while [ "$dir" != "/" ]; do
+  if [ -d "$dir/.svn" ]; then
+    exit 0
+  fi
+  dir=$(dirname "$dir")
+done
+exit 1
+'''
 command = "svn --non-interactive info --no-newline --show-item last-changed-revision"
  
 [custom.svn_status]
 description = "Show a summary of SVN status flags for the current working directory when visiting a WC"
 style = "fg:lavender"
 format = "[($output) ]($style)"
-when = "svn --non-interactive info >/dev/null 2>&1"
+when = '''
+dir="$PWD"
+while [ "$dir" != "/" ]; do
+  if [ -d "$dir/.svn" ]; then
+    exit 0
+  fi
+  dir=$(dirname "$dir")
+done
+exit 1
+'''
 command = "~/starship-svn-status.sh"
 
 [dart]

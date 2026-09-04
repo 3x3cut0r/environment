@@ -344,7 +344,15 @@
       "url": "https://mcp.context7.com/mcp",
       "enabled": true,
       "headers": {
-        "CONTEXT7_API_KEY": "{env.CONTEXT7_API_KEY}"
+        "CONTEXT7_API_KEY": "{env:CONTEXT7_API_KEY}"
+      }
+    },
+    "n8n": {
+      "type": "remote",
+      "url": "https://n8n.3x3cut0r.de/mcp-server/http",
+      "enabled": true,
+      "headers": {
+        "Authorization": "Bearer {env:N8N_MCP_TOKEN}"
       }
     }
   }

@@ -163,7 +163,12 @@ local fd_exclude_dirs = {
 
 vim.keymap.set("n", "<leader>fb", "<cmd>Telescope buffers<cr>", { desc = "Find buffers" })
 vim.keymap.set("n", "<leader>ff", function()
-  local find_command = { "fd", "--type", "f", "--hidden", "--no-ignore" }
+  local fd_command = "fd"
+  if vim.fn.executable(fd_command) ~= 1 and vim.fn.executable("fdfind") == 1 then
+    fd_command = "fdfind"
+  end
+
+  local find_command = { fd_command, "--type", "f", "--hidden", "--no-ignore" }
 
   for _, dir in ipairs(fd_exclude_dirs) do
     vim.list_extend(find_command, { "--exclude", dir })

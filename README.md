@@ -135,6 +135,7 @@ cd environment
   Otherwise, package-manager install runs first and quoted commands run afterwards.
 - Entries after the marker are installed via `python3 -m pip install`.
 - On macOS, setup ensures Homebrew is installed before running installation steps.
+- On Ubuntu, setup creates `~/.local/bin/fd` as a compatibility link to `fdfind` when needed.
 - Go is installed separately from the official `go.dev` release archive (latest stable, dynamic version lookup), not from the system package manager, before package processing starts.
 - Neovim is installed separately from the latest GitHub release `tar.gz` archive (not from the system package manager), then linked to `/usr/local/bin/nvim`. On macOS, setup falls back to `brew install neovim` if the archive-based installation fails.
 - After successful Neovim installation, old versions under `/opt/nvim/neovim-*` are removed automatically.

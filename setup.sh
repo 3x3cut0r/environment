@@ -735,6 +735,51 @@ install_packages() {
     fi
 }
 
+configure_fd_command() {
+    if [ "$OS_ID" != "ubuntu" ]; then
+        return 0
+    fi
+
+    if command -v fd >/dev/null 2>&1; then
+        return 0
+    fi
+
+    local fdfind_path=""
+    fdfind_path=$(command -v fdfind 2>/dev/null || true)
+    if [ -z "$fdfind_path" ]; then
+        log_message WARN "Neither fd nor fdfind is available. Skipping fd compatibility link."
+        return 0
+    fi
+
+    local fd_link="$HOME/.local/bin/fd"
+    if [ -L "$fd_link" ]; then
+        local existing_target=""
+        existing_target=$(readlink "$fd_link" 2>/dev/null || true)
+        if [ "$existing_target" = "$fdfind_path" ]; then
+            log_message INFO "fd compatibility link already configured: $fd_link -> $fdfind_path"
+        else
+            log_message WARN "Cannot create fd compatibility link: $fd_link already points elsewhere."
+        fi
+        return 0
+    fi
+
+    if [ -e "$fd_link" ]; then
+        log_message WARN "Cannot create fd compatibility link: $fd_link already exists."
+        return 0
+    fi
+
+    if ! mkdir -p "${fd_link%/*}"; then
+        log_message WARN "Cannot create directory for fd compatibility link: ${fd_link%/*}"
+        return 0
+    fi
+
+    if ln -s "$fdfind_path" "$fd_link"; then
+        log_message INFO "Created fd compatibility link for Ubuntu: $fd_link -> $fdfind_path"
+    else
+        log_message WARN "Failed to create fd compatibility link: $fd_link"
+    fi
+}
+
 install_lazy_tools() {
     if [ "${SKIP_PACKAGES:-no}" = "yes" ]; then
         log_message WARN "Skipping lazy tool installation."
@@ -3136,6 +3181,7 @@ main() {
     install_go_official
     install_neovim_official
     install_packages
+    configure_fd_command
     install_opencode
     if ! install_npm; then
         log_message WARN "nvm/Node.js installation encountered errors. Continuing with remaining configuration."

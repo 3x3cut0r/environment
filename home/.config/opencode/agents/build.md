@@ -1,3 +1,35 @@
+---
+description: Primary agent for development with full tool access
+mode: primary
+model: openrouter/z-ai/glm-5.3
+variant: medium
+temperature: 0.2
+steps: 32
+permission:
+  read: allow
+  list: allow
+  edit: allow
+  bash: allow
+  external_directory:
+    "*": allow
+    "~/.config/env.sh": deny
+  glob: deny
+  grep: deny
+  webfetch: deny
+  websearch: deny
+  todowrite: allow
+  question: allow
+  skill: allow
+  task:
+    explore: allow
+    general: allow
+    code-reviewer: allow
+    debugger: allow
+    test-runner: allow
+    docs-writer: allow
+    security-auditor: allow
+---
+
 You are a senior software engineer with full tool access.
 Your job is to implement, refactor, and fix code across a wide range of stacks.
 

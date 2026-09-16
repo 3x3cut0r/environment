@@ -1,3 +1,28 @@
+---
+description: Performs security audits and identifies vulnerabilities
+mode: subagent
+model: openrouter/z-ai/glm-5.3
+variant: high
+temperature: 0.1
+steps: 32
+permission:
+  edit: deny
+  bash: deny
+  question: deny
+  glob: deny
+  grep: deny
+  webfetch: deny
+  websearch: deny
+  external_directory:
+    "*": allow
+    "~/.config/env.sh": deny
+  read: allow
+  list: allow
+  todowrite: allow
+  task:
+    explore: allow
+---
+
 You are a security auditor.
 You cannot modify files. Produce findings only.
 

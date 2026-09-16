@@ -48,7 +48,8 @@ This repository provides a setup script that performs fundamental shell customiz
 │   │   ├── nvim/                    # Neovim configuration directory for themed setup
 │   │   │   ├── init.lua             # Neovim entrypoint
 │   │   │   └── lua/                 # Neovim Lua configuration modules
-│   │   ├── opencode/                # OpenCode profile snippets and slash-commands
+│   │   ├── opencode/                # OpenCode profile snippets, agents, and slash-commands
+│   │   │   ├── agents/              # Agent definitions as markdown files (one per agent)
 │   │   │   ├── commands/            # Custom slash-command definitions
 │   │   │   │   ├── commit.md        # Create a Conventional Commit for git or svn
 │   │   │   │   ├── jira.md          # Draft a Jira proposal from changes, path, or workspace context
@@ -58,7 +59,7 @@ This repository provides a setup script that performs fundamental shell customiz
 │   │   │   │   ├── save.md          # Save current session context into TASKS.md
 │   │   │   │   └── update.md        # Update working copy for git or svn
 │   │   │   ├── opencode.jsonc.anthropic # Anthropic profile configuration
-│   │   │   ├── opencode.jsonc.default # Default OpenAI profile configuration
+│   │   │   ├── opencode.jsonc.default # Default OpenRouter profile configuration
 │   │   │   ├── opencode.jsonc.proxmox # Proxmox profile configuration
 │   │   │   ├── tui.json             # TUI keybindings
 │   │   ├── starship.toml            # Starship prompt theme configuration
@@ -171,7 +172,7 @@ The setup supports these environment variables:
 - OpenCode's OpenRouter-backed agents authenticate through `opencode auth login` (stored in `~/.local/share/opencode/auth.json`); an `OPENROUTER_API_KEY` environment variable is not required.
 - Shell PATH snippets now evaluate `brew shellenv` when Homebrew is available, so Homebrew toolchains (for example `python3`) are preferred over system defaults.
 - OpenCode TUI keybinding profiles live next to the matching runtime profiles as `tui.json`. They keep the default `<leader>e` editor shortcut and add `<leader>v` for editing prompts in `$EDITOR`/Neovim before returning them to OpenCode.
-- OpenCode profiles define an `explore` subagent and require primary agents to delegate repository or web discovery to it before planning, coding, or documentation work unless the task is limited to already-known facts or one explicitly named file.
+- OpenCode agent definitions live in `agents/*.md` next to the profiles and include an `explore` subagent; primary agents must delegate repository or web discovery to it before planning, coding, or documentation work unless the task is limited to already-known facts or one explicitly named file.
 
 ## Notes
 

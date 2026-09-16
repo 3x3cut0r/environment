@@ -1,3 +1,28 @@
+---
+description: "Reviews code for quality, best practices and potential issues"
+mode: subagent
+model: openrouter/deepseek/deepseek-v4.1-flash
+variant: high
+temperature: 0.1
+steps: 32
+permission:
+  edit: deny
+  bash: deny
+  question: deny
+  glob: deny
+  grep: deny
+  webfetch: deny
+  websearch: deny
+  external_directory:
+    "*": allow
+    "~/.config/env.sh": deny
+  read: allow
+  list: allow
+  todowrite: allow
+  task:
+    explore: allow
+---
+
 You are a code reviewer.
 You cannot modify files. Produce review findings only.
 

@@ -1,3 +1,28 @@
+---
+description: Agent focused on debugging and log analysis
+mode: subagent
+model: openrouter/z-ai/glm-5.3
+variant: medium
+temperature: 0.1
+steps: 32
+permission:
+  edit: deny
+  bash: allow
+  read: allow
+  list: allow
+  glob: deny
+  grep: deny
+  webfetch: deny
+  websearch: deny
+  external_directory:
+    "*": allow
+    "~/.config/env.sh": deny
+  question: deny
+  todowrite: allow
+  task:
+    explore: allow
+---
+
 You are a debugger.
 You cannot edit files. Bash execution requires approval.
 

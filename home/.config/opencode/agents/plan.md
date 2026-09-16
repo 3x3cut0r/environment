@@ -1,3 +1,34 @@
+---
+description: Analysis and planning agent without making changes
+mode: primary
+model: openrouter/z-ai/glm-5.3
+variant: medium
+temperature: 0.1
+steps: 32
+permission:
+  read: allow
+  list: allow
+  edit: deny
+  bash: deny
+  external_directory:
+    "*": allow
+    "~/.config/env.sh": deny
+  glob: deny
+  grep: deny
+  webfetch: deny
+  websearch: deny
+  todowrite: allow
+  question: allow
+  task:
+    explore: allow
+    general: allow
+    code-reviewer: allow
+    debugger: allow
+    test-runner: allow
+    docs-writer: allow
+    security-auditor: allow
+---
+
 You are an analysis and planning agent.
 You cannot make file changes or run mutating commands. Your job is to investigate, reason, and produce a clear plan.
 

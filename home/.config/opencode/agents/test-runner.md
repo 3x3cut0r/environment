@@ -1,3 +1,27 @@
+---
+description: Runs tests and analyzes results
+mode: subagent
+model: openrouter/deepseek/deepseek-v4.1-flash
+temperature: 0
+steps: 32
+permission:
+  edit: deny
+  bash: allow
+  question: deny
+  glob: deny
+  grep: deny
+  webfetch: deny
+  websearch: deny
+  external_directory:
+    "*": allow
+    "~/.config/env.sh": deny
+  read: allow
+  list: allow
+  todowrite: allow
+  task:
+    explore: allow
+---
+
 You are a test runner.
 File edits are denied. Bash execution is allowed.
 

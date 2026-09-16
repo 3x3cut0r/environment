@@ -150,13 +150,6 @@
 
   "agent": {
     "build": {
-      "description": "Primary agent for development with full tool access",
-      "mode": "primary",
-      "model": "openrouter/z-ai/glm-5.3",
-      "variant": "medium",
-      "prompt": "{file:./prompts/build.txt}",
-      "temperature": 0.2,
-      "steps": 32,
       "permission": {
         "read": "allow",
         "list": "allow",
@@ -229,13 +222,6 @@
       }
     },
     "plan": {
-      "description": "Analysis and planning agent without making changes",
-      "mode": "primary",
-      "model": "openrouter/z-ai/glm-5.3",
-      "variant": "medium",
-      "prompt": "{file:./prompts/plan.txt}",
-      "temperature": 0.1,
-      "steps": 32,
       "permission": {
         "read": "allow",
         "list": "allow",
@@ -307,12 +293,6 @@
       }
     },
     "explore": {
-      "description": "Fast, read-only agent for exploring codebases",
-      "mode": "subagent",
-      "model": "openrouter/deepseek/deepseek-v4.1-flash",
-      "prompt": "{file:./prompts/explore.txt}",
-      "temperature": 0,
-      "steps": 32,
       "permission": {
         "read": {
           "*": "allow"
@@ -376,13 +356,6 @@
       }
     },
     "general": {
-      "description": "General-purpose execution agent for multi-step tasks when no specialized subagent fits",
-      "mode": "subagent",
-      "model": "openrouter/deepseek/deepseek-v4.1-flash",
-      "variant": "high",
-      "prompt": "{file:./prompts/general.txt}",
-      "temperature": 0.2,
-      "steps": 32,
       "permission": {
         "read": "allow",
         "list": "allow",
@@ -448,13 +421,6 @@
       }
     },
     "code-reviewer": {
-      "description": "Reviews code for quality, best practices and potential issues",
-      "mode": "subagent",
-      "model": "openrouter/deepseek/deepseek-v4.1-flash",
-      "variant": "high",
-      "prompt": "{file:./prompts/code-reviewer.txt}",
-      "temperature": 0.1,
-      "steps": 32,
       "permission": {
         "edit": "deny",
         "bash": "deny",
@@ -520,13 +486,6 @@
       }
     },
     "debugger": {
-      "description": "Agent focused on debugging and log analysis",
-      "mode": "subagent",
-      "model": "openrouter/z-ai/glm-5.3",
-      "variant": "medium",
-      "prompt": "{file:./prompts/debugger.txt}",
-      "temperature": 0.1,
-      "steps": 32,
       "permission": {
         "edit": "deny",
         "bash": "allow",
@@ -592,12 +551,6 @@
       }
     },
     "test-runner": {
-      "description": "Runs tests and analyzes results",
-      "mode": "subagent",
-      "model": "openrouter/deepseek/deepseek-v4.1-flash",
-      "prompt": "{file:./prompts/test-runner.txt}",
-      "temperature": 0,
-      "steps": 32,
       "permission": {
         "edit": "deny",
         "bash": "allow",
@@ -663,13 +616,6 @@
       }
     },
     "docs-writer": {
-      "description": "Writes and maintains project documentation",
-      "mode": "subagent",
-      "model": "openrouter/deepseek/deepseek-v4.1-flash",
-      "variant": "high",
-      "prompt": "{file:./prompts/docs-writer.txt}",
-      "temperature": 0.3,
-      "steps": 32,
       "permission": {
         "read": "allow",
         "list": "allow",
@@ -735,13 +681,6 @@
       }
     },
     "security-auditor": {
-      "description": "Performs security audits and identifies vulnerabilities",
-      "mode": "subagent",
-      "model": "openrouter/z-ai/glm-5.3",
-      "variant": "high",
-      "prompt": "{file:./prompts/security-auditor.txt}",
-      "temperature": 0.1,
-      "steps": 32,
       "permission": {
         "edit": "deny",
         "bash": "deny",

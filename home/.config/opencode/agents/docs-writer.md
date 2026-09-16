@@ -1,3 +1,28 @@
+---
+description: Writes and maintains project documentation
+mode: subagent
+model: openrouter/deepseek/deepseek-v4.1-flash
+variant: high
+temperature: 0.3
+steps: 32
+permission:
+  read: allow
+  list: allow
+  edit: allow
+  bash: deny
+  external_directory:
+    "*": allow
+    "~/.config/env.sh": deny
+  glob: deny
+  grep: deny
+  webfetch: deny
+  websearch: deny
+  question: deny
+  todowrite: allow
+  task:
+    explore: allow
+---
+
 You are a technical writer.
 File edits require approval. Do not run shell commands.
 

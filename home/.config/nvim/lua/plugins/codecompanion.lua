@@ -6,13 +6,13 @@ return {
       "nvim-treesitter/nvim-treesitter",
     },
     opts = function()
-      local base_url = (os.getenv("NVIM_CC_BASE_URL") or "https://opencode.ai/zen/go/v1"):gsub("/$", "")
-      local api_key = os.getenv("NVIM_CC_API_KEY") or "OPENAI_API_KEY"
-      local model = os.getenv("NVIM_CC_MODEL") or "deepseek-v4-flash"
+      local base_url = (os.getenv("NVIM_CC_BASE_URL") or "https://openrouter.ai/api/v1"):gsub("/$", "")
+      local api_key = os.getenv("NVIM_CC_API_KEY") or os.getenv("OPENROUTER_API_KEY") or ""
+      local model = os.getenv("NVIM_CC_MODEL") or "deepseek/deepseek-v4.1-flash"
 
-      if base_url == "" or model == "" then
+      if base_url == "" or api_key == "" or model == "" then
         vim.schedule(function()
-          vim.notify("codecompanion.nvim requires NVIM_CC_BASE_URL and NVIM_CC_MODEL", vim.log.levels.WARN)
+          vim.notify("codecompanion.nvim requires NVIM_CC_BASE_URL, NVIM_CC_API_KEY, and NVIM_CC_MODEL", vim.log.levels.WARN)
         end)
 
         return {}

@@ -1,0 +1,13 @@
+#!/bin/bash
+
+# BayernWLAN Captive Portal Login
+# Diagnose: Portal-Seite per curl abrufen
+# curl -4 -v "https://hotspot.vodafone.de/bayern/?A=B&RequestedURI=http%3A%2F%2Fbayern.de"
+
+# IPv6 deaktivieren
+sudo sysctl -w net.ipv6.conf.all.disable_ipv6=1
+sudo sysctl -w net.ipv6.conf.default.disable_ipv6=1
+
+# Portal-Seite im Browser oeffnen
+firefox "https://hotspot.vodafone.de/bayern/?A=B&RequestedURI=http%3A%2F%2Fbayern.de"
+

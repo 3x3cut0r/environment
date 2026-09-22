@@ -98,6 +98,12 @@
         "CONTEXT7_API_KEY": "{env:CONTEXT7_API_KEY}"
       }
     },
+    "fusion360": {
+      "type": "remote",
+      "url": "http://127.0.0.1:27182/mcp",
+      "enabled": false,
+      "oauth": false
+    },
     "n8n": {
       "type": "remote",
       "url": "https://n8n.3x3cut0r.de/mcp-server/http",

@@ -24,6 +24,7 @@ There are no repository-local Cursor or Copilot instructions beyond this file.
 Important conventions:
 - `*.append` files are appended into target files.
 - `*.touch` files ensure target files exist.
+- `*.touch` directories deploy recursively only when the target directory is missing or contains the `.environment` marker file; otherwise the whole tree is skipped.
 - Marker comments like `# <<< vars/PATH` are merge anchors.
 - `packages.list` is split by `# <<< Add python packages below`.
 Do not rename or remove these conventions casually.

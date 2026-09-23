@@ -49,7 +49,7 @@ This repository provides a setup script that performs fundamental shell customiz
 │   │   │   ├── init.lua             # Neovim entrypoint
 │   │   │   └── lua/                 # Neovim Lua configuration modules
 │   │   ├── opencode/                # OpenCode profile snippets, agents, and slash-commands
-│   │   │   ├── agents/              # Agent definitions as markdown files (one per agent)
+│   │   │   ├── agents.touch/        # Agent definitions as markdown files (one per agent); touch directory, see Configuration
 │   │   │   ├── commands/            # Custom slash-command definitions
 │   │   │   │   ├── commit.md        # Create a Conventional Commit for git or svn
 │   │   │   │   ├── jira.md          # Draft a Jira proposal from changes, path, or workspace context
@@ -173,6 +173,8 @@ The setup supports these environment variables:
 - Shell PATH snippets now evaluate `brew shellenv` when Homebrew is available, so Homebrew toolchains (for example `python3`) are preferred over system defaults.
 - OpenCode TUI keybinding profiles live next to the matching runtime profiles as `tui.json`. They keep the default `<leader>e` editor shortcut and add `<leader>v` for editing prompts in `$EDITOR`/Neovim before returning them to OpenCode.
 - OpenCode agent definitions live in `agents/*.md` next to the profiles and include an `explore` subagent; primary agents must delegate repository or web discovery to it before planning, coding, or documentation work unless the task is limited to already-known facts or one explicitly named file.
+- Directories suffixed with `.touch` (for example `home/.config/opencode/agents.touch/`) deploy recursively only when the target directory is missing or contains the repository marker file `.environment`. If the target directory already exists without that marker (for example a work-managed `~/.config/opencode/agents/`), the whole directory tree is skipped. Delete the deployed `.environment` marker to take over management of such a directory yourself.
+- Machines that already have `~/.config/opencode/agents/` from earlier setups need a one-time re-seed before the marker exists: either remove that directory before the next run or create the marker manually with `touch ~/.config/opencode/agents/.environment`.
 
 ## Notes
 

@@ -2937,14 +2937,48 @@ configure_environment() {
 
     log_message INFO "Configure environment files from 'home/' to '$target_home'."
 
+    # Touch directories deploy only when the target directory is missing or
+    # carries the repository marker file (.environment). Externally managed
+    # targets are skipped entirely.
+    local touch_dir_marker=".environment"
+    local skipped_touch_dirs=()
+    local touch_dir_path relative_dir target_dir_path
+    while IFS= read -r -d '' touch_dir_path; do
+        relative_dir=${touch_dir_path#"$source_home/"}
+        target_dir_path="$target_home/${relative_dir%.touch}"
+        if [ -e "$target_dir_path" ] && [ ! -f "$target_dir_path/$touch_dir_marker" ]; then
+            skipped_touch_dirs+=("$relative_dir")
+            log_message INFO "Skipped directory ${relative_dir%.touch} (managed externally)"
+        fi
+    done < <(find "$source_home" -type d -name '*.touch' -print0)
+
     local file_path relative_path marker_identifier target_relative target_path target_directory append_mode
+    local rest_path dir_component skipped_dir
     while IFS= read -r -d '' file_path; do
         relative_path=${file_path#"$source_home/"}
         marker_identifier="$relative_path"
 
+        # Skip files inside externally managed touch directories
+        if [ ${#skipped_touch_dirs[@]} -gt 0 ]; then
+            for skipped_dir in "${skipped_touch_dirs[@]}"; do
+                if [[ "$relative_path" == "$skipped_dir"/* ]]; then
+                    continue 2
+                fi
+            done
+        fi
+
+        # Strip .touch suffix from directory components
+        target_relative=""
+        rest_path="$relative_path"
+        while [[ "$rest_path" == */* ]]; do
+            dir_component="${rest_path%%/*}"
+            rest_path="${rest_path#*/}"
+            target_relative+="${dir_component%.touch}/"
+        done
+        target_relative+="$rest_path"
+
         append_mode=0
         touch_mode=0
-        target_relative="$relative_path"
         if [[ "$target_relative" == *.append ]]; then
             append_mode=1
             target_relative="${target_relative%.append}"

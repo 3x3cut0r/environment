@@ -1,0 +1,5 @@
+# yazi configuration
+# Docs: https://yazi-rs.github.io/docs/configuration/yazi
+#
+# Defaults are kept intentionally. Theme and keymaps live in
+# theme.toml and keymap.toml next to this file.

@@ -18,6 +18,8 @@ SKIP_CATPPUCCIN_GNOME_TEXT_EDITOR="no"
 SKIP_CATPPUCCIN_TERMINAL_APP="no"
 SKIP_CATPPUCCIN_XFCE4_TERMINAL="no"
 SKIP_CATPPUCCIN_HYPRLAND="no"
+SKIP_CATPPUCCIN_YAZI="no"
+SKIP_YAZI="no"
 SKIP_ENVIRONMENT_WRAPPER="no"
 SKIP_CONFIGURE_ENVIRONMENT="no"
 SKIP_CONFIGURE_TERMINALS="no"
@@ -58,6 +60,8 @@ parse_args() {
                 SKIP_CATPPUCCIN_TERMINAL_APP="yes"
                 SKIP_CATPPUCCIN_XFCE4_TERMINAL="yes"
                 SKIP_CATPPUCCIN_HYPRLAND="yes"
+                SKIP_CATPPUCCIN_YAZI="yes"
+                SKIP_YAZI="yes"
                 SKIP_ENVIRONMENT_WRAPPER="yes"
                 SKIP_CONFIGURE_TERMINALS="yes"
                 shift
@@ -100,6 +104,15 @@ parse_args() {
                 SKIP_CATPPUCCIN_TERMINAL_APP="yes"
                 SKIP_CATPPUCCIN_XFCE4_TERMINAL="yes"
                 SKIP_CATPPUCCIN_HYPRLAND="yes"
+                SKIP_CATPPUCCIN_YAZI="yes"
+                shift
+                ;;
+            --skip-catppuccin-yazi|-scyz)
+                SKIP_CATPPUCCIN_YAZI="yes"
+                shift
+                ;;
+            --skip-yazi|-sy)
+                SKIP_YAZI="yes"
                 shift
                 ;;
             --skip-catppuccin-vim|-scv)
@@ -176,7 +189,7 @@ Options:
   -h,   --help              Show this help message and exit
   -y,   --yes               Automatically answer prompts with yes
   -r,   --reconfigure       Reconfigure dotfiles only (skip installs and terminal config)
-  -sp,  --skip-packages     Skip package-related installs (Homebrew bootstrap on macOS, system packages, Go, Neovim, Node.js/npm, lazy tools, delta)
+  -sp,  --skip-packages     Skip package-related installs (Homebrew bootstrap on macOS, system packages, Go, Neovim, Node.js/npm, lazy tools, delta, yazi)
   -sm,  --skip-npm          Skip nvm, Node.js, and npm installation
   -so,  --skip-opencode     Skip OpenCode installation
   -sn,  --skip-nerd-font,
@@ -184,7 +197,7 @@ Options:
   -ss,  --skip-starship     Skip Starship installation
   -st,  --skip-tpm          Skip tmux plugin manager installation
   -sv,  --skip-vim-plug     Skip vim-plug installation for Vim
-  -sc,  --skip-catppuccin   Skip Catppuccin installations for Vim, Neovim, bat, delta, Gedit, GNOME Text Editor, Terminal.app, Xfce4 Terminal, and Hyprland
+  -sc,  --skip-catppuccin   Skip Catppuccin installations for Vim, Neovim, bat, delta, Gedit, GNOME Text Editor, Terminal.app, Xfce4 Terminal, Hyprland, and yazi
   -scv, --skip-catppuccin-vim
                                Skip Catppuccin installation for Vim
   -scn, --skip-catppuccin-nvim,
@@ -203,7 +216,10 @@ Options:
   -scx, --skip-catppuccin-xfce4-terminal
                               Skip Catppuccin installation for Xfce4 Terminal
   -sch, --skip-catppuccin-hyprland
-                              Skip Catppuccin installation for Hyprland
+                               Skip Catppuccin installation for Hyprland
+  -scyz, --skip-catppuccin-yazi
+                               Skip Catppuccin installation for yazi
+  -sy,  --skip-yazi         Skip yazi installation
   -sw,  --skip-wrapper      Skip installation of the environment wrapper command
   -sce, --skip-configure-environment
                               Skip applying files from repository home/ to target home
@@ -1025,6 +1041,185 @@ install_delta() {
         log_message INFO "Installed delta ${delta_version} at $install_path"
     else
         log_message INFO "Installed delta at $install_path"
+    fi
+}
+
+install_yazi() {
+    if [ "${SKIP_YAZI:-no}" = "yes" ]; then
+        log_message WARN "Skipping yazi installation."
+        return 0
+    fi
+
+    if [ "${SKIP_PACKAGES:-no}" = "yes" ]; then
+        log_message WARN "Skipping yazi installation."
+        return 0
+    fi
+
+    if command -v yazi >/dev/null 2>&1; then
+        log_message INFO "yazi is already installed."
+        return 0
+    fi
+
+    if [ "$OS_KERNEL" = "Darwin" ] && command -v brew >/dev/null 2>&1; then
+        log_message INFO "Installing yazi using Homebrew on macOS."
+        if brew install yazi >/dev/null 2>&1; then
+            log_message INFO "Installed yazi via Homebrew."
+            return 0
+        fi
+        log_message WARN "Homebrew installation for yazi failed. Falling back to the GitHub release."
+    fi
+
+    if ! command -v curl >/dev/null 2>&1; then
+        log_message WARN "curl not found. Skipping yazi installation."
+        return 0
+    fi
+
+    if ! command -v unzip >/dev/null 2>&1; then
+        log_message WARN "unzip not found. Skipping yazi installation."
+        return 0
+    fi
+
+    local target_triple=""
+    case "$OS_KERNEL" in
+        Linux)
+            case "$OS_ARCH" in
+                x86_64|amd64)
+                    target_triple="x86_64-unknown-linux-gnu"
+                    ;;
+                aarch64|arm64)
+                    target_triple="aarch64-unknown-linux-gnu"
+                    ;;
+                *)
+                    log_message WARN "Unsupported architecture for yazi installation: $OS_ARCH"
+                    return 0
+                    ;;
+            esac
+            ;;
+        Darwin)
+            case "$OS_ARCH" in
+                x86_64|amd64)
+                    target_triple="x86_64-apple-darwin"
+                    ;;
+                aarch64|arm64)
+                    target_triple="aarch64-apple-darwin"
+                    ;;
+                *)
+                    log_message WARN "Unsupported architecture for yazi installation: $OS_ARCH"
+                    return 0
+                    ;;
+            esac
+            ;;
+        *)
+            log_message WARN "Unsupported OS for yazi installation: $OS_KERNEL"
+            return 0
+            ;;
+    esac
+
+    local latest_release_api="https://api.github.com/repos/sxyazi/yazi/releases/latest"
+    local release_payload=""
+    if ! release_payload=$(curl -fsSL "$latest_release_api" 2>/dev/null); then
+        log_message WARN "Failed to query the latest yazi release metadata. Skipping yazi installation."
+        return 0
+    fi
+
+    local yazi_version=""
+    yazi_version=$(printf '%s\n' "$release_payload" | sed -n 's/.*"tag_name":[[:space:]]*"\([^"]*\)".*/\1/p' | awk 'NR==1 {print; exit}')
+
+    local download_url=""
+    download_url=$(printf '%s\n' "$release_payload" \
+        | awk -F'"' '/"browser_download_url":/ {print $4}' \
+        | grep -E "/sxyazi/yazi/releases/download/.*/yazi-${target_triple}\.zip$" \
+        | awk 'NR==1 {print; exit}')
+
+    if [ -z "$download_url" ]; then
+        log_message WARN "No matching yazi release asset found for ${target_triple}."
+        return 0
+    fi
+
+    local temp_archive=""
+    local temp_dir=""
+    temp_archive=$(mktemp "${TMPDIR:-/tmp}/yazi-archive-XXXXXX.zip") || {
+        log_message WARN "Unable to create temporary archive file for yazi installation."
+        return 0
+    }
+
+    temp_dir=$(mktemp -d) || {
+        log_message WARN "Unable to create temporary directory for yazi installation."
+        rm -f "$temp_archive"
+        return 0
+    }
+
+    log_message INFO "Downloading yazi archive from GitHub: ${download_url##*/}"
+    if ! curl -fsSL -o "$temp_archive" "$download_url" >/dev/null 2>&1; then
+        log_message WARN "Failed to download yazi archive from GitHub: $download_url"
+        rm -f "$temp_archive"
+        rm -rf "$temp_dir"
+        return 0
+    fi
+
+    if ! unzip -q "$temp_archive" -d "$temp_dir" >/dev/null 2>&1; then
+        log_message WARN "Failed to extract yazi archive: ${download_url##*/}"
+        rm -f "$temp_archive"
+        rm -rf "$temp_dir"
+        return 0
+    fi
+
+    local extracted_yazi=""
+    local extracted_ya=""
+    extracted_yazi=$(find "$temp_dir" -type f -name yazi -perm -111 2>/dev/null | awk 'NR==1 {print; exit}')
+    extracted_ya=$(find "$temp_dir" -type f -name ya -perm -111 2>/dev/null | awk 'NR==1 {print; exit}')
+
+    if [ -z "$extracted_yazi" ] || [ ! -x "$extracted_yazi" ]; then
+        log_message WARN "Extracted yazi archive does not contain a usable yazi binary."
+        rm -f "$temp_archive"
+        rm -rf "$temp_dir"
+        return 0
+    fi
+
+    local install_failed=0
+    local binary_name binary_source binary_path
+    for binary_name in yazi ya; do
+        if [ "$binary_name" = "yazi" ]; then
+            binary_source="$extracted_yazi"
+        else
+            binary_source="$extracted_ya"
+        fi
+
+        if [ -z "$binary_source" ] || [ ! -x "$binary_source" ]; then
+            log_message WARN "yazi archive does not contain a usable ${binary_name} binary. Skipping it."
+            continue
+        fi
+
+        binary_path="/usr/local/bin/${binary_name}"
+        if [ "${EUID:-$(id -u)}" -ne 0 ]; then
+            if ! command -v sudo >/dev/null 2>&1; then
+                log_message WARN "Cannot install ${binary_name} to $binary_path: elevated privileges required but sudo not available."
+                install_failed=1
+                continue
+            fi
+
+            if ! sudo install -m 755 "$binary_source" "$binary_path" >/dev/null 2>&1; then
+                install_failed=1
+            fi
+        else
+            if ! install -m 755 "$binary_source" "$binary_path" >/dev/null 2>&1; then
+                install_failed=1
+            fi
+        fi
+    done
+
+    rm -f "$temp_archive"
+    rm -rf "$temp_dir"
+
+    if [ $install_failed -eq 1 ] || [ ! -x "/usr/local/bin/yazi" ]; then
+        log_message WARN "Failed to install yazi to /usr/local/bin"
+        return 0
+    fi
+
+    if [ -n "$yazi_version" ]; then
+        log_message INFO "Installed yazi ${yazi_version} to /usr/local/bin"
+    else
+        log_message INFO "Installed yazi to /usr/local/bin"
     fi
 }
 
@@ -2737,6 +2932,52 @@ install_catppuccin_xfce4_terminal() {
     fi
 }
 
+install_catppuccin_yazi() {
+    if [ "${SKIP_CATPPUCCIN_YAZI:-no}" = "yes" ]; then
+        log_message WARN "Skipping Catppuccin installation for yazi."
+        return 0
+    fi
+
+    local target_home="$HOME"
+    if [ -z "$target_home" ] && command -v getent >/dev/null 2>&1 && [ -n "$CURRENT_USER" ]; then
+        target_home=$(getent passwd "$CURRENT_USER" | cut -d: -f6)
+    fi
+
+    if [ -z "$target_home" ] || [ ! -d "$target_home" ]; then
+        log_message WARN "Unable to determine a valid home directory for yazi theme installation."
+        return 0
+    fi
+
+    local repo_theme_file="${REPOSITORY_DIR:-.}/home/.config/yazi/theme.toml"
+    local repo_bat_theme_file="${REPOSITORY_DIR:-.}/home/.config/bat/themes/Catppuccin Mocha.tmTheme"
+
+    if [ ! -f "$repo_theme_file" ]; then
+        log_message WARN "Bundled yazi theme file is missing: $repo_theme_file"
+        return 0
+    fi
+
+    local yazi_config_dir="$target_home/.config/yazi"
+    mkdir -p "$yazi_config_dir"
+
+    if install -m 644 "$repo_theme_file" "$yazi_config_dir/theme.toml"; then
+        log_message INFO "Installed Catppuccin Mocha (mauve) yazi theme."
+    else
+        log_message WARN "Failed to install the Catppuccin yazi theme."
+    fi
+
+    # The theme references a syntect theme for code preview highlighting.
+    # Reuse the bundled Catppuccin Mocha bat theme instead of shipping a second copy.
+    if [ -f "$repo_bat_theme_file" ]; then
+        if install -m 644 "$repo_bat_theme_file" "$yazi_config_dir/Catppuccin-mocha.tmTheme"; then
+            log_message INFO "Installed Catppuccin Mocha syntect theme for yazi previews."
+        else
+            log_message WARN "Failed to install the syntect theme for yazi previews."
+        fi
+    else
+        log_message WARN "Bundled bat theme file is missing. Skipping yazi syntect theme installation."
+    fi
+}
+
 install_catppuccin_hyprland() {
     if [ "${SKIP_CATPPUCCIN_HYPRLAND:-no}" = "yes" ]; then
         log_message WARN "Skipping Catppuccin installation for Hyprland."
@@ -3222,6 +3463,7 @@ main() {
     fi
     install_lazy_tools
     install_delta
+    install_yazi
     install_nerd_font
     install_starship
     install_tmux_plugin_manager
@@ -3234,6 +3476,7 @@ main() {
     install_catppuccin_gnome_text_editor
     install_catppuccin_terminal_app
     install_catppuccin_xfce4_terminal
+    install_catppuccin_yazi
     install_catppuccin_hyprland
     configure_environment
     configure_hyprland

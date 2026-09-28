@@ -1,4 +1,5 @@
 # groups
+7zip p7zip p7zip-full
 bash-completion
 ca-certificates
 java-25-openjdk-devel openjdk-25-jdk-headless java-21-openjdk-devel openjdk-21-jdk-headless java-latest-openjdk-headless default-jdk-headless openjdk
@@ -15,10 +16,12 @@ dog
 eza exa
 fd fd-find fdfind
 fzf
+ffmpeg
 gh
 git
 git-lfs
 groovy
+imagemagick
 jq
 lshw
 lua
@@ -37,7 +40,9 @@ python3.11
 python3.14 python3.13 python3.12
 python3-pip
 python3-venv
+poppler-utils poppler
 ranger
+resvg
 rg ripgrep
 rsync
 shellcheck
@@ -55,6 +60,7 @@ wget
 wormhole magic-wormhole
 xclip
 xsel
+yazi
 zip info-zip
 zoxide
 

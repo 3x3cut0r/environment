@@ -106,6 +106,21 @@ vim.api.nvim_create_autocmd("LspAttach", {
 vim.keymap.set("n", "<leader>e", "<cmd>Neotree toggle<cr>", { desc = "Explorer (Neo-tree)" })
 vim.keymap.set("n", "<leader>o", "<cmd>Neotree reveal<cr>", { desc = "Reveal file (Neo-tree)" })
 
+-- yazi.nvim
+-- Defaults (inside yazi, set via opts.keymaps):
+-- <f1> -> show help
+-- <c-v> -> open file in vertical split
+-- <c-x> -> open file in horizontal split
+-- <c-t> -> open file in new tab
+-- <c-g> -> grep in directory
+-- <c-y> -> copy relative path to clipboard
+-- <c-\> -> change nvim cwd to yazi cwd
+-- <tab> -> cycle open buffers
+
+vim.keymap.set({ "n", "v" }, "<leader>-", "<cmd>Yazi<cr>", { desc = "Open yazi at current file" })
+vim.keymap.set("n", "<leader>fy", "<cmd>Yazi cwd<cr>", { desc = "Open yazi in working directory" })
+vim.keymap.set("n", "<c-up>", "<cmd>Yazi toggle<cr>", { desc = "Resume last yazi session" })
+
 -- nvim-lint
 -- Defaults:
 -- none

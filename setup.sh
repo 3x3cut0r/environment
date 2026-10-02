@@ -3178,45 +3178,29 @@ configure_environment() {
 
     log_message INFO "Configure environment files from 'home/' to '$target_home'."
 
-    # Touch directories deploy only when the target directory is missing or
-    # carries the repository marker file (.environment). Externally managed
-    # targets are skipped entirely.
-    local touch_dir_marker=".environment"
-    local skipped_touch_dirs=()
-    local touch_dir_path relative_dir target_dir_path
-    while IFS= read -r -d '' touch_dir_path; do
-        relative_dir=${touch_dir_path#"$source_home/"}
-        target_dir_path="$target_home/${relative_dir%.touch}"
-        if [ -e "$target_dir_path" ] && [ ! -f "$target_dir_path/$touch_dir_marker" ]; then
-            skipped_touch_dirs+=("$relative_dir")
-            log_message INFO "Skipped directory ${relative_dir%.touch} (managed externally)"
+    # Deployment scope is controlled by the .skip-environment marker file: any
+    # target directory carrying it, and everything below it, is never deployed.
+    # All other directories are treated as repo-managed and are overwritten.
+    local skip_dir_marker=".skip-environment"
+    local skipped_target_dirs=()
+
+    # Collect target directories that explicitly opt out of deployment.
+    local source_dir relative_dir target_dir_path
+    while IFS= read -r -d '' source_dir; do
+        relative_dir=${source_dir#"$source_home/"}
+        target_dir_path="$target_home/$relative_dir"
+        if [ -f "$target_dir_path/$skip_dir_marker" ]; then
+            skipped_target_dirs+=("$target_dir_path")
+            log_message INFO "Skipped directory $target_dir_path (skip marker present)"
         fi
-    done < <(find "$source_home" -type d -name '*.touch' -print0)
+    done < <(find "$source_home" -type d -print0)
 
     local file_path relative_path marker_identifier target_relative target_path target_directory append_mode
-    local rest_path dir_component skipped_dir
+    local skipped_dir
     while IFS= read -r -d '' file_path; do
         relative_path=${file_path#"$source_home/"}
         marker_identifier="$relative_path"
-
-        # Skip files inside externally managed touch directories
-        if [ ${#skipped_touch_dirs[@]} -gt 0 ]; then
-            for skipped_dir in "${skipped_touch_dirs[@]}"; do
-                if [[ "$relative_path" == "$skipped_dir"/* ]]; then
-                    continue 2
-                fi
-            done
-        fi
-
-        # Strip .touch suffix from directory components
-        target_relative=""
-        rest_path="$relative_path"
-        while [[ "$rest_path" == */* ]]; do
-            dir_component="${rest_path%%/*}"
-            rest_path="${rest_path#*/}"
-            target_relative+="${dir_component%.touch}/"
-        done
-        target_relative+="$rest_path"
+        target_relative="$relative_path"
 
         append_mode=0
         touch_mode=0
@@ -3245,6 +3229,16 @@ configure_environment() {
         fi
 
         target_path="$target_home/$target_relative"
+
+        # Skip files inside directories carrying the .skip-environment marker
+        if [ ${#skipped_target_dirs[@]} -gt 0 ]; then
+            for skipped_dir in "${skipped_target_dirs[@]}"; do
+                if [[ "$target_path" == "$skipped_dir/"* ]]; then
+                    continue 2
+                fi
+            done
+        fi
+
         target_directory=$(dirname "$target_path")
         mkdir -p "$target_directory"
 

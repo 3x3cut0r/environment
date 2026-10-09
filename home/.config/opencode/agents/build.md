@@ -1,8 +1,8 @@
 ---
 description: Primary agent for development with full tool access
 mode: primary
-model: openrouter/z-ai/glm-5.3
-variant: medium
+model: opencode-go/glm-5.3
+variant: high
 temperature: 0.2
 steps: 32
 permission:

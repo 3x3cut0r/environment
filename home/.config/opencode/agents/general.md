@@ -1,7 +1,7 @@
 ---
 description: General-purpose execution agent for multi-step tasks when no specialized subagent fits
 mode: subagent
-model: openrouter/deepseek/deepseek-v4.1-flash
+model: opencode-go/deepseek-v4.1-flash
 variant: high
 temperature: 0.2
 steps: 32

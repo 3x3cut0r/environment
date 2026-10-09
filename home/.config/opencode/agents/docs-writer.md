@@ -1,7 +1,7 @@
 ---
 description: Writes and maintains project documentation
 mode: subagent
-model: openrouter/deepseek/deepseek-v4.1-flash
+model: opencode-go/deepseek-v4.1-flash
 variant: high
 temperature: 0.3
 steps: 32

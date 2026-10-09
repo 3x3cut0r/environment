@@ -1,7 +1,7 @@
 ---
 description: Performs security audits and identifies vulnerabilities
 mode: subagent
-model: openrouter/z-ai/glm-5.3
+model: opencode-go/glm-5.3
 variant: high
 temperature: 0.1
 steps: 32

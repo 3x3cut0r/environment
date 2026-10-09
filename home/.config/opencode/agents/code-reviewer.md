@@ -1,7 +1,7 @@
 ---
 description: "Reviews code for quality, best practices and potential issues"
 mode: subagent
-model: openrouter/deepseek/deepseek-v4.1-flash
+model: opencode-go/deepseek-v4.1-flash
 variant: high
 temperature: 0.1
 steps: 32

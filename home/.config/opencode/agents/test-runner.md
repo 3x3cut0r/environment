@@ -1,7 +1,7 @@
 ---
 description: Runs tests and analyzes results
 mode: subagent
-model: openrouter/deepseek/deepseek-v4.1-flash
+model: opencode-go/deepseek-v4.1-flash
 temperature: 0
 steps: 32
 permission:

@@ -1,8 +1,8 @@
 ---
 description: Agent focused on debugging and log analysis
 mode: subagent
-model: openrouter/z-ai/glm-5.3
-variant: medium
+model: opencode-go/glm-5.3
+variant: high
 temperature: 0.1
 steps: 32
 permission:

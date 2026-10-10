@@ -2,7 +2,7 @@
 description: Writes and maintains project documentation
 mode: subagent
 model: opencode-go/deepseek-v4.1-flash
-variant: high
+variant: low
 temperature: 0.3
 steps: 64
 permission:

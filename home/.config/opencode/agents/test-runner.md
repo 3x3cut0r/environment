@@ -2,6 +2,7 @@
 description: Runs tests and analyzes results
 mode: subagent
 model: opencode-go/deepseek-v4.1-flash
+variant: low
 temperature: 0
 steps: 64
 permission:

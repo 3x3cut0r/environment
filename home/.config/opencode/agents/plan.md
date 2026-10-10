@@ -4,7 +4,7 @@ mode: primary
 model: opencode-go/glm-5.3
 variant: high
 temperature: 0.1
-steps: 32
+steps: 64
 permission:
   read: allow
   list: allow

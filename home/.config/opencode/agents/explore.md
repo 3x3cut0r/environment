@@ -3,7 +3,7 @@ description: "Fast, read-only agent for exploring codebases"
 mode: subagent
 model: opencode-go/deepseek-v4.1-flash
 temperature: 0
-steps: 32
+steps: 64
 permission:
   read:
     "*": allow

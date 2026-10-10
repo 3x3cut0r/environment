@@ -3,13 +3,6 @@
   "model": "opencode-go/glm-5.3",
   "small_model": "opencode-go/deepseek-v4.1-flash",
   "default_agent": "plan",
-  "provider": {
-    "openrouter": {
-      "options": {
-        "apiKey": "{env:OPENROUTER_API_KEY}"
-      }
-    }
-  },
   "permission": {
     "*": "deny",
     "read": {

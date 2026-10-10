@@ -4,7 +4,7 @@ mode: subagent
 model: opencode-go/deepseek-v4.1-flash
 variant: high
 temperature: 0.3
-steps: 32
+steps: 64
 permission:
   read: allow
   list: allow

@@ -59,7 +59,7 @@ This repository provides a setup script that performs fundamental shell customiz
 │   │   │   │   ├── save.md          # Save current session context into TASKS.md
 │   │   │   │   └── update.md        # Update working copy for git or svn
 │   │   │   ├── opencode.jsonc.anthropic # Anthropic profile configuration
-│   │   │   ├── opencode.jsonc.default # Default profile configuration (OpenCode Go primary, OpenRouter fallback)
+│   │   │   ├── opencode.jsonc.default # Default profile configuration (OpenCode Go primary)
 │   │   │   ├── opencode.jsonc.proxmox # Proxmox profile configuration
 │   │   │   ├── tui.json             # TUI keybindings
 │   │   ├── starship.toml            # Starship prompt theme configuration
@@ -169,7 +169,7 @@ The setup supports these environment variables:
 - `ENVIRONMENT_WRAPPER_PATH=/custom/path/environment`: Overrides wrapper install location.
 - `BAT_CONFIG_DIR=/custom/path/bat`: Overrides where bat config/themes are written.
 - Personal shell environment variables can be stored in `~/.config/env.sh`. The setup now manages this file from `home/.config/env.sh.append` and loads it from Bash and Zsh startup files. Add exports such as `export OPENAI_API_KEY="your-api-key"` or gp.nvim-specific settings like `export NVIM_GP_API_KEY="your-api-key"`, `export NVIM_GP_PROVIDER="openrouter"`, and `export NVIM_GP_BASE_URL="https://openrouter.ai/api/v1"` there. OpenRouter model IDs need the vendor prefix, for example `deepseek/deepseek-v4.1-flash`.
-- OpenCode agents run on the OpenCode Go API (`opencode-go/glm-5.3` and `opencode-go/deepseek-v4.1-flash`); authenticate once via `/connect` or `opencode providers login` (stored in `~/.local/share/opencode/auth.json`). OpenRouter remains configured as a fallback provider; an `OPENROUTER_API_KEY` environment variable is not required.
+- OpenCode agents run on the OpenCode Go API (`opencode-go/glm-5.3` and `opencode-go/deepseek-v4.1-flash`); authenticate once via `/connect` or `opencode providers login` (stored in `~/.local/share/opencode/auth.json`). OpenRouter is no longer configured as an opencode provider; OpenRouter credentials remain in use only for the Neovim plugins (gp.nvim, codecompanion.nvim).
 - Shell PATH snippets now evaluate `brew shellenv` when Homebrew is available, so Homebrew toolchains (for example `python3`) are preferred over system defaults.
 - OpenCode TUI keybinding profiles live next to the matching runtime profiles as `tui.json`. They keep the default `<leader>e` editor shortcut and add `<leader>v` for editing prompts in `$EDITOR`/Neovim before returning them to OpenCode.
 - OpenCode agent definitions live in `agents/*.md` next to the profiles and include an `explore` subagent; primary agents must delegate repository or web discovery to it before planning, coding, or documentation work unless the task is limited to already-known facts or one explicitly named file.

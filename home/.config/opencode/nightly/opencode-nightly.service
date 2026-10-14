@@ -1,0 +1,7 @@
+[Unit]
+Description=Run opencode nightly tasks
+
+[Service]
+Type=oneshot
+EnvironmentFile=-%h/.config/opencode/nightly/env
+ExecStart=/usr/bin/env python3 %h/.config/opencode/nightly/run-nightly.py

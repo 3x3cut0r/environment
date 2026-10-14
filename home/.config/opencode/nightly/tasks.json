@@ -1,0 +1,12 @@
+{
+    "tasks": [
+        {
+            "name": "daily",
+            "dir": "/tmp",
+            "agent": "build",
+            "auto": true,
+            "enabled": true,
+            "prompt_file": "prompts/daily.md"
+        }
+    ]
+}

@@ -43,6 +43,11 @@ alias z='cd'
 alias zi='cdi'
 fi
 
+# Open Yazi as the default file manager shortcut when available.
+if command -v yazi >/dev/null 2>&1; then
+alias y='yazi'
+fi
+
 # Colorized search commands.
 alias grep='grep --color=auto'
 alias egrep='egrep --color=auto'

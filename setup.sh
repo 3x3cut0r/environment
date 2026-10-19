@@ -1055,15 +1055,15 @@ install_yazi() {
         return 0
     fi
 
-    if command -v yazi >/dev/null 2>&1; then
-        log_message INFO "yazi is already installed."
+    if command -v yazi >/dev/null 2>&1 && command -v ya >/dev/null 2>&1; then
+        log_message INFO "yazi and ya are already installed."
         return 0
     fi
 
     if [ "$OS_KERNEL" = "Darwin" ] && command -v brew >/dev/null 2>&1; then
         log_message INFO "Installing yazi using Homebrew on macOS."
-        if brew install yazi >/dev/null 2>&1; then
-            log_message INFO "Installed yazi via Homebrew."
+        if brew install yazi >/dev/null 2>&1 && command -v ya >/dev/null 2>&1; then
+            log_message INFO "Installed yazi and ya via Homebrew."
             return 0
         fi
         log_message WARN "Homebrew installation for yazi failed. Falling back to the GitHub release."
@@ -1211,8 +1211,8 @@ install_yazi() {
     rm -f "$temp_archive"
     rm -rf "$temp_dir"
 
-    if [ $install_failed -eq 1 ] || [ ! -x "/usr/local/bin/yazi" ]; then
-        log_message WARN "Failed to install yazi to /usr/local/bin"
+    if [ $install_failed -eq 1 ] || [ ! -x "/usr/local/bin/yazi" ] || [ ! -x "/usr/local/bin/ya" ]; then
+        log_message WARN "Failed to install yazi and ya to /usr/local/bin"
         return 0
     fi
 
@@ -2978,6 +2978,73 @@ install_catppuccin_yazi() {
     fi
 }
 
+install_yazi_plugins() {
+    if [ "${SKIP_YAZI:-no}" = "yes" ]; then
+        log_message WARN "Skipping yazi plugin installation."
+        return 0
+    fi
+
+    if [ "${SKIP_PACKAGES:-no}" = "yes" ]; then
+        log_message WARN "Skipping yazi plugin installation."
+        return 0
+    fi
+
+    if [ "${SKIP_CONFIGURE_ENVIRONMENT:-no}" = "yes" ]; then
+        log_message WARN "Skipping yazi plugin installation."
+        return 0
+    fi
+
+    if ! command -v ya >/dev/null 2>&1; then
+        log_message WARN "The ya CLI is not available. Skipping yazi plugin installation."
+        return 0
+    fi
+
+    if ! ya pkg --help >/dev/null 2>&1; then
+        log_message WARN "The installed ya CLI does not support 'ya pkg'. Skipping yazi plugin installation."
+        return 0
+    fi
+
+    if ! command -v git >/dev/null 2>&1; then
+        log_message WARN "git is not available. Skipping yazi plugin installation."
+        return 0
+    fi
+
+    if [ -z "${HOME:-}" ]; then
+        log_message WARN "HOME is not set. Skipping yazi plugin installation."
+        return 0
+    fi
+
+    local yazi_config_dir="${XDG_CONFIG_HOME:-${HOME}/.config}/yazi"
+    local package_file="${yazi_config_dir}/package.toml"
+    local skip_dir="$yazi_config_dir"
+
+    while [ -n "$skip_dir" ] && [ "$skip_dir" != "$HOME" ] && [ "$skip_dir" != "/" ]; do
+        if [ -f "$skip_dir/.skip-environment" ]; then
+            log_message INFO "Skipping yazi plugin installation because ${skip_dir}/.skip-environment exists."
+            return 0
+        fi
+        skip_dir=$(dirname "$skip_dir")
+    done
+
+    if [ -f "${HOME}/.skip-environment" ]; then
+        log_message INFO "Skipping yazi plugin installation because ${HOME}/.skip-environment exists."
+        return 0
+    fi
+
+    if [ ! -f "$package_file" ]; then
+        log_message WARN "yazi package file is missing: $package_file"
+        return 0
+    fi
+
+    log_message INFO "Installing yazi plugins."
+    if ! GIT_TERMINAL_PROMPT=0 ya pkg install --discard; then
+        log_message WARN "Failed to install yazi plugins. Run 'ya pkg install --discard' manually."
+        return 0
+    fi
+
+    log_message INFO "Installed yazi plugins."
+}
+
 install_catppuccin_hyprland() {
     if [ "${SKIP_CATPPUCCIN_HYPRLAND:-no}" = "yes" ]; then
         log_message WARN "Skipping Catppuccin installation for Hyprland."
@@ -3473,6 +3540,7 @@ main() {
     install_catppuccin_yazi
     install_catppuccin_hyprland
     configure_environment
+    install_yazi_plugins
     configure_hyprland
     configure_git_delta
     configure_terminals

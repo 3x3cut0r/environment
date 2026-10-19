@@ -1,0 +1,27 @@
+# yazi package dependencies.
+# setup.sh runs `ya pkg install --discard` after deploying this file.
+# Revisions are pinned for reproducible installs. Bump them together with
+# the Yazi version when you intentionally update the plugins.
+#
+# The Catppuccin Mocha theme is bundled in theme.toml and installed by
+# install_catppuccin_yazi, so the upstream flavor is not listed here.
+
+[[plugin.deps]]
+use = "yazi-rs/plugins:smart-enter"
+rev = "=9166202"
+hash = "187cc58ba7ac3befd49c342129e6f1b6"
+
+[[plugin.deps]]
+use = "yazi-rs/plugins:jump-to-char"
+rev = "=9166202"
+hash = "7a4b4237223aaa94e589d1c01a23542a"
+
+[[plugin.deps]]
+use = "yazi-rs/plugins:git"
+rev = "=9166202"
+hash = "347cc6b190eb0c2fd60513cc7ae37412"
+
+[[plugin.deps]]
+use = "Lil-Dank/lazygit"
+rev = "=e73fd74"
+hash = "6ea5f37c7f219671ec504cb8311f889d"

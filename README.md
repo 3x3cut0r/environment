@@ -12,6 +12,7 @@ This repository provides a setup script that performs fundamental shell customiz
 - `install_delta`: Downloads the latest matching `delta` release archive from GitHub for Linux or macOS, installs the binary to `/usr/local/bin/delta`, and configures Git to use it when no conflicting pager settings already exist.
 - `install_nerd_font`: Downloads and installs the Nerd Font variant used across prompts and editors.
 - `install_starship`: Sets up the Starship prompt with the repository's theme defaults.
+- `install_yazi`: Installs yazi and the `ya` CLI via Homebrew or the latest official GitHub release.
 - `install_tmux_plugin_manager`: Fetches and configures the tmux plugin manager (TPM) for plugin handling.
 - `install_vim_plugin_manager`: Installs the Vim/Neovim plugin manager to bootstrap editor plugins.
 - `install_catppuccin_vim`: Applies the Catppuccin color scheme to the Vim configuration.
@@ -22,6 +23,8 @@ This repository provides a setup script that performs fundamental shell customiz
 - `install_catppuccin_gnome_text_editor`: Updates Catppuccin Mocha for GNOME Text Editor from upstream and installs it with a bundled fallback.
 - `install_catppuccin_terminal_app`: Updates Catppuccin Mocha for Terminal.app on macOS and applies it as the default profile.
 - `install_catppuccin_xfce4_terminal`: Checks for `xfce4-terminal` and installs the latest Catppuccin Mocha colorscheme from upstream.
+- `install_catppuccin_yazi`: Installs the bundled Catppuccin Mocha theme and syntect theme for yazi previews.
+- `install_yazi_plugins`: Installs the yazi plugins declared in `home/.config/yazi/package.toml` via `ya pkg install --discard`.
 - `install_catppuccin_hyprland`: Checks for Hyprland and installs Catppuccin Mocha from upstream, then auto-adds a `source` line to `hyprland.conf`.
 - `install_environment_wrapper`: Installs the `environment` wrapper command at `~/.local/bin/environment`.
 - `configure_environment`: Applies the curated dotfile snippets, Starship theme settings, and environment variables.
@@ -64,10 +67,16 @@ This repository provides a setup script that performs fundamental shell customiz
 │   │   │   ├── tui.json             # TUI keybindings
 │   │   ├── starship.toml            # Starship prompt theme configuration
 │   │   ├── tmux/                    # tmux configuration and helper scripts
-│   │       ├── tmux.conf            # tmux configuration with TPM setup
-│   │       └── tmux.example.sh      # Example tmux session bootstrap script
-│   │   └── vscode/                  # VS Code helper assets
-│   │       └── extensions.list      # Extension IDs for bulk installation
+│   │   │   ├── tmux.conf            # tmux configuration with TPM setup
+│   │   │   └── tmux.example.sh      # Example tmux session bootstrap script
+│   │   ├── vscode/                  # VS Code helper assets
+│   │   │   └── extensions.list      # Extension IDs for bulk installation
+│   │   └── yazi/                    # yazi file manager configuration
+│   │       ├── init.lua             # Plugin setup (git linemode)
+│   │       ├── keymap.toml          # Custom and plugin keybindings
+│   │       ├── package.toml         # Plugin dependencies installed via ya pkg
+│   │       ├── theme.toml           # Catppuccin Mocha theme
+│   │       └── yazi.toml            # Plugin fetchers for git status
 │   ├── .exrc                        # Ex/Vi editor configuration
 │   ├── .local/                      # User-local binaries managed by setup
 │   │   ├── bin/

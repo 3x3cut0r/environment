@@ -6,6 +6,10 @@
 [mgr]
 prepend_keymap = [
     { on = "!", run = 'shell "$SHELL" --block', desc = "Open shell here" },
+    { on = "l", run = "plugin smart-enter", desc = "Enter directory or open file" },
+    # Keep the default `f` filter; use Shift+F for jump-to-char.
+    { on = "F", run = "plugin jump-to-char", desc = "Jump to char" },
+    { on = [ "g", "i" ], run = "plugin lazygit", desc = "Open lazygit" },
     { on = [ "g", "h" ], run = "cd ~", desc = "Go to home directory" },
     { on = [ "g", "d" ], run = "cd ~/Downloads", desc = "Go to downloads" },
     { on = [ "g", "c" ], run = "cd ~/.config", desc = "Go to config directory" },

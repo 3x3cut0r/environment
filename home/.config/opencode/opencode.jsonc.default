@@ -1,5 +1,5 @@
 {
-  "$schema": "./schema/config.json",
+  "$schema": "https://opencode.ai/config.json",
   "model": "opencode-go/glm-5.3",
   "small_model": "opencode-go/deepseek-v4.1-flash",
   "default_agent": "plan",
@@ -34,7 +34,6 @@
     "glob": "allow",
     "grep": "allow",
     "list": "allow",
-    "lsp": "allow",
     "webfetch": "allow",
     "websearch": "allow",
     "todowrite": "allow",
@@ -82,7 +81,8 @@
       "command": [
         "brv",
         "mcp"
-      ]
+      ],
+      "enabled": true
     },
     "context7": {
       "type": "remote",
@@ -106,5 +106,22 @@
         "Authorization": "Bearer {env:N8N_MCP_TOKEN}"
       }
     }
+  },
+  "compaction": {
+    "auto": true,
+    "prune": true,
+    "reserved": 10000
+  },
+  "watcher": {
+    "ignore": [
+      "**/node_modules/**",
+      "**/.git/**",
+      "**/dist/**",
+      "**/build/**",
+      "**/.venv/**",
+      "**/venv/**",
+      "**/__pycache__/**",
+      "**/target/**"
+    ]
   }
 }

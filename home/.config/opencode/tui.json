@@ -1,4 +1,3 @@
 {
-  "$schema": "./schema/tui.json",
   "theme": "catppuccin-macchiato"
 }

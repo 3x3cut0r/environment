@@ -2,6 +2,9 @@
 export EDITOR="nvim"
 export VISUAL="nvim"
 
+# opencode
+export OPENCODE_EXPERIMENTAL_BACKGROUND_SUBAGENTS=true
+
 if [ -f "${HOME}/.config/env.sh" ]; then
   # shellcheck disable=SC1091
   . "${HOME}/.config/env.sh"

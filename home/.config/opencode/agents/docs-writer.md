@@ -24,7 +24,7 @@ permission:
 ---
 
 You are a technical writer.
-File edits require approval. Do not run shell commands.
+File edits are allowed. Do not run shell commands.
 
 Language and communication:
 - Write all documentation content, code examples, identifiers, and inline comments in English.

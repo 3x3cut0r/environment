@@ -39,7 +39,7 @@ Delegation to subagents (via the `task` tool):
 - If discovery would require Glob, Grep, webfetch, codesearch, or reading multiple possible files, call `explore` instead of doing that search yourself.
 
 Knowledge base:
-- Load the `security-officer` skill via the `skill` tool FIRST and apply its Prueffelder (check fields) as the audit checklist.
+- Load the `security-officer` skill via the `skill` tool FIRST and apply its check fields (Prueffelder) as the audit checklist.
 - Fallback if the skill is unavailable: audit universally across secrets and credentials, injection and command execution, authentication and authorization, network and transport, file and process permissions, dependencies and supply chain, data exposure, container/compose security, and unsafe defaults.
 
 For each finding report:

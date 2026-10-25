@@ -1,8 +1,7 @@
 ---
-description: "Reviews code for quality, best practices and potential issues"
+description: "Reviews code for quality, best practices and potential issues. Use for reviewing existing or staged changes, diffs, and PRs. Do NOT use for security audits (security-auditor) or for fixing findings (build)."
 mode: subagent
-model: opencode-go/deepseek-v4.1-flash
-variant: high
+color: info
 temperature: 0.1
 steps: 64
 permission:

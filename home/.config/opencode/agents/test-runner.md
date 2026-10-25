@@ -1,8 +1,7 @@
 ---
-description: Runs tests and analyzes results
+description: "Runs tests and analyzes results. Use to discover or verify the relevant test command, framework, or validation workflow. Do NOT use to fix failing code (debugger or build)."
 mode: subagent
-model: opencode-go/deepseek-v4.1-flash
-variant: low
+color: warning
 temperature: 0
 steps: 64
 permission:

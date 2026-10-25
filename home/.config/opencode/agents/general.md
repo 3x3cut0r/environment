@@ -1,8 +1,7 @@
 ---
-description: General-purpose execution agent for multi-step tasks when no specialized subagent fits
+description: "General-purpose execution agent for multi-step tasks when no specialized subagent fits. Use for focused implementation after discovery is done; not for open-ended analysis (explore) or reviews."
 mode: subagent
-model: opencode-go/deepseek-v4.1-flash
-variant: low
+color: error
 temperature: 0.2
 steps: 64
 permission:

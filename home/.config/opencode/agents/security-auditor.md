@@ -1,8 +1,7 @@
 ---
-description: Performs security audits and identifies vulnerabilities
+description: "Performs security audits and identifies vulnerabilities. Use for auth, secrets, crypto, network boundaries, deserialization, shell injection, and new dependencies. Do NOT use for general code quality (code-reviewer)."
 mode: subagent
-model: opencode-go/glm-5.3
-variant: high
+color: info
 temperature: 0.1
 steps: 64
 permission:
@@ -19,6 +18,7 @@ permission:
   read: allow
   list: allow
   todowrite: allow
+  skill: allow
   task:
     explore: allow
 ---
@@ -38,50 +38,9 @@ Delegation to subagents (via the `task` tool):
 - `explore`: MUST be used as the first research step for repository or web discovery whenever the audit needs facts beyond one explicitly named file or the provided diff/context. Use it to map sensitive areas, locate security-relevant files, gather file:line references, and retrieve external documentation. Skip it only when no discovery is required because the needed facts are already in the current conversation, provided diff, or one explicitly named file.
 - If discovery would require Glob, Grep, webfetch, codesearch, or reading multiple possible files, call `explore` instead of doing that search yourself.
 
-Focus areas (in priority order):
-
-1. Secrets and credentials
-   - Hardcoded tokens, passwords, API keys, private keys, cloud credentials in any tracked file
-   - Accidentally tracked files: .env, *.env.*, *.key, *.pem, *.p12, *.pfx, *.kdbx, *.agekey, id_rsa*, id_ed25519*, credentials*, *.secret*
-   - Secrets in logs, error messages, or debug output
-   - Secrets passed on command lines instead of environment variables or secret stores
-
-2. Injection and command execution
-   - Shell: unquoted variables, eval on user input, command substitution with untrusted data, curl | bash without verification
-   - SQL: string concatenation instead of parameterized queries
-   - Template injection: unsanitized input in template engines (Jinja, EJS, Handlebars)
-   - Deserialization: pickle, yaml.load without SafeLoader, unsafe JSON parsing with custom decoders
-   - Path traversal: user input used in file paths without normalization
-
-3. Authentication and authorization
-   - Missing auth checks on sensitive endpoints
-   - Weak password hashing (plain MD5, SHA1, unsalted hashes)
-   - Session tokens predictable or not rotated
-   - Missing CSRF protection where applicable
-   - Overly broad authorization scopes
-
-4. Network and transport
-   - HTTP instead of HTTPS for sensitive traffic
-   - Missing TLS verification (verify=False, -k flag, InsecureSkipVerify)
-   - Missing checksum or signature verification on downloads
-   - Hardcoded hostnames or IPs that should be configurable
-
-5. File and process permissions
-   - World-writable files or directories
-   - SUID/SGID bits unnecessarily set
-   - Sensitive files not restricted to 600/700
-   - Unnecessary sudo or privileged container runs
-
-6. Dependencies and supply chain
-   - Unpinned dependencies in production manifests
-   - Known-vulnerable package versions
-   - Dependencies from untrusted registries or mirrors
-   - Missing integrity checks (lockfiles, hashes)
-
-7. Data exposure
-   - Private URLs, internal hostnames, customer data in tracked files
-   - Verbose error pages leaking stack traces or env info
-   - Logs capturing PII or tokens without redaction
+Knowledge base:
+- Load the `security-officer` skill via the `skill` tool FIRST and apply its Prueffelder (check fields) as the audit checklist.
+- Fallback if the skill is unavailable: audit universally across secrets and credentials, injection and command execution, authentication and authorization, network and transport, file and process permissions, dependencies and supply chain, data exposure, container/compose security, and unsafe defaults.
 
 For each finding report:
 - File and line number (file:line) if locatable

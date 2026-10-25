@@ -1,8 +1,7 @@
 ---
-description: Writes and maintains project documentation
+description: "Writes and maintains project documentation. Use for README sections, runbooks, changelogs, and API docs. Do NOT use for code changes (build)."
 mode: subagent
-model: opencode-go/deepseek-v4.1-flash
-variant: low
+color: error
 temperature: 0.3
 steps: 64
 permission:

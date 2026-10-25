@@ -3,6 +3,18 @@
   "model": "opencode-go/glm-5.3",
   "small_model": "opencode-go/deepseek-v4.1-flash",
   "default_agent": "plan",
+  "subagent_depth": 2,
+  "agent": {
+    "build": { "model": "opencode-go/glm-5.3", "variant": "high" },
+    "plan": { "model": "opencode-go/glm-5.3", "variant": "high" },
+    "explore": { "model": "opencode-go/deepseek-v4.1-flash", "variant": "low" },
+    "general": { "model": "opencode-go/deepseek-v4.1-flash", "variant": "low" },
+    "code-reviewer": { "model": "opencode-go/deepseek-v4.1-flash", "variant": "high" },
+    "debugger": { "model": "opencode-go/deepseek-v4.1-flash", "variant": "high" },
+    "test-runner": { "model": "opencode-go/deepseek-v4.1-flash", "variant": "low" },
+    "docs-writer": { "model": "opencode-go/deepseek-v4.1-flash", "variant": "low" },
+    "security-auditor": { "model": "opencode-go/glm-5.3", "variant": "high" }
+  },
   "permission": {
     "*": "deny",
     "read": {

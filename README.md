@@ -63,7 +63,6 @@ This repository provides a setup script that performs fundamental shell customiz
 │   │   │   │   └── update.md        # Update working copy for git or svn
 │   │   │   ├── opencode.jsonc.anthropic # Anthropic profile configuration
 │   │   │   ├── opencode.jsonc.default # Default profile configuration (OpenCode Go primary)
-│   │   │   ├── opencode.jsonc.proxmox # Proxmox profile configuration
 │   │   │   ├── tui.json             # TUI keybindings
 │   │   ├── starship.toml            # Starship prompt theme configuration
 │   │   ├── tmux/                    # tmux configuration and helper scripts

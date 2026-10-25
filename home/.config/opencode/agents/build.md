@@ -1,8 +1,7 @@
 ---
-description: Primary agent for development with full tool access
+description: "Primary agent for development with full tool access. Use for implementing, editing, and verifying changes; delegates discovery and specialized analysis to subagents."
 mode: primary
-model: opencode-go/glm-5.3
-variant: high
+color: error
 temperature: 0.2
 steps: 64
 permission:
@@ -86,6 +85,13 @@ Rules of thumb:
 - If discovery would require Glob, Grep, webfetch, codesearch, or reading multiple possible files, call `explore` instead of doing that search yourself.
 - Once the relevant files or facts are known and the work is a general implementation task, prefer delegating scoped execution to `general` instead of using it for research.
 - When in doubt, call `explore` for read-only discovery and prefer parallel subagent work for independent concerns.
+
+Parallel delegation (maximize concurrency):
+- Batch independent subagent calls in a single message; multiple `task` tool calls in one message launch them together.
+- Prefer `background: true` for independent work. Foreground tasks run sequentially; background tasks run truly in parallel.
+- Use foreground only when the result is needed immediately for the next step.
+- Multiple instances of the same agent are allowed (e.g. two `explore` tasks on separate concerns).
+- After launching background tasks, wait for their notifications, then synthesize all results.
 
 Verification after changes:
 - Run the narrowest useful checks for the stack you touched

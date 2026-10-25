@@ -1,8 +1,7 @@
 ---
-description: Agent focused on debugging and log analysis
+description: "Agent focused on debugging and log analysis. Use for reproducible failures whose root cause is unknown and needs methodical bisection or log analysis. Do NOT use for running test suites (test-runner)."
 mode: subagent
-model: opencode-go/glm-5.3
-variant: high
+color: warning
 temperature: 0.1
 steps: 64
 permission:

@@ -54,12 +54,17 @@ This repository provides a setup script that performs fundamental shell customiz
 │   │   ├── opencode/                # OpenCode profile snippets, agents, and slash-commands
 │   │   │   ├── agents/              # Agent definitions as markdown files (one per agent)
 │   │   │   ├── commands/            # Custom slash-command definitions
+│   │   │   │   ├── audit.md         # Security audit of diff, repo, or path
+│   │   │   │   ├── changelog.md     # Generate a Keep a Changelog entry from commits
 │   │   │   │   ├── commit.md        # Create a Conventional Commit for git or svn
 │   │   │   │   ├── jira.md          # Draft a Jira proposal from changes, path, or workspace context
 │   │   │   │   ├── load.md          # Load TASKS.md context and optionally execute an instruction
+│   │   │   │   ├── logs.md          # Analyze logs from containers, services, or files
 │   │   │   │   ├── readme.md        # Create, review, simplify, or expand a README
 │   │   │   │   ├── review.md        # Review staged or working changes for commit readiness
-│   │   │   │   └── save.md          # Save current session context into TASKS.md
+│   │   │   │   ├── save.md          # Save current session context into TASKS.md
+│   │   │   │   └── test.md          # Run tests or static checks with framework detection
+│   │   │   ├── skills/              # Custom skill definitions (one folder per skill)
 │   │   │   ├── opencode.jsonc.anthropic # Anthropic profile configuration
 │   │   │   ├── opencode.jsonc.default # Default profile configuration (OpenCode Go primary)
 │   │   │   ├── tui.json             # TUI keybindings

@@ -72,14 +72,14 @@ General engineering principles:
 Delegation to subagents (via the `task` tool):
 Use subagents to keep your own context lean and to push narrow work to cheaper or specialized models. Prefer delegation whenever discovery, validation, or specialized analysis is needed. Delegate discovery work by default; skip delegation only when the answer is already fully contained in the current conversation or in one explicitly named file that you can read directly.
 
-- `explore`: MUST be used as the first research step for repository or web discovery before editing, answering architecture/configuration questions, locating files, mapping modules, confirming behavior, collecting file:line references, or investigating anything beyond one explicitly named file. Give it a precise read-only prompt and let it do the main discovery work. Skip it only when no discovery is required because the needed facts are already in the current conversation, or when the task is confined to one explicitly named file that you can read directly without search.
+- `explore`: MUST handle repository or web discovery before you edit or answer architecture/configuration questions, locate files, map modules, confirm behavior, or collect file:line references. Give it a precise read-only prompt and let it do the main discovery work. It is the default first stream, but independent streams (log-analyzer, code-reviewer, security-auditor) launch in the same message, not after it. Skip it only when no discovery is required because the needed facts are already in the current conversation, or when the task is confined to one explicitly named file that you can read directly without search.
 - `debugger`: Use when a failure is reproducible but the root cause is unclear and requires methodical bisection, hypothesis testing, or stack-trace interpretation. Skip for obvious errors where the fix is immediate.
 - `log-analyzer`: Use when the question is "what do the logs say" (distilling application, container, or system logs into timelines and error groups). Skip when the root cause is already identified or code facts are needed (explore).
 - `test-runner`: Use after non-trivial changes spanning multiple files, or when test discovery itself is unclear (unknown framework, custom scripts). For single-file edits with an obvious check (bash -n, py_compile), run the check yourself.
 - `code-reviewer`: Use before finalizing a larger change set (multiple files or non-trivial logic) to catch issues you may have missed. Skip for one-line fixes, pure doc edits, or config tweaks.
 - `security-auditor`: Use when the change touches auth, secrets, crypto, network boundaries, deserialization, shell execution with user input, or new dependencies. Skip for pure refactors that do not alter trust boundaries.
 - `docs-writer`: Use when the change requires new or substantially updated user-facing docs (README sections, CHANGELOG entries, runbooks). Skip for inline code comments or small README tweaks that you can do in-line.
-- `general`: Use for multi-step execution tasks when no specialized subagent fits, especially scoped implementation work, file edits, command execution, and parallelizable units of work after `explore` has already gathered the needed context.
+- `general`: Use for multi-step execution tasks when no specialized subagent fits, especially scoped implementation work, file edits, command execution, and parallelizable units of work after `explore` has already gathered the needed context. Spawn multiple `general` instances in parallel for independent implementation units.
 
 Rules of thumb:
 - One subagent per distinct concern. Do not chain `explore` -> `code-reviewer` -> `security-auditor` for a two-line fix.
@@ -89,10 +89,12 @@ Rules of thumb:
 - When in doubt, call `explore` for read-only discovery and prefer parallel subagent work for independent concerns.
 
 Parallel delegation (maximize concurrency):
+- Identify every independent concern up front and launch all of them in your first response. Do not serialize `explore` -> others when the streams are independent.
 - Batch independent subagent calls in a single message; multiple `task` tool calls in one message launch them together.
 - Prefer `background: true` for independent work. Foreground tasks run sequentially; background tasks run truly in parallel.
 - Use foreground only when the result is needed immediately for the next step.
 - Multiple instances of the same agent are allowed (e.g. two `explore` tasks on separate concerns).
+- While background tasks run, you may read explicitly named files yourself instead of waiting idle.
 - After launching background tasks, wait for their notifications, then synthesize all results.
 
 Verification after changes:

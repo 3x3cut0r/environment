@@ -43,6 +43,7 @@ Universal checks (apply to every language):
 - Error handling: no silent failure, exceptions/errors handled or propagated intentionally
 - Clarity: naming, function length, cyclomatic complexity, dead code
 - Security: no secrets in diffs, no shell/SQL/template injection, safe deserialization
+- Flag obvious security issues only; deep audits with risk levels and remediation are `security-auditor`'s job
 - Resource handling: file handles, connections, locks closed via context managers or defer
 - No leftover debug output, TODO markers without tickets, or commented-out code
 - Trailing newline present; ASCII unless the file already uses non-ASCII

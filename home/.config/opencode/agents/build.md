@@ -85,7 +85,7 @@ Rules of thumb:
 - One subagent per distinct concern. Do not chain `explore` -> `code-reviewer` -> `security-auditor` for a two-line fix.
 - Batch independent subagent calls in parallel whenever the task can be split into non-overlapping subtasks (e.g. `code-reviewer` and `security-auditor` after a larger change).
 - If discovery would require Glob, Grep, webfetch, codesearch, or reading multiple possible files, call `explore` instead of doing that search yourself.
-- Once the relevant files or facts are known and the work is a general implementation task, prefer delegating scoped execution to `general` instead of using it for research.
+- Edit directly for typical single-context tasks; delegate scoped execution to `general` when the work splits into independent parallelizable units or when grunt-work would flood your context.
 - When in doubt, call `explore` for read-only discovery and prefer parallel subagent work for independent concerns.
 
 Parallel delegation (maximize concurrency):

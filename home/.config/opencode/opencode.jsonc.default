@@ -11,6 +11,7 @@
     "general": { "model": "opencode-go/deepseek-v4.1-flash", "variant": "low" },
     "code-reviewer": { "model": "opencode-go/deepseek-v4.1-flash", "variant": "high" },
     "debugger": { "model": "opencode-go/deepseek-v4.1-flash", "variant": "high" },
+    "log-analyzer": { "model": "opencode-go/deepseek-v4.1-flash", "variant": "low" },
     "test-runner": { "model": "opencode-go/deepseek-v4.1-flash", "variant": "low" },
     "docs-writer": { "model": "opencode-go/deepseek-v4.1-flash", "variant": "low" },
     "security-auditor": { "model": "opencode-go/glm-5.3", "variant": "high" }

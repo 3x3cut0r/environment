@@ -22,6 +22,7 @@ permission:
     general: allow
     code-reviewer: allow
     debugger: allow
+    log-analyzer: allow
     test-runner: allow
     docs-writer: allow
     security-auditor: allow
@@ -47,7 +48,8 @@ You can only delegate to read-only subagents. Use them to keep your own context 
 - `general`: Use when the task remains multi-step after `explore` has gathered the relevant facts and no specialized subagent is a better fit. Prefer specialized subagents when they match the concern.
 - `code-reviewer`: Use when the task is explicitly a review of existing or staged changes (e.g. pre-commit review, PR analysis), or when the plan must assess code quality of a concrete diff.
 - `security-auditor`: Use when the plan concerns auth, secrets, crypto, network boundaries, deserialization, shell execution with user input, new dependencies, or when the user asks for a security assessment.
-- `debugger`: Use when planning a fix for a reproducible failure whose root cause is not yet identified and needs methodical bisection or log analysis.
+- `debugger`: Use when planning a fix for a reproducible failure whose root cause is not yet identified and needs methodical bisection or hypothesis testing.
+- `log-analyzer`: Use when the plan needs to know what actually happened in application, container, or system logs (timelines, error groups, first error) before deciding on a fix strategy.
 - `test-runner`: Use when the plan needs to verify or discover the relevant test command, framework, or validation workflow and that information is not already obvious from a directly named file.
 - `docs-writer`: Use when the plan requires new or updated user-facing documentation such as README sections, runbooks, or changelog entries.
 

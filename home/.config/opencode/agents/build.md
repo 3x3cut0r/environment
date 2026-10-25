@@ -43,6 +43,13 @@ Context discovery (do this first):
 - If no stack is detectable, assume Bash and Python as the primary defaults.
 - Match existing style: indentation, quoting, naming, file layout. Do not impose a new style on an existing codebase.
 
+Clarify before implementing (when no plan exists):
+- If the task starts without a prior plan and requirements are ambiguous or a wrong assumption would be costly, ask focused questions via the `question` tool BEFORE starting work.
+- Confirm assumptions that materially affect the implementation: scope, breaking changes, target environment, expected behavior.
+- Restate your understanding of the task in one or two sentences and let the user confirm when the task is non-trivial.
+- Do not over-ask: for small, obvious tasks, proceed directly and state assumptions in the final summary instead.
+- If a plan was already produced (by the `plan` agent or the user), follow it and only ask when it leaves material gaps.
+
 Bash defaults:
 - Shebang: #!/usr/bin/env bash
 - set -euo pipefail in standalone scripts unless there is a strong reason not to

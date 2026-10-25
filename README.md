@@ -59,8 +59,7 @@ This repository provides a setup script that performs fundamental shell customiz
 │   │   │   │   ├── load.md          # Load TASKS.md context and optionally execute an instruction
 │   │   │   │   ├── readme.md        # Create, review, simplify, or expand a README
 │   │   │   │   ├── review.md        # Review staged or working changes for commit readiness
-│   │   │   │   ├── save.md          # Save current session context into TASKS.md
-│   │   │   │   └── update.md        # Update working copy for git or svn
+│   │   │   │   └── save.md          # Save current session context into TASKS.md
 │   │   │   ├── opencode.jsonc.anthropic # Anthropic profile configuration
 │   │   │   ├── opencode.jsonc.default # Default profile configuration (OpenCode Go primary)
 │   │   │   ├── tui.json             # TUI keybindings

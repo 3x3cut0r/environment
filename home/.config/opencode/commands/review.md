@@ -1,6 +1,6 @@
 ---
 description: Review staged or working changes for commit readiness (target=, strict=)
-agent: plan
+agent: build
 ---
 
 Input arguments: $ARGUMENTS

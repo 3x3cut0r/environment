@@ -47,8 +47,6 @@ Commands, Skills und der Config.
   ~/github/environment/home/.config/opencode/ synchronisiert: agents/,
   commands/, skills/, opencode.jsonc.default (opencode.jsonc ist ein Symlink
   auf .default).
-- AUSNAHME: proxmox-Skill wird NICHT gespiegelt (enthaelt oeffentliche IPs und
-  CT-Inventar); im Repo liegt nur eine Marker-README im proxmox/-Verzeichnis.
 - Externe Skills (~/.agents/skills/, ~/.claude/skills/) werden NICHT
   gespiegelt - sie haben eigene Update-Mechanismen (hf skills add --force,
   npx ctx7 skills install).

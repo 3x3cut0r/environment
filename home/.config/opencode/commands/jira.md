@@ -1,6 +1,6 @@
 ---
 description: Draft a Jira proposal from changes, path, or workspace context (instruction=/inst=, context=, path=, type=, commits=, user=, untracked=)
-agent: plan
+agent: build
 ---
 
 Input arguments: $ARGUMENTS

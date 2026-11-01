@@ -7,11 +7,6 @@
 # install_catppuccin_yazi, so the upstream flavor is not listed here.
 
 [[plugin.deps]]
-use = "yazi-rs/plugins:smart-enter"
-rev = "=9166202"
-hash = "187cc58ba7ac3befd49c342129e6f1b6"
-
-[[plugin.deps]]
 use = "yazi-rs/plugins:jump-to-char"
 rev = "=9166202"
 hash = "7a4b4237223aaa94e589d1c01a23542a"

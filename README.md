@@ -75,8 +75,8 @@ This repository provides a setup script that performs fundamental shell customiz
 │   │   ├── vscode/                  # VS Code helper assets
 │   │   │   └── extensions.list      # Extension IDs for bulk installation
 │   │   └── yazi/                    # yazi file manager configuration
-│   │       ├── init.lua             # Plugin setup (git linemode)
-│   │       ├── keymap.toml          # Custom and plugin keybindings
+│   │       ├── init.lua             # Plugin setup (git linemode, zoxide database updates)
+│   │       ├── keymap.toml          # Custom and plugin keybindings (z jumps via zoxide)
 │   │       ├── package.toml         # Plugin dependencies installed via ya pkg
 │   │       ├── theme.toml           # Catppuccin Mocha theme
 │   │       └── yazi.toml            # Plugin fetchers for git status

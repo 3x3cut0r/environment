@@ -28,7 +28,7 @@ copy_mode = "prefix+["
 # herdr names splits by divider: horizontal = stacked, vertical = side by side.
 # tmux: % = split-window -h (side by side), " = split-window (stacked).
 split_horizontal = ["prefix+\"", "prefix+-", "alt+enter"]
-split_vertical = ["prefix+%", "prefix+h", "prefix+v", "alt+shift+enter"]
+split_vertical = ["prefix+%", "prefix+v", "alt+shift+enter"]
 close_pane = ["prefix+x", "alt+esc"]
 zoom = "prefix+z"
 last_pane = "prefix+;"

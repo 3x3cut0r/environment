@@ -52,7 +52,7 @@ rename_pane = "prefix+shift+o"
 # Windows -> tabs
 new_tab = "prefix+c"
 rename_tab = ["prefix+r", "prefix+,"]
-close_tab = ["prefix+k", "prefix+&"]
+close_tab = ["prefix+&"]
 switch_tab = ["prefix+1..9", "alt+1..9"]
 previous_tab = ["prefix+p", "alt+left"]
 next_tab = ["prefix+n", "alt+right"]

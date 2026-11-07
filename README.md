@@ -149,7 +149,7 @@ cd environment
   If a line starts with a quoted command, the command runs first and package-manager fallback runs afterwards.
   Otherwise, package-manager install runs first and quoted commands run afterwards.
 - Entries after the marker are installed via `python3 -m pip install`.
-- `herdr` is installed from the detected package manager when available (Homebrew formula, AUR `herdr`/`herdr-bin` via yay) and otherwise falls back to the official `herdr.dev` install script into `~/.local/bin/herdr`.
+- `herdr` is installed via the official `herdr.dev` install script into `~/.local/bin/herdr` and skipped when `herdr` is already on `PATH`.
 - On macOS, setup ensures Homebrew is installed before running installation steps.
 - On Ubuntu, setup creates `~/.local/bin/fd` as a compatibility link to `fdfind` when needed.
 - Go is installed separately from the official `go.dev` release archive (latest stable, dynamic version lookup), not from the system package manager, before package processing starts.
@@ -188,6 +188,7 @@ The setup supports these environment variables:
 - Shell PATH snippets now evaluate `brew shellenv` when Homebrew is available, so Homebrew toolchains (for example `python3`) are preferred over system defaults.
 - OpenCode TUI keybinding profiles live next to the matching runtime profiles as `tui.json`. They keep the default `<leader>e` editor shortcut and add `<leader>v` for editing prompts in `$EDITOR`/Neovim before returning them to OpenCode.
 - OpenCode agent definitions live in `agents/*.md` next to the profiles and include an `explore` subagent; primary agents must delegate repository or web discovery to it before planning, coding, or documentation work unless the task is limited to already-known facts or one explicitly named file.
+- OpenCode enforces a global secret-deny policy in `opencode.jsonc.default`: the `read` and `external_directory` permission maps deny SSH keys (`~/.ssh/*`, `id_rsa*`, `id_ed25519*`, `id_ecdsa*`, `id_dsa*`), GnuPG, cloud and container credentials, `.env`, and key/cert files for every agent. Agents must not override `read` or `external_directory` in their frontmatter (an agent-level allow would cancel the global denies), and bash-capable agents carry matching `bash` deny patterns for key paths as a best-effort brake.
 - Any target directory that contains a `.skip-environment` marker file is never deployed: setup skips that directory and everything below it. This is a global opt-out that works for any managed directory. To protect an externally managed OpenCode setup, place the marker in `~/.config/opencode/` (whole scope) or in `~/.config/opencode/agents/` (agents only).
 - herdr runs with the repo-managed `~/.config/herdr/config.toml`: tmux-style keybindings (`ctrl+space` prefix) and herdr's built-in Catppuccin Mocha theme (`[theme] name = "catppuccin"`), matching the Catppuccin theming used across bat, btop, Vim, and delta.
 - Every target directory without a `.skip-environment` marker is treated as repo-managed: files are deployed and overwritten on each run. There is no `.environment` ownership marker anymore.

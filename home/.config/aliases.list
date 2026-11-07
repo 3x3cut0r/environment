@@ -35,7 +35,9 @@ alias la='ls -A'
 alias ..='cd ..'
 alias ...='cd ../..'
 alias ....='cd ../../..'
-alias ~='cd ~'
+alias .....='cd ../../../..'
+alias ......='cd ../../../../..'
+# alias ~='cd ~'
 
 # Keep zoxide-compatible command names when using --cmd cd.
 if command -v zoxide >/dev/null 2>&1; then
@@ -421,3 +423,16 @@ alias tms='tmux new-session -s'     # New named session
 alias tmls='tmux list-windows'      # List windows
 alias tmlp='tmux list-panes'        # List panes
 alias tmi='tmux info'               # Show tmux info
+
+# Shortcuts for herdr sessions (tmux-equivalent commands)
+# herdr session -> tmux session, herdr tab -> tmux window, herdr pane -> tmux pane
+alias hra='herdr'                   # Attach to the persistent session (also new)
+alias hrat='herdr session attach'   # Attach to a named session
+alias hrks='herdr session stop'     # Stop a named session
+alias hrka='herdr server stop'      # Stop the server (all sessions)
+alias hrl='herdr session list'      # List all sessions
+alias hrs='herdr --session'         # New named session
+alias hrlw='herdr workspace list'   # List workspaces (in-app sessions)
+alias hrls='herdr tab list'         # List tabs (windows)
+alias hrlp='herdr pane list'        # List panes
+alias hri='herdr status'            # Show herdr info

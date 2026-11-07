@@ -46,6 +46,8 @@ This repository provides a setup script that performs fundamental shell customiz
 │   │   │   └── themes/              # Theme directory (updated from upstream during setup)
 │   │   ├── eza/                     # eza color theme configuration
 │   │   │   └── theme.yml            # Catppuccin Mocha theme (mauve accent)
+│   │   ├── herdr/                   # herdr terminal workspace manager configuration
+│   │   │   └── config.toml          # herdr config (Catppuccin Mocha theme, tmux-style keys)
 │   │   ├── hypr/                    # Hyprland configuration snippets
 │   │   │   └── autostart.conf       # Hyprland autostart entries for terminal and Chrome
 │   │   ├── nvim/                    # Neovim configuration directory for themed setup
@@ -147,6 +149,7 @@ cd environment
   If a line starts with a quoted command, the command runs first and package-manager fallback runs afterwards.
   Otherwise, package-manager install runs first and quoted commands run afterwards.
 - Entries after the marker are installed via `python3 -m pip install`.
+- `herdr` is installed from the detected package manager when available (Homebrew formula, AUR `herdr`/`herdr-bin` via yay) and otherwise falls back to the official `herdr.dev` install script into `~/.local/bin/herdr`.
 - On macOS, setup ensures Homebrew is installed before running installation steps.
 - On Ubuntu, setup creates `~/.local/bin/fd` as a compatibility link to `fdfind` when needed.
 - Go is installed separately from the official `go.dev` release archive (latest stable, dynamic version lookup), not from the system package manager, before package processing starts.
@@ -186,6 +189,7 @@ The setup supports these environment variables:
 - OpenCode TUI keybinding profiles live next to the matching runtime profiles as `tui.json`. They keep the default `<leader>e` editor shortcut and add `<leader>v` for editing prompts in `$EDITOR`/Neovim before returning them to OpenCode.
 - OpenCode agent definitions live in `agents/*.md` next to the profiles and include an `explore` subagent; primary agents must delegate repository or web discovery to it before planning, coding, or documentation work unless the task is limited to already-known facts or one explicitly named file.
 - Any target directory that contains a `.skip-environment` marker file is never deployed: setup skips that directory and everything below it. This is a global opt-out that works for any managed directory. To protect an externally managed OpenCode setup, place the marker in `~/.config/opencode/` (whole scope) or in `~/.config/opencode/agents/` (agents only).
+- herdr runs with the repo-managed `~/.config/herdr/config.toml`: tmux-style keybindings (`ctrl+space` prefix) and herdr's built-in Catppuccin Mocha theme (`[theme] name = "catppuccin"`), matching the Catppuccin theming used across bat, btop, Vim, and delta.
 - Every target directory without a `.skip-environment` marker is treated as repo-managed: files are deployed and overwritten on each run. There is no `.environment` ownership marker anymore.
 
 ## Notes

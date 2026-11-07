@@ -1,7 +1,4 @@
 # herdr configuration
-# Mirrors the Omarchy tmux config in config/tmux/tmux.conf
-# tmux session -> herdr workspace, tmux window -> herdr tab, tmux pane -> herdr pane
-# This file is repo-managed and overwritten on each setup run.
 # Reference: https://herdr.dev/docs/configuration/
 
 # First-run setup would reappear after every setup run (missing shows onboarding).
@@ -22,13 +19,16 @@ prefix = ["ctrl+space", "ctrl+b"]
 # Config and help
 reload_config = "prefix+q"
 help = "prefix+?"
+detach = "prefix+d"
 
 # Copy mode
 copy_mode = "prefix+["
 
 # Panes
-split_horizontal = ["prefix+h", "alt+enter"]
-split_vertical = ["prefix+v", "alt+shift+enter"]
+# herdr names splits by divider: horizontal = stacked, vertical = side by side.
+# tmux: % = split-window -h (side by side), " = split-window (stacked).
+split_horizontal = ["prefix+\"", "prefix+-", "alt+enter"]
+split_vertical = ["prefix+%", "prefix+h", "prefix+v", "alt+shift+enter"]
 close_pane = ["prefix+x", "alt+esc"]
 zoom = "prefix+z"
 last_pane = "prefix+;"
@@ -46,7 +46,6 @@ resize_pane_down = "ctrl+alt+shift+down"
 resize_pane_up = "ctrl+alt+shift+up"
 resize_pane_right = "ctrl+alt+shift+right"
 
-# No tmux equivalent; herdr's default prefix+shift+p is taken by previous session
 rename_pane = "prefix+shift+o"
 
 # Windows -> tabs

@@ -12,12 +12,12 @@ Pruefe alle neu erzeugten oder geaenderten Dateien auf sicherheitskritische
 Schwachstellen und liefere priorisierte, umsetzbare Findings.
 
 ## Kontext
-- Umgebung: VPS mit Docker-Compose-Stacks
+- Fokus: AI-generierter Output aus OpenCode oder Claude Code
 - Typische Dateien: Shell-Scripte, Python, Docker-Compose, Nginx/Caddy-Configs,
   systemd-Units, YAML/JSON-Konfigurationen, .env-Dateien
-- Fokus: AI-generierter Output aus OpenCode oder Claude Code
-- Falls kein VPS-/Compose-Kontext vorliegt, pruefe universell nach den
-  Prueffeldern 1-4 und 6-9
+- Pruefe standardmaessig universell nach den Prueffeldern 1-4 und 6-9
+- Prueffeld 5 (Container/Compose) nur anwenden, wenn ein Container- oder
+  Compose-Kontext vorliegt (z.B. VPS mit Docker-Compose-Stacks)
 
 ## Prueffelder
 

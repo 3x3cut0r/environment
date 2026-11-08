@@ -150,7 +150,7 @@ cd environment
 - On macOS, setup ensures Homebrew is installed before running installation steps.
 - On Ubuntu, setup creates `~/.local/bin/fd` as a compatibility link to `fdfind` when needed.
 - Go is installed separately from the official `go.dev` release archive (latest stable, dynamic version lookup), not from the system package manager, before package processing starts.
-- Neovim is installed separately from the latest GitHub release `tar.gz` archive (not from the system package manager), then linked to `/usr/local/bin/nvim`. On macOS, setup falls back to `brew install neovim` if the archive-based installation fails.
+- Neovim is installed separately from the latest GitHub release `tar.gz` archive (not from the system package manager), then linked to `/usr/local/bin/nvim`. The archive is downloaded with retries, preferring the GitHub API asset endpoint over `github.com` release download URLs, which keeps working when the release download path is degraded (for example during HTTP 504 incidents). On macOS, setup falls back to `brew install neovim` if all archive downloads fail.
 - After successful Neovim installation, old versions under `/opt/nvim/neovim-*` are removed automatically.
 - After Neovim, setup installs the latest `nvm` release and uses it to install and activate the latest LTS Node.js version together with `npm`.
 - After `install_packages`, setup installs OpenCode using the official install script and falls back to `npm install -g opencode-ai` if the official installer fails.

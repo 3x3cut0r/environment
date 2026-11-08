@@ -1679,19 +1679,42 @@ install_neovim_official() {
             ;;
     esac
 
+    local archive_name="nvim-${nvim_os}-${nvim_arch}.tar.gz"
     local release_payload=""
     local nvim_version=""
+    local nvim_asset_id=""
     local latest_release_api="https://api.github.com/repos/neovim/neovim/releases/latest"
     if release_payload=$(curl -fsSL "$latest_release_api" 2>/dev/null); then
         nvim_version=$(printf '%s\n' "$release_payload" | sed -n 's/.*"tag_name":[[:space:]]*"\([^"]*\)".*/\1/p' | awk 'NR==1 {print; exit}')
+        nvim_asset_id=$(printf '%s\n' "$release_payload" | awk -v asset_name="$archive_name" '
+            /"id":/ {
+                if (match($0, /[0-9]+/)) {
+                    asset_id = substr($0, RSTART, RLENGTH)
+                }
+                next
+            }
+            index($0, "\"name\": \"" asset_name) {
+                print asset_id
+                exit
+            }
+        ')
     fi
 
     if [ -z "$nvim_version" ]; then
         nvim_version="latest"
     fi
 
-    local archive_name="nvim-${nvim_os}-${nvim_arch}.tar.gz"
-    local download_url="https://github.com/neovim/neovim/releases/latest/download/${archive_name}"
+    # Prefer the API asset endpoint: it keeps working when the
+    # github.com releases download path is degraded (e.g. HTTP 504).
+    local download_urls=()
+    if [ -n "$nvim_asset_id" ]; then
+        download_urls+=("https://api.github.com/repos/neovim/neovim/releases/assets/${nvim_asset_id}")
+    fi
+    if [ "$nvim_version" != "latest" ]; then
+        download_urls+=("https://github.com/neovim/neovim/releases/download/${nvim_version}/${archive_name}")
+    fi
+    download_urls+=("https://github.com/neovim/neovim/releases/latest/download/${archive_name}")
+
     local temp_archive=""
     local temp_dir=""
     temp_archive=$(mktemp "${TMPDIR:-/tmp}/nvim-archive-XXXXXX.tar.gz") || {
@@ -1707,9 +1730,25 @@ install_neovim_official() {
         return 1
     }
 
-    log_message INFO "Downloading Neovim archive from GitHub: $archive_name"
-    if ! curl -fsSL -o "$temp_archive" "$download_url" >/dev/null 2>&1; then
-        log_message ERROR "Failed to download Neovim archive from GitHub: $download_url"
+    local download_url=""
+    local candidate_url=""
+    local http_code=""
+    for candidate_url in "${download_urls[@]}"; do
+        log_message INFO "Downloading Neovim archive from GitHub: $candidate_url"
+        http_code=$(curl -fsSL -H 'Accept: application/octet-stream' \
+            --connect-timeout 15 --retry 3 --retry-delay 2 \
+            -o "$temp_archive" -w '%{http_code}' "$candidate_url" 2>/dev/null) || true
+        [ -n "$http_code" ] || http_code="000"
+        if [ "$http_code" = "200" ] || [ "$http_code" = "206" ]; then
+            download_url="$candidate_url"
+            break
+        fi
+        log_message WARN "Neovim download from $candidate_url failed (HTTP $http_code)."
+        rm -f "$temp_archive"
+    done
+
+    if [ -z "$download_url" ]; then
+        log_message ERROR "Failed to download Neovim archive from GitHub: $archive_name"
         rm -f "$temp_archive"
         rm -rf "$temp_dir"
         install_neovim_with_homebrew_fallback && return 0

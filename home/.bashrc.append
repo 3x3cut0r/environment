@@ -45,4 +45,12 @@ fi
 
 if command -v zoxide >/dev/null 2>&1; then
   eval "$(zoxide init bash --cmd cd)"
+  # zoxide 0.4.x generates _z_cd() calling `cd`, which resolves back to the
+  # wrapper function above and recurses until bash segfaults. Force the builtin.
+  _z_cd() {
+    builtin cd "$@" || return "$?"
+    if [ "$_ZO_ECHO" = "1" ]; then
+      echo "$PWD"
+    fi
+  }
 fi

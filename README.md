@@ -5,6 +5,7 @@
 This repository provides a setup script that performs fundamental shell customizations and merges curated configuration snippets into an existing workstation.
 
 - `install_packages`: Installs the baseline package set required for the configured tooling.
+- `install_herdr`: Downloads the latest matching herdr binary from the `herdrdev/herdr` GitHub release and installs it to `~/.local/bin/herdr`.
 - `install_go_official`: Installs or updates Go from the latest official `go.dev` archive, with local `sources/` fallback on failure.
 - `install_neovim_official`: Installs or updates Neovim from the latest official GitHub `tar.gz` release, deploys to `/opt/nvim/neovim-<version>`, and links `/usr/local/bin/nvim`.
 - `install_npm`: Installs the latest `nvm` release and uses it to install the latest LTS Node.js version, including `npm`.
@@ -149,7 +150,7 @@ cd environment
   If a line starts with a quoted command, the command runs first and package-manager fallback runs afterwards.
   Otherwise, package-manager install runs first and quoted commands run afterwards.
 - Entries after the marker are installed via `python3 -m pip install`.
-- `herdr` is installed via the official `herdr.dev` install script into `~/.local/bin/herdr` and skipped when `herdr` is already on `PATH`.
+- `herdr` is installed from the latest matching binary of the `herdrdev/herdr` GitHub release into `~/.local/bin/herdr` and skipped when `herdr` is already installed. Downloads prefer the GitHub API asset endpoint and retry transient failures, so the `herdr.dev` install script is not required.
 - On macOS, setup ensures Homebrew is installed before running installation steps.
 - On Ubuntu, setup creates `~/.local/bin/fd` as a compatibility link to `fdfind` when needed.
 - Go is installed separately from the official `go.dev` release archive (latest stable, dynamic version lookup), not from the system package manager, before package processing starts.
@@ -208,7 +209,7 @@ Options:
   -h,   --help              Show this help message and exit
   -y,   --yes               Automatically answer prompts with yes
   -r,   --reconfigure       Reconfigure dotfiles only (skip installs and terminal config)
-  -sp,  --skip-packages     Skip package-related installs (Homebrew bootstrap on macOS, system packages, Go, Neovim, Node.js/npm, lazy tools, delta)
+  -sp,  --skip-packages     Skip package-related installs (Homebrew bootstrap on macOS, system packages, Go, Neovim, Node.js/npm, lazy tools, delta, yazi, herdr)
   -sm,  --skip-npm          Skip nvm, Node.js, and npm installation
   -so,  --skip-opencode     Skip OpenCode installation
   -sn,  --skip-nerd-font,

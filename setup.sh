@@ -189,7 +189,7 @@ Options:
   -h,   --help              Show this help message and exit
   -y,   --yes               Automatically answer prompts with yes
   -r,   --reconfigure       Reconfigure dotfiles only (skip installs and terminal config)
-  -sp,  --skip-packages     Skip package-related installs (Homebrew bootstrap on macOS, system packages, Go, Neovim, Node.js/npm, lazy tools, delta, yazi)
+  -sp,  --skip-packages     Skip package-related installs (Homebrew bootstrap on macOS, system packages, Go, Neovim, Node.js/npm, lazy tools, delta, yazi, herdr)
   -sm,  --skip-npm          Skip nvm, Node.js, and npm installation
   -so,  --skip-opencode     Skip OpenCode installation
   -sn,  --skip-nerd-font,
@@ -1041,6 +1041,150 @@ install_delta() {
         log_message INFO "Installed delta ${delta_version} at $install_path"
     else
         log_message INFO "Installed delta at $install_path"
+    fi
+}
+
+install_herdr() {
+    if [ "${SKIP_PACKAGES:-no}" = "yes" ]; then
+        log_message WARN "Skipping herdr installation."
+        return 0
+    fi
+
+    local install_dir="${HOME}/.local/bin"
+    local install_path="${install_dir}/herdr"
+
+    if command -v herdr >/dev/null 2>&1 || [ -x "$install_path" ]; then
+        log_message INFO "herdr is already installed."
+        return 0
+    fi
+
+    if ! command -v curl >/dev/null 2>&1; then
+        log_message WARN "curl not found. Skipping herdr installation."
+        return 0
+    fi
+
+    local target_asset=""
+    case "$OS_KERNEL" in
+        Linux)
+            case "$OS_ARCH" in
+                x86_64|amd64)
+                    target_asset="herdr-linux-x86_64"
+                    ;;
+                aarch64|arm64)
+                    target_asset="herdr-linux-aarch64"
+                    ;;
+                *)
+                    log_message WARN "Unsupported architecture for herdr installation: $OS_ARCH"
+                    return 0
+                    ;;
+            esac
+            ;;
+        Darwin)
+            case "$OS_ARCH" in
+                x86_64|amd64)
+                    target_asset="herdr-macos-x86_64"
+                    ;;
+                aarch64|arm64)
+                    target_asset="herdr-macos-aarch64"
+                    ;;
+                *)
+                    log_message WARN "Unsupported architecture for herdr installation: $OS_ARCH"
+                    return 0
+                    ;;
+            esac
+            ;;
+        *)
+            log_message WARN "Unsupported OS for herdr installation: $OS_KERNEL"
+            return 0
+            ;;
+    esac
+
+    if ! mkdir -p "$install_dir" >/dev/null 2>&1; then
+        log_message WARN "Unable to create herdr install directory: $install_dir"
+        return 0
+    fi
+
+    local release_payload=""
+    local herdr_version=""
+    local herdr_asset_id=""
+    local latest_release_api="https://api.github.com/repos/herdrdev/herdr/releases/latest"
+    if release_payload=$(curl -fsSL "$latest_release_api" 2>/dev/null); then
+        herdr_version=$(printf '%s\n' "$release_payload" | sed -n 's/.*"tag_name":[[:space:]]*"\([^"]*\)".*/\1/p' | awk 'NR==1 {print; exit}')
+        herdr_asset_id=$(printf '%s\n' "$release_payload" | awk -v asset_name="$target_asset" '
+            /"id":/ {
+                if (match($0, /[0-9]+/)) {
+                    asset_id = substr($0, RSTART, RLENGTH)
+                }
+                next
+            }
+            index($0, "\"name\": \"" asset_name) {
+                print asset_id
+                exit
+            }
+        ')
+    fi
+
+    # Prefer the API asset endpoint: it keeps working when the
+    # github.com releases download path is degraded (e.g. HTTP 504).
+    local download_urls=()
+    if [ -n "$herdr_asset_id" ]; then
+        download_urls+=("https://api.github.com/repos/herdrdev/herdr/releases/assets/${herdr_asset_id}")
+    fi
+    if [ -n "$herdr_version" ]; then
+        download_urls+=("https://github.com/herdrdev/herdr/releases/download/${herdr_version}/${target_asset}")
+    fi
+    download_urls+=("https://github.com/herdrdev/herdr/releases/latest/download/${target_asset}")
+
+    local temp_binary=""
+    temp_binary=$(mktemp "${TMPDIR:-/tmp}/herdr-binary-XXXXXX") || {
+        log_message WARN "Unable to create temporary file for herdr installation."
+        return 0
+    }
+
+    local download_url=""
+    local candidate_url=""
+    local http_code=""
+    for candidate_url in "${download_urls[@]}"; do
+        log_message INFO "Downloading herdr binary from GitHub: $candidate_url"
+        http_code=$(curl -fsSL -H 'Accept: application/octet-stream' \
+            --connect-timeout 15 --retry 3 --retry-delay 2 \
+            -o "$temp_binary" -w '%{http_code}' "$candidate_url" 2>/dev/null) || true
+        [ -n "$http_code" ] || http_code="000"
+        if [ "$http_code" = "200" ] || [ "$http_code" = "206" ]; then
+            download_url="$candidate_url"
+            break
+        fi
+        log_message WARN "herdr download from $candidate_url failed (HTTP $http_code)."
+        rm -f "$temp_binary"
+    done
+
+    if [ -z "$download_url" ]; then
+        log_message WARN "Failed to download herdr binary from GitHub: ${target_asset}"
+        rm -f "$temp_binary"
+        return 0
+    fi
+
+    if ! install -m 755 "$temp_binary" "$install_path" >/dev/null 2>&1; then
+        log_message WARN "Failed to install herdr to $install_path"
+        rm -f "$temp_binary"
+        return 0
+    fi
+
+    rm -f "$temp_binary"
+
+    case ":$PATH:" in
+        *":$install_dir:"*)
+            ;;
+        *)
+            PATH="$install_dir:$PATH"
+            export PATH
+            ;;
+    esac
+
+    if [ -x "$install_path" ]; then
+        log_message INFO "Installed herdr at $install_path"
+    else
+        log_message WARN "Installed herdr to $install_path, but the binary is not executable."
     fi
 }
 
@@ -3562,6 +3706,7 @@ main() {
         log_message WARN "nvm/Node.js installation encountered errors. Continuing with remaining configuration."
     fi
     install_lazy_tools
+    install_herdr
     install_delta
     install_yazi
     install_nerd_font

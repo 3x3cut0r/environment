@@ -31,7 +31,7 @@ split_horizontal = ["prefix+\"", "prefix+-", "alt+enter"]
 split_vertical = ["prefix+%", "prefix+v", "alt+shift+enter"]
 close_pane = ["prefix+x", "alt+esc"]
 zoom = "prefix+z"
-last_pane = "prefix+;"
+# last_pane = "prefix+;" # collides with rename_workspace
 
 # Like select-pane on prefix+hjkl in tmux.conf
 focus_pane_left = ["prefix+h", "ctrl+alt+left"]
@@ -63,7 +63,7 @@ move_tab_next = "alt+shift+right"
 
 # Sessions -> workspaces
 new_workspace = "prefix+shift+c"
-rename_workspace = ["prefix+shift+r", "prefix+shift+,"]
+rename_workspace = ["prefix+shift+r", "prefix+;"]
 close_workspace = "prefix+shift+k"
 switch_workspace = "prefix+shift+1..9"
 previous_workspace = ["prefix+shift+p", "alt+up"]

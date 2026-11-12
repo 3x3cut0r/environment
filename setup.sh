@@ -1063,6 +1063,26 @@ install_herdr() {
         return 0
     fi
 
+    # Default install method: official installer from herdr.dev.
+    log_message INFO "Installing herdr using the official installer."
+    if curl -fsSL https://herdr.dev/install.sh | sh >/dev/null 2>&1 \
+        && { command -v herdr >/dev/null 2>&1 || [ -x "$install_path" ]; }; then
+        case ":$PATH:" in
+            *":$install_dir:"*)
+                ;;
+            *)
+                if [ -x "$install_path" ]; then
+                    PATH="$install_dir:$PATH"
+                    export PATH
+                fi
+                ;;
+        esac
+        log_message INFO "Installed herdr using the official installer."
+        return 0
+    fi
+
+    log_message WARN "Official herdr installer failed. Trying GitHub release fallback."
+
     local target_asset=""
     case "$OS_KERNEL" in
         Linux)
@@ -1750,6 +1770,7 @@ install_go_official() {
 
 install_neovim_with_homebrew_fallback() {
     if [ "$OS_KERNEL" != "Darwin" ]; then
+        log_message ERROR "Homebrew fallback for Neovim is only available on macOS. Neovim installation failed."
         return 1
     fi
 
@@ -1862,13 +1883,13 @@ install_neovim_official() {
     local temp_archive=""
     local temp_dir=""
     temp_archive=$(mktemp "${TMPDIR:-/tmp}/nvim-archive-XXXXXX.tar.gz") || {
-        log_message ERROR "Unable to create temporary archive file for Neovim installation."
+        log_message WARN "Unable to create temporary archive file for Neovim installation."
         install_neovim_with_homebrew_fallback && return 0
         return 1
     }
 
     temp_dir=$(mktemp -d) || {
-        log_message ERROR "Unable to create temporary directory for Neovim installation."
+        log_message WARN "Unable to create temporary directory for Neovim installation."
         rm -f "$temp_archive"
         install_neovim_with_homebrew_fallback && return 0
         return 1
@@ -1892,7 +1913,7 @@ install_neovim_official() {
     done
 
     if [ -z "$download_url" ]; then
-        log_message ERROR "Failed to download Neovim archive from GitHub: $archive_name"
+        log_message WARN "Failed to download Neovim archive from GitHub: $archive_name"
         rm -f "$temp_archive"
         rm -rf "$temp_dir"
         install_neovim_with_homebrew_fallback && return 0
@@ -1900,7 +1921,7 @@ install_neovim_official() {
     fi
 
     if ! tar -xzf "$temp_archive" -C "$temp_dir" >/dev/null 2>&1; then
-        log_message ERROR "Failed to extract Neovim archive: $archive_name"
+        log_message WARN "Failed to extract Neovim archive: $archive_name"
         rm -f "$temp_archive"
         rm -rf "$temp_dir"
         install_neovim_with_homebrew_fallback && return 0
@@ -1910,7 +1931,7 @@ install_neovim_official() {
     local extracted_dir=""
     extracted_dir=$(find "$temp_dir" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | awk 'NR==1 {print; exit}')
     if [ -z "$extracted_dir" ] || [ ! -x "$extracted_dir/bin/nvim" ]; then
-        log_message ERROR "Extracted Neovim archive does not contain a usable bin/nvim binary."
+        log_message WARN "Extracted Neovim archive does not contain a usable bin/nvim binary."
         rm -f "$temp_archive"
         rm -rf "$temp_dir"
         install_neovim_with_homebrew_fallback && return 0
@@ -1924,7 +1945,7 @@ install_neovim_official() {
 
     if [ "${EUID:-$(id -u)}" -ne 0 ]; then
         if ! command -v sudo >/dev/null 2>&1; then
-            log_message ERROR "Cannot install Neovim to $install_dir: elevated privileges required but sudo not available."
+            log_message WARN "Cannot install Neovim to $install_dir: elevated privileges required but sudo not available."
             rm -f "$temp_archive"
             rm -rf "$temp_dir"
             install_neovim_with_homebrew_fallback && return 0
@@ -1964,7 +1985,7 @@ install_neovim_official() {
     rm -rf "$temp_dir"
 
     if [ $install_failed -eq 1 ] || [ ! -x "$symlink_path" ]; then
-        log_message ERROR "Failed to install Neovim to $symlink_path"
+        log_message WARN "Failed to install Neovim to $symlink_path"
         install_neovim_with_homebrew_fallback && return 0
         return 1
     fi
@@ -3220,7 +3241,7 @@ install_yazi_plugins() {
     fi
 
     log_message INFO "Installing yazi plugins."
-    if ! GIT_TERMINAL_PROMPT=0 ya pkg install --discard; then
+    if ! GIT_TERMINAL_PROMPT=0 ya pkg install --discard >/dev/null 2>&1; then
         log_message WARN "Failed to install yazi plugins. Run 'ya pkg install --discard' manually."
         return 0
     fi

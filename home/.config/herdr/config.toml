@@ -39,6 +39,10 @@ focus_pane_down = ["prefix+j", "ctrl+alt+down"]
 focus_pane_up = ["prefix+k", "ctrl+alt+up"]
 focus_pane_right = ["prefix+l", "ctrl+alt+right"]
 
+# Like swap-pane in tmux.
+swap_pane_left = "prefix+<"
+swap_pane_right = "prefix+>"
+
 resize_mode = ["prefix+ctrl+left", "prefix+ctrl+down", "prefix+ctrl+up", "prefix+ctrl+right"]
 
 # Like resize-pane on C-M-S-arrows

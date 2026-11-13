@@ -18,6 +18,11 @@
   },
   "permission": {
     "*": "deny",
+    // MCP tool IDs are "<server>_<tool>", so every MCP server needs its own allow rule here.
+    "byterover_*": "allow",
+    "context7_*": "allow",
+    "fusion360_*": "allow",
+    "n8n_*": "allow",
     "read": {
       "*": "allow",
       "**/.ssh": "deny",

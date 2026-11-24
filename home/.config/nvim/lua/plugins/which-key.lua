@@ -54,6 +54,7 @@ return {
       { "<leader>s", group = "search" },
       { "<leader>t", group = "toggle/terminal" },
       { "<leader>u", group = "ui" },
+      { "<leader>um", desc = "Markdown render toggle" },
       { "<leader>w", group = "window" },
       { "<leader>x", group = "diagnostics" },
       { "[t", desc = "Previous todo comment" },

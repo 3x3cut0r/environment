@@ -145,6 +145,20 @@ vim.keymap.set("n", "<leader>fr", "<cmd>RemoteHistory<cr>", { desc = "Remote his
 vim.keymap.set("n", "<leader>ro", ":RemoteOpen ", { desc = "Open remote file" })
 vim.keymap.set("n", "<leader>rt", ":RemoteTreeBrowser ", { desc = "Browse remote tree" })
 
+-- Render Markdown
+-- Defaults:
+-- Rendered view is active in normal, command, and terminal mode
+-- Insert mode shows the raw Markdown source
+
+vim.keymap.set("n", "<leader>um", function()
+  local ok, render_markdown = pcall(require, "render-markdown")
+  if not ok then
+    vim.notify("render-markdown.nvim is only available in Markdown buffers", vim.log.levels.WARN)
+    return
+  end
+  render_markdown.buf_toggle()
+end, { desc = "Markdown render toggle" })
+
 -- Telescope
 -- Defaults:
 -- none

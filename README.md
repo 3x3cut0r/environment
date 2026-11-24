@@ -198,6 +198,7 @@ The setup supports these environment variables:
 
 - Current script behavior: `install_catppuccin_neovim` checks for `home/.config/nvim/init.vim`, while this repository currently provides `home/.config/nvim/init.lua`. This can cause the Neovim Catppuccin install step to be skipped.
 - `install-vscode-extensions` now auto-detects the VS Code CLI on macOS via standard app bundle paths if `code` is not available in `PATH`.
+- Neovim renders Markdown in-buffer with `render-markdown.nvim` (`home/.config/nvim/lua/plugins/render-markdown.lua`); `<leader>um` toggles the rendered view per buffer. No browser preview or external runtime is needed.
 
 ```bash
 Environment bootstrap script

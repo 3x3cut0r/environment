@@ -11,6 +11,7 @@ return {
           bufferline = true,
           lualine = true,
           neotree = true,
+          render_markdown = true,
           telescope = true,
           which_key = true,
           snacks = {
